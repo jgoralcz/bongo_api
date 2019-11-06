@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS state (
+  id SERIAL PRIMARY KEY,
+  respects_paid_today INTEGER NOT NULL DEFAULT 0
+);
