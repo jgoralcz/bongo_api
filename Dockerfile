@@ -30,11 +30,7 @@ COPY --chown=node:node src/ /usr/src/node/src/
 
 EXPOSE 8443
 
-# install npm
 RUN npm install
-
-# Bundle app source
-COPY . .
 
 WORKDIR /usr/src/app/src
 
