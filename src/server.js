@@ -3,16 +3,15 @@ const express = require('express');
 const logger = require('log4js').getLogger();
 const hsts = require('hsts');
 
-logger.level = 'info';
-const port = 8443;
-
+const router = require('./routes/Routes.js');
 const { errorHandler } = require('./middleware/errorhandler');
 const { httpLogger } = require('./middleware/logger');
 const { env: { LOCAL } } = require('./util/constants/environments');
 
-const env = process.env.NODE_ENV || LOCAL;
+logger.level = 'info';
+const port = 8443;
 
-const router = require('./routes/Routes.js');
+const env = process.env.NODE_ENV || LOCAL;
 
 const server = express();
 

@@ -43,10 +43,10 @@ route.get('/store', async (req, res) => {
                 await storeImageBufferByID(filename, buffer, width, height);
               }
               fs.unlinkSync(file.path);
-            }, index * 300);
+            }, index * 50);
           }
         }
-      }catch(error) {
+      } catch (error) {
         console.error(error);
       }
     })
