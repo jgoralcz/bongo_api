@@ -1,3 +1,5 @@
+# docker build -t bongo_bot_api .
+# docker run -d -p 9999:8443 -v $PWD/waifu_images:/usr/src/waifu_images --name bongo_bot_api bongo_bot_api
 FROM node:12
 
 LABEL owner = jgoralcz
@@ -24,14 +26,18 @@ RUN apt-get update && apt-get install --force-yes -yy \
   && rm -rf /var/lib/apt/lists/*
 ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.1
 
-COPY --chown=node:node config.json /usr/src/node/
-COPY --chown=node:node package*.json /usr/src/node/
-COPY --chown=node:node src/ /usr/src/node/src/
+# COPY --chown=node:node config.json /usr/src/node/
+# COPY --chown=node:node package*.json /usr/src/node/
+# COPY --chown=node:node src/ /usr/src/node/src/
+
+COPY config.json /usr/src/node/
+COPY package*.json /usr/src/node/
+COPY src/ /usr/src/node/src/
 
 EXPOSE 8443
 
 RUN npm install
 
-WORKDIR /usr/src/app/src
+WORKDIR /usr/src/node/src
 
-CMD ["node", "index.js"]
+CMD ["node", "server.js"]

@@ -105,7 +105,7 @@ const getRandomImageBuffer = async () => poolQuery(`
 const storeImageBufferByID = async (imageFilePath, buffer, width, height) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
   SET buffer = $2, width = $3, height = $4
-  WHERE image_file_path_extra = $1
+  WHERE image_file_path_extra ILIKE $1
   RETURNING *;
 `, [imageFilePath, buffer, width, height]);
 

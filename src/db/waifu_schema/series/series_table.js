@@ -54,7 +54,7 @@ const upsertSeries = async (series) => poolQuery(`
 const storeImageSeriesBufferByID = async (imageFilePath, filename, buffer, width, height) => poolQuery(`
   UPDATE waifu_schema.series_table
   SET image_file_path = $2, buffer = $3, width = $4, height = $5
-  WHERE name = $1
+  WHERE name ILIKE $1
   RETURNING *;
 `, [imageFilePath, filename, buffer, width, height]);
 
