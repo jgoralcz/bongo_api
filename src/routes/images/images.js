@@ -36,11 +36,11 @@ route.get('/store', async (req, res) => {
             const filename = file.path.replace('/Users/Josh/Documents/GitHub/', '');
             console.log('filename', filename);
             setTimeout(async () => {
-              const rows = await storeImageSeriesBufferByID(filename.replace('waifu_images/', '').replace('.png', ''), filename, buffer, width, height);
+              const cleanFileName = (filename.startsWith('/')) ? filename.substring(1, filename.length) : filename;
+              const rows = await storeImageSeriesBufferByID(cleanFileName.replace('waifu_images/', '').replace('.png', ''), cleanFileName, buffer, width, height);
               console.log(filename, 'done');
               if (!rows || rows.length <= 0) {
-              // ternary opeator for series.
-                await storeImageBufferByID(filename, buffer, width, height);
+                await storeImageBufferByID(cleanFileName, buffer, width, height);
               }
               fs.unlinkSync(file.path);
             }, index * 50);
