@@ -120,6 +120,26 @@ const getWaifuImageByURL = async url => poolQuery(`
   WHERE image_fi = $1;
 `, [url]);
 
+const getRandomNoBufferImageByURL = async () => poolQuery(`
+  SELECT image_url_path_extra
+  FROM waifu_schema.waifu_table_images
+  WHERE buffer is null
+  ORDER BY random()
+  LIMIT 1;
+`, []);
+
+const storeImageBufferByURL = async (url, buffer, width, height) => poolQuery(`
+  UPDATE waifu_schema.waifu_table_images
+  SET buffer = $2, width = $3, height = $4
+  WHERE image_url_path_extra ILIKE $1
+  RETURNING *;
+`, [url, buffer, width, height]);
+
+const deleteImageByURL = async (url) => poolQuery(`
+  DELETE FROM waifu_schema.waifu_table_images
+  WHERE image_url_path_extra = $1;
+`, [url]);
+
 module.exports = {
   getRandomWaifuImageNonReviewed,
   getRemainingImages,
@@ -131,4 +151,7 @@ module.exports = {
   getWaifuImageBufferByID,
   storeImageBufferByID,
   getRandomImageBuffer,
+  getRandomNoBufferImageByURL,
+  storeImageBufferByURL,
+  deleteImageByURL,
 };

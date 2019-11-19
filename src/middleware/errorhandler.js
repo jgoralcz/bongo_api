@@ -1,5 +1,5 @@
 const logger = require('log4js').getLogger();
-const { env: { PROD } } = require('../util/constants/environments');
+const { PROD } = require('../util/constants/environments');
 
 const errorHandler = (err, req, res, next) => {
   if (res.headersSent) {

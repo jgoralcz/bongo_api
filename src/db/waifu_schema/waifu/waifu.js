@@ -196,6 +196,21 @@ const todaysBirthdays = async () => poolQuery(`
     DATE_PART('month', date_of_birth) = date_part('month', CURRENT_DATE);
 `, []);
 
+const getRandomNoBufferWaifuImageByURL = async () => poolQuery(`
+  SELECT image_url
+  FROM waifu_schema.waifu_table
+  WHERE buffer is null
+  ORDER BY random()
+  LIMIT 1;
+`, []);
+
+const storeWaifuImageBufferByURL = async (url, buffer, width, height) => poolQuery(`
+  UPDATE waifu_schema.waifu_table
+  SET buffer = $2, width = $3, height = $4
+  WHERE image_url = $1
+  RETURNING *;
+`, [url, buffer, width, height]);
+
 module.exports = {
   upsertWaifu,
   updateWaifuSeriesId,
@@ -209,4 +224,6 @@ module.exports = {
   todaysBirthdaysClaims,
   todaysBirthdays,
   getWaifuCount,
+  storeWaifuImageBufferByURL,
+  getRandomNoBufferWaifuImageByURL,
 };

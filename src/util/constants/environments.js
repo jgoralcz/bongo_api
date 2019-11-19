@@ -1,9 +1,7 @@
-const env = {
+const ENV = {
   PROD: 'PROD',
   TEST: 'TEST',
   LOCAL: 'LOCAL',
 };
 
-module.exports = {
-  env,
-};
+module.exports = ENV;

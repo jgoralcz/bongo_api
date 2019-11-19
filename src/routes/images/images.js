@@ -4,7 +4,11 @@ const fs = require('fs');
 const { createCanvas, Image, loadImage } = require('canvas');
 
 const { storeImageSeriesBufferByID } = require('../../db/waifu_schema/series/series_table');
-const { getWaifuImageBufferByID, storeImageBufferByID, getRandomImageBuffer } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
+const {
+  getWaifuImageBufferByID, deleteImageByURL, storeImageBufferByID,
+  getRandomImageBuffer, storeImageBufferByURL,
+  getRandomNoBufferImageByURL,
+} = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
 
 route.get('/random', async (req, res) => {
@@ -15,12 +19,47 @@ route.get('/random', async (req, res) => {
   res.status(200).send(query[0].buffer);
 });
 
-route.get('/store', async (req, res) => {
+route.patch('/forgotbuffers', async (req, res) => {
+  setInterval(async () => {
+    let imageURL = '';
+    try {
+      const row = await getRandomNoBufferImageByURL();
+      if (!row || !row[0] || !row[0].image_url_path_extra) return;
+
+      imageURL = row[0].image_url_path_extra;
+
+      const theirImage = await loadImage(imageURL);
+      const { width, height } = theirImage;
+
+      if (width && height) {
+        const canvas = createCanvas(width, height);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(theirImage, 0, 0, width, height);
+        const buffer = await canvas.toBuffer((imageURL.includes('png') ? 'image/png' : 'image/jpeg'), { quality: 0.75 });
+        const rows = await storeImageBufferByURL(imageURL, buffer, width, height);
+
+        if (rows) {
+          console.log('finished', imageURL);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      if (imageURL) {
+        await deleteImageByURL(imageURL).catch(console.error);
+      }
+    }
+  }, 8000 + (Math.random() * 2000));
+});
+
+route.patch('/store', async (req, res) => {
   let index = 0;
   klaw('/waifu_images')
     .on('data', async (file) => {
       try {
         if (!fs.lstatSync(file.path).isDirectory()) {
+          const filename = file.path.replace('/Users/Josh/Documents/GitHub/', '');
+
           index += 1;
           const fileBuffer = fs.readFileSync(file.path);
           const theirImage = await loadImage(fileBuffer);
@@ -33,7 +72,6 @@ route.get('/store', async (req, res) => {
             ctx.drawImage(theirImage, 0, 0, width, height);
             const buffer = await canvas.toBuffer((file.path.includes('.png') ? 'image/png' : 'image/jpeg'), { quality: 0.75 });
 
-            const filename = file.path.replace('/Users/Josh/Documents/GitHub/', '');
             console.log('filename', filename);
             setTimeout(async () => {
               const cleanFileName = (filename.startsWith('/')) ? filename.substring(1, filename.length) : filename;
@@ -59,13 +97,13 @@ route.get('/store', async (req, res) => {
     });
 });
 
-route.get('/:id', async (req, res) => {
-  const { id } = req.params;
-  const query = await getWaifuImageBufferByID(id);
+// route.get('/:id', async (req, res) => {
+//   const { id } = req.params;
+//   const query = await getWaifuImageBufferByID(id);
 
-  res.set('Content-Type', 'image/png');
-  res.set('Content-Length', query[0].buffer.length);
-  res.status(200).send(query[0].buffer);
-});
+//   res.set('Content-Type', 'image/png');
+//   res.set('Content-Length', query[0].buffer.length);
+//   res.status(200).send(query[0].buffer);
+// });
 
 module.exports = route;
