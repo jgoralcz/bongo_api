@@ -211,6 +211,20 @@ const storeWaifuImageBufferByURL = async (url, buffer, width, height) => poolQue
   RETURNING *;
 `, [url, buffer, width, height]);
 
+const getWaifuImageNoCDNurl = async () => poolQuery(`
+  SELECT id, buffer
+  FROM waifu_schema.waifu_table
+  WHERE image_url_cdn IS NULL AND buffer IS NOT NULL
+  LIMIT 1;
+`, []);
+
+const updateWaifuCDNurl = async (id, CDNurl) => poolQuery(`
+  UPDATE waifu_schema.waifu_table
+  SET image_url_cdn = $2
+  WHERE id = $1
+  RETURNING *;
+`, [id, CDNurl]);
+
 module.exports = {
   upsertWaifu,
   updateWaifuSeriesId,
@@ -226,4 +240,6 @@ module.exports = {
   getWaifuCount,
   storeWaifuImageBufferByURL,
   getRandomNoBufferWaifuImageByURL,
+  getWaifuImageNoCDNurl,
+  updateWaifuCDNurl,
 };

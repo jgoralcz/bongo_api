@@ -1,5 +1,5 @@
 const router = require('express-promise-router')();
-const images = require('./images/images');
+const images = require('./waifus/images/images');
 const waifus = require('./waifus/waifus');
 
 router.use('/waifus', waifus);

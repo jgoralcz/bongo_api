@@ -42,7 +42,7 @@ const updateWaifuImageReview = async (nsfw, reviewed, badImage, imageID) => pool
  * @param imageID the id to delete
  * @returns {Promise<void>}
  */
-const deleteImage = async imageID => poolQuery(`
+const deleteImage = async (imageID) => poolQuery(`
   DELETE
   FROM waifu_schema.waifu_table_images
   WHERE image_id = $1;
@@ -114,7 +114,7 @@ const storeImageBufferByID = async (imageFilePath, buffer, width, height) => poo
  * @param url the waifu url.
  * @returns {Promise<*>}
  */
-const getWaifuImageByURL = async url => poolQuery(`
+const getWaifuImageByURL = async (url) => poolQuery(`
   SELECT *
   FROM waifu_schema.waifu_table_images
   WHERE image_fi = $1;
@@ -136,9 +136,24 @@ const storeImageBufferByURL = async (url, buffer, width, height) => poolQuery(`
 `, [url, buffer, width, height]);
 
 const deleteImageByURL = async (url) => poolQuery(`
-  DELETE FROM waifu_schema.waifu_table_images
+  DELETE
+  FROM waifu_schema.waifu_table_images
   WHERE image_url_path_extra = $1;
 `, [url]);
+
+const getWaifuImagesNoCDNurl = async () => poolQuery(`
+  SELECT waifu_id, buffer
+  FROM waifu_schema.waifu_table_images
+  WHERE image_url_cdn_extra IS NULL AND buffer IS NOT NULL
+  LIMIT 1;
+`, []);
+
+const updateWaifusCDNurl = async (id, CDNurl) => poolQuery(`
+  UPDATE waifu_schema.waifu_table_images
+  SET image_url_cdn_extra = $2
+  WHERE waifu_id = $1
+  RETURNING *;
+`, [id, CDNurl]);
 
 module.exports = {
   getRandomWaifuImageNonReviewed,
@@ -154,4 +169,6 @@ module.exports = {
   getRandomNoBufferImageByURL,
   storeImageBufferByURL,
   deleteImageByURL,
+  getWaifuImagesNoCDNurl,
+  updateWaifusCDNurl,
 };

@@ -1,15 +1,35 @@
 const route = require('express-promise-router')();
 const klaw = require('klaw');
 const fs = require('fs');
+const logger = require('log4js').getLogger();
 const { createCanvas, Image, loadImage } = require('canvas');
 
-const { storeImageSeriesBufferByID } = require('../../db/waifu_schema/series/series_table');
+const { storeImageSeriesBufferByID } = require('../../../db/waifu_schema/series/series_table');
+const { storeImageBufferToURL } = require('../../../util/functions/storeImageBufferToURL');
 const {
   getWaifuImageBufferByID, deleteImageByURL, storeImageBufferByID,
   getRandomImageBuffer, storeImageBufferByURL,
-  getRandomNoBufferImageByURL,
-} = require('../../db/waifu_schema/waifu_images/waifu_table_images');
+  getRandomNoBufferImageByURL, getWaifuImagesNoCDNurl,
+  updateWaifusCDNurl,
+} = require('../../../db/waifu_schema/waifu_images/waifu_table_images');
 
+route.patch('/cdn_images', async (req, res) => {
+  for (let i = 0; i < 63870; i += 1) {
+    try {
+      logger.info('working...');
+      const row = await getWaifuImagesNoCDNurl();
+      if (!row || !row[0] || !row[0].buffer || !row[0].waifu_id) {
+        logger.error('buffer or id not found');
+        continue;
+      }
+
+      const { waifu_id: waifuID, buffer } = row[0];
+      await storeImageBufferToURL(waifuID, buffer, updateWaifusCDNurl);
+    } catch (error) {
+      logger.error(error);
+    }
+  }
+});
 
 route.get('/random', async (req, res) => {
   const query = await getRandomImageBuffer();

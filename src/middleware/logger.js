@@ -4,7 +4,7 @@ const log4js = require('log4js');
 log4js.configure({
   appenders: {
     console: { type: 'stdout' },
-    everything: { type: 'dateFile', filename: 'logs/chat.log' },
+    everything: { type: 'dateFile', filename: 'logs/bongo_bot_api.log' },
   },
   categories: {
     default: { appenders: ['console', 'everything'], level: 'debug' },
