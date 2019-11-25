@@ -23,7 +23,7 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, isThumbnail) => {
     },
   });
 
-  const cdnURL = (isThumbnail) ? `https://bongo.b-cdn.net/characters/${id}/${characterUUID}_thumb.${fileExtension}` : `https://bongo.b-cdn.net/characters/${id}/${characterUUID}.${fileExtension}`;
+  const cdnURL = (isThumbnail) ? `https://cdn.bongo.best/characters/${id}/${characterUUID}_thumb.${fileExtension}` : `https://cdn.bongo.best/characters/${id}/${characterUUID}.${fileExtension}`;
 
   if (response) {
     const rows = await updateDBFunc(id, cdnURL);

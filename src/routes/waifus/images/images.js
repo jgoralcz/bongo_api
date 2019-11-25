@@ -18,18 +18,36 @@ route.patch('/cdn_images', async (req, res) => {
     try {
       logger.info('working...');
       const row = await getWaifuImagesNoCDNurl();
-      if (!row || !row[0] || !row[0].buffer || !row[0].waifu_id) {
+      if (!row || !row[0] || !row[0].buffer || !row[0].waifu_id || !row[0].image_id) {
         logger.error('buffer or id not found');
         continue;
       }
 
-      const { waifu_id: waifuID, buffer } = row[0];
-      await storeImageBufferToURL(waifuID, buffer, updateWaifusCDNurl);
+      const { image_id: imageID, buffer } = row[0];
+      await storeImageBufferToURL(imageID, buffer, updateWaifusCDNurl);
     } catch (error) {
       logger.error(error);
     }
   }
 });
+
+// route.delete('/cdn_images', async (req, res) => {
+//   for (let i = 0; i < 63870; i += 1) {
+//     try {
+//       logger.info('working...');
+//       const row = await getWaifuImagesNoCDNurl();
+//       if (!row || !row[0] || !row[0].buffer || !row[0].waifu_id) {
+//         logger.error('buffer or id not found');
+//         continue;
+//       }
+
+//       const { waifu_id: imageID, buffer } = row[0];
+//       await storeImageBufferToURL(imageID, buffer, updateWaifusCDNurl);
+//     } catch (error) {
+//       logger.error(error);
+//     }
+//   }
+// });
 
 route.get('/random', async (req, res) => {
   const query = await getRandomImageBuffer();

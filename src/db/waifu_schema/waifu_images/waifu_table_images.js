@@ -142,16 +142,16 @@ const deleteImageByURL = async (url) => poolQuery(`
 `, [url]);
 
 const getWaifuImagesNoCDNurl = async () => poolQuery(`
-  SELECT waifu_id, buffer
+  SELECT waifu_id, buffer, image_id
   FROM waifu_schema.waifu_table_images
-  WHERE image_url_cdn_extra IS NULL AND buffer IS NOT NULL
+  WHERE image_url_cdn_extra_backup IS NULL AND buffer IS NOT NULL
   LIMIT 1;
 `, []);
 
 const updateWaifusCDNurl = async (id, CDNurl) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
-  SET image_url_cdn_extra = $2
-  WHERE waifu_id = $1
+  SET image_url_cdn_extra_backup = $2
+  WHERE image_id = $1
   RETURNING *;
 `, [id, CDNurl]);
 
