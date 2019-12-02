@@ -4,6 +4,7 @@ const fs = require('fs');
 const logger = require('log4js').getLogger();
 const { createCanvas, Image, loadImage } = require('canvas');
 
+
 const { storeImageSeriesBufferByID } = require('../../../db/waifu_schema/series/series_table');
 const { storeImageBufferToURL } = require('../../../util/functions/storeImageBufferToURL');
 const {
@@ -29,6 +30,10 @@ route.patch('/cdn_images', async (req, res) => {
       logger.error(error);
     }
   }
+});
+
+route.delete('/cdn_images', async (req, res) => {
+
 });
 
 // route.delete('/cdn_images', async (req, res) => {
@@ -78,13 +83,13 @@ route.patch('/forgotbuffers', async (req, res) => {
         const rows = await storeImageBufferByURL(imageURL, buffer, width, height);
 
         if (rows) {
-          console.log('finished', imageURL);
+          logger.trace('finished', imageURL);
         }
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       if (imageURL) {
-        await deleteImageByURL(imageURL).catch(console.error);
+        await deleteImageByURL(imageURL).catch((err) => logger.error(err));
       }
     }
   }, 8000 + (Math.random() * 2000));
@@ -110,11 +115,11 @@ route.patch('/store', async (req, res) => {
             ctx.drawImage(theirImage, 0, 0, width, height);
             const buffer = await canvas.toBuffer((file.path.includes('.png') ? 'image/png' : 'image/jpeg'), { quality: 0.75 });
 
-            console.log('filename', filename);
+            logger.trace('filename', filename);
             setTimeout(async () => {
               const cleanFileName = (filename.startsWith('/')) ? filename.substring(1, filename.length) : filename;
               const rows = await storeImageSeriesBufferByID(cleanFileName.replace('waifu_images/', '').replace('.png', ''), cleanFileName, buffer, width, height);
-              console.log(filename, 'done');
+              logger.trace(filename, 'done');
               if (!rows || rows.length <= 0) {
                 await storeImageBufferByID(cleanFileName, buffer, width, height);
               }
@@ -123,15 +128,15 @@ route.patch('/store', async (req, res) => {
           }
         }
       } catch (error) {
-        console.error(error);
+        logger.error(error);
       }
     })
     .on('end', () => {
-      console.log('================\nFinished!!\n================');
+      logger.trace('================\nFinished!!\n================');
     })
     .on('error', (err, item) => {
-      console.error(err.message);
-      console.error(item.path); // the file the error occurred on
+      logger.error(err.message);
+      logger.error(item.path); // the file the error occurred on
     });
 });
 

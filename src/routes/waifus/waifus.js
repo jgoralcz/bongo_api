@@ -2,7 +2,14 @@ const route = require('express-promise-router')();
 const { createCanvas, loadImage } = require('canvas');
 const logger = require('log4js').getLogger();
 
+const imageSize = require('image-size');
+
+const { getWaifuById } = require('../../db/waifu_schema/waifu/waifu');
+
 const { storeImageBufferToURL } = require('../../util/functions/storeImageBufferToURL');
+const { getBuffer } = require('../../util/functions/buffer');
+
+const { updateWaifusCDNurl, storeNewImageBuffer } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const {
   getRandomNoBufferWaifuImageByURL, storeWaifuImageBufferByURL,
@@ -31,11 +38,36 @@ route.patch('/cdn_images', async (req, res) => {
       }
 
       const { id, buffer } = row[0];
-      await storeImageBufferToURL(id, buffer, updateWaifuCDNurl);
+      await storeImageBufferToURL(id, buffer, updateWaifusCDNurl);
     } catch (error) {
       console.error(error);
     }
   }
+});
+
+route.post('/:id/images', async (req, res) => {
+  const { body, query } = req;
+
+  if (!body || !body.url || !query || !query.id) return res.status(400).send({ url: body.url, id: query.id });
+
+  const { id } = query;
+  const { url } = body;
+
+  const waifu = await getWaifuById(id);
+  if (!waifu) return res.status(400).send(`waifu not found with id ${id}.`);
+
+  const getImageInfo = await getBuffer(url);
+  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send(`No buffer found for url ${url}.`);
+
+  const { buffer } = getImageInfo;
+
+  const { height, width } = imageSize(buffer); // has to be sync according to image-size docs
+  if (!height || !width) return res.status(400).send(`No width or height found for url ${url}; height=${height}, width=${width}`);
+
+  const row = await storeImageBufferToURL(id, buffer, storeNewImageBuffer);
+  if (!row) return res.status(400).send(`Failed uploading ${url}`);
+
+  return res.status(200).send(row.image_url);
 });
 
 

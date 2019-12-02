@@ -4,6 +4,7 @@ const MAGIC = {
   pngNumber: '89504e47',
   gifNumber: '47494638',
   jpgGeneral: 'ffd8ff',
+  webm: '1f45dfa3',
 };
 
 const imageIdentifier = (buffer) => {
@@ -17,6 +18,10 @@ const imageIdentifier = (buffer) => {
   }
   if (magicNumber === MAGIC.pngNumber) {
     return 'png';
+  }
+
+  if (magicNumber === MAGIC.webm) {
+    return 'webm';
   }
 
   return '';
