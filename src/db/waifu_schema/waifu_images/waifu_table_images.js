@@ -109,11 +109,11 @@ const storeImageBufferByID = async (imageFilePath, buffer, width, height) => poo
   RETURNING *;
 `, [imageFilePath, buffer, width, height]);
 
-const storeNewImageBuffer = async (imageURL, buffer, width, height) => poolQuery(`
-  INSERT INTO waifu_schema.waifu_table_images (image_url, buffer, width, height)
-  VALUES ($1, $2, $3, $4)
+const storeNewImageBuffer = async (id, imageURL, buffer, width, height) => poolQuery(`
+  INSERT INTO waifu_schema.waifu_table_images (waifu_id, image_url_path_extra, buffer, width, height)
+  VALUES ($1, $2, $3, $4, $5)
   RETURNING *;
-`, [imageURL, buffer, width, height]);
+`, [id, imageURL, buffer, width, height]);
 
 /**
  * used for scraping

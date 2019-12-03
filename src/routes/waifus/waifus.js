@@ -3,6 +3,7 @@ const { createCanvas, loadImage } = require('canvas');
 const logger = require('log4js').getLogger();
 
 const imageSize = require('image-size');
+const { mbLimit } = require('../../util/constants/bytes');
 
 const { getWaifuById } = require('../../db/waifu_schema/waifu/waifu');
 
@@ -46,28 +47,40 @@ route.patch('/cdn_images', async (req, res) => {
 });
 
 route.post('/:id/images', async (req, res) => {
-  const { body, query } = req;
+  const { body, params, query } = req;
 
-  if (!body || !body.url || !query || !query.id) return res.status(400).send({ url: body.url, id: query.id });
+  if (!body || !body.uri || !params || !params.id) {
+    return res.status(400).send({
+      error: 'Missing info. Required params.id, body.uri',
+      body,
+      params,
+      query,
+    });
+  }
 
-  const { id } = query;
-  const { url } = body;
+  const { id } = params;
+  const { uri } = body;
 
   const waifu = await getWaifuById(id);
-  if (!waifu) return res.status(400).send(`waifu not found with id ${id}.`);
+  if (!waifu || waifu.length <= 0) return res.status(400).send({ error: `character not found with id ${id}.` });
 
-  const getImageInfo = await getBuffer(url);
-  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send(`No buffer found for url ${url}.`);
+  const getImageInfo = await getBuffer(uri);
+  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${uri}.` });
 
-  const { buffer } = getImageInfo;
+  const { buffer: tempBuffer } = getImageInfo;
+  const buffer = Buffer.from(tempBuffer);
 
-  const { height, width } = imageSize(buffer); // has to be sync according to image-size docs
-  if (!height || !width) return res.status(400).send(`No width or height found for url ${url}; height=${height}, width=${width}`);
+  if (!buffer) return res.status(400).send({ error: `${uri} is not a supported image type.` });
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewImageBuffer);
-  if (!row) return res.status(400).send(`Failed uploading ${url}`);
+  if (!buffer || !buffer.length || (buffer.length / 1e5) > mbLimit) return res.status(400).send({ error: `${uri} exceeds the ${mbLimit}mb limit.` });
 
-  return res.status(200).send(row.image_url);
+  const { height, width } = imageSize(buffer);
+  if (!height || !width) return res.status(400).send({ error: `No width or height found for url ${uri}; height=${height}, width=${width}` });
+
+  const row = await storeImageBufferToURL(id, buffer, storeNewImageBuffer, height, width);
+  if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}` });
+
+  return res.status(200).send({ url: row[0].image_url_path_extra });
 });
 
 

@@ -5,7 +5,7 @@ const logger = require('log4js').getLogger();
 const { imageIdentifier } = require('../../util/constants/magicNumbers');
 const { apiKey } = require('../../../config.json');
 
-const storeImageBufferToURL = async (id, buffer, updateDBFunc, isThumbnail) => {
+const storeImageBufferToURL = async (id, buffer, updateDBFunc, isThumbnail, height, width) => {
   const fileExtension = imageIdentifier(buffer);
   if (!fileExtension) return undefined;
 
@@ -26,7 +26,7 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, isThumbnail) => {
   const cdnURL = (isThumbnail) ? `https://cdn.bongo.best/characters/${id}/${characterUUID}_thumb.${fileExtension}` : `https://cdn.bongo.best/characters/${id}/${characterUUID}.${fileExtension}`;
 
   if (response) {
-    const rows = await updateDBFunc(id, cdnURL);
+    const rows = await updateDBFunc(id, cdnURL, buffer, height, width);
     if (rows && rows.length > 0) {
       logger.info(`Finished ${cdnURL}`);
     } else {
