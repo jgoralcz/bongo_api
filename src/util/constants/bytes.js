@@ -1,4 +1,4 @@
-const mbLimit = 5;
+const mbLimit = 10;
 
 module.exports = {
   mbLimit,

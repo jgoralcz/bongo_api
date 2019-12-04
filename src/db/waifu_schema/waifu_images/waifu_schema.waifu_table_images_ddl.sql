@@ -3,12 +3,18 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table_images (
   waifu_id INTEGER,
   image_file_path_extra TEXT UNIQUE NOT NULL,
   image_url_path_extra TEXT UNIQUE NOT NULL,
-  nsfw boolean,
+  nsfw BOOLEAN,
   reviewer TEXT,
-  bad_image boolean,
-  buffer bytea,
-  width real,
-  height real,
+  bad_image BOOLEAN,
+  buffer BYTEA,
+  width REAL,
+  height REAL,
+  image_url_cdn_extra TEXT,
+  image_url_cdn_extra_backup TEXT,
+  image_url_path_extra_mwl_backup TEXT,
+  buffer_length BIGINT,
+  file_type TEXT,
+  date_added TIMESTAMP now()
 
   FOREIGN KEY (waifu_id) REFERENCES waifu_table ON DELETE CASCADE ON UPDATE CASCADE
 );

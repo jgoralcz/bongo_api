@@ -10,11 +10,11 @@ const { getWaifuById } = require('../../db/waifu_schema/waifu/waifu');
 const { storeImageBufferToURL } = require('../../util/functions/storeImageBufferToURL');
 const { getBuffer } = require('../../util/functions/buffer');
 
-const { updateWaifusCDNurl, storeNewImageBuffer } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
+const { updateWaifusCDNurl, storeNewImageBuffer, getHashFromBufferID } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const {
   getRandomNoBufferWaifuImageByURL, storeWaifuImageBufferByURL,
-  getWaifuImageNoCDNurl, updateWaifuCDNurl,
+  getWaifuImageNoCDNurl, updateWaifuCDNurl, updateWaifuImage,
 } = require('../../db/waifu_schema/waifu/waifu');
 
 // route.get('/:id', async (req, res) => {
@@ -59,10 +59,12 @@ route.post('/:id/images', async (req, res) => {
   }
 
   const { id } = params;
-  const { uri } = body;
+  const { uri, nsfw = false } = body;
 
-  const waifu = await getWaifuById(id);
-  if (!waifu || waifu.length <= 0) return res.status(400).send({ error: `character not found with id ${id}.` });
+  const waifuRow = await getWaifuById(id);
+  if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: `character not found with id ${id}.` });
+
+  const [waifu] = waifuRow;
 
   const getImageInfo = await getBuffer(uri);
   if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${uri}.` });
@@ -70,17 +72,26 @@ route.post('/:id/images', async (req, res) => {
   const { buffer: tempBuffer } = getImageInfo;
   const buffer = Buffer.from(tempBuffer);
 
-  if (!buffer) return res.status(400).send({ error: `${uri} is not a supported image type.` });
-
-  if (!buffer || !buffer.length || (buffer.length / 1e5) > mbLimit) return res.status(400).send({ error: `${uri} exceeds the ${mbLimit}mb limit.` });
+  if (!buffer || !buffer.length) return res.status(400).send({ error: `${uri} is not a supported image type.` });
+  if ((buffer.length / 1024 / 1024) > mbLimit) return res.status(400).send({ error: `${uri} exceeds the ${mbLimit}mb limit.` });
 
   const { height, width } = imageSize(buffer);
   if (!height || !width) return res.status(400).send({ error: `No width or height found for url ${uri}; height=${height}, width=${width}` });
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewImageBuffer, height, width);
-  if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}` });
+  const checkImageExists = await getHashFromBufferID(waifu.id, buffer);
+  if (checkImageExists && checkImageExists[0]) return res.status(400).send({ error: `The hash for ${uri} already exists for ${waifu.id}.` });
 
-  return res.status(200).send({ url: row[0].image_url_path_extra });
+  const row = await storeImageBufferToURL(id, buffer, storeNewImageBuffer, false, height, width, nsfw);
+  if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}.` });
+
+  const [info] = row;
+
+  if (!waifu.buffer || !waifu.image_url || !waifu.image_url_cdn) {
+    await updateWaifuImage(id, buffer, info.image_url_path_extra, width,
+      height, nsfw, buffer.length, info.file_type).catch((error) => logger.error(error));
+  }
+
+  return res.status(200).send({ url: info.image_url_path_extra });
 });
 
 

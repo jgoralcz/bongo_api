@@ -109,17 +109,19 @@ const storeImageBufferByID = async (imageFilePath, buffer, width, height) => poo
   RETURNING *;
 `, [imageFilePath, buffer, width, height]);
 
-const storeNewImageBuffer = async (id, imageURL, buffer, width, height) => poolQuery(`
-  INSERT INTO waifu_schema.waifu_table_images (waifu_id, image_url_path_extra, buffer, width, height)
-  VALUES ($1, $2, $3, $4, $5)
+const storeNewImageBuffer = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+  INSERT INTO waifu_schema.waifu_table_images (waifu_id, image_url_path_extra, 
+    buffer, width, height, nsfw, buffer_length, file_type, buffer_hash)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, h_int(encode($3::BYTEA, 'base64')))
   RETURNING *;
-`, [id, imageURL, buffer, width, height]);
+`, [id, imageURL, buffer, width, height, nsfw, bufferLength, fileType]);
 
-/**
- * used for scraping
- * @param url the waifu url.
- * @returns {Promise<*>}
- */
+const getHashFromBufferID = async (id, buffer) => poolQuery(`
+  SELECT buffer_hash
+  FROM waifu_schema.waifu_table_images
+  WHERE waifu_id = $1 AND buffer_hash = h_int(encode($2::BYTEA, 'base64'));
+`, [id, buffer]);
+
 const getWaifuImageByURL = async (url) => poolQuery(`
   SELECT *
   FROM waifu_schema.waifu_table_images
@@ -178,4 +180,5 @@ module.exports = {
   getWaifuImagesNoCDNurl,
   updateWaifusCDNurl,
   storeNewImageBuffer,
+  getHashFromBufferID,
 };
