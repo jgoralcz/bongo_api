@@ -7,6 +7,7 @@ const hsts = require('hsts');
 
 const router = require('./routes/Routes.js');
 
+const { basicAuth, authorizer, unauthResponse } = require('./middleware/basicAuth');
 const { errorHandler } = require('./middleware/errorhandler');
 const { httpLogger } = require('./middleware/logger');
 
@@ -19,6 +20,12 @@ const port = 8443;
 const env = process.env.NODE_ENV || LOCAL;
 
 const server = express();
+
+server.use(basicAuth({
+  authorizer,
+  authorizeAsync: true,
+  unauthorizedResponse: unauthResponse,
+}));
 
 server.use(hsts({ maxAge: 31536000 }));
 server.use(bodyparser.urlencoded({ extended: true }));

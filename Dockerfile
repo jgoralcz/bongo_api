@@ -1,6 +1,6 @@
 # docker build -t bongo_bot_api .
-# docker run -d -p 9999:8443 -v $PWD/waifu_images:/usr/src/waifu_images --name bongo_bot_api bongo_bot_api
-FROM node:12
+# docker run -d -p 8443:8443 --name bongo_bot_api bongo_bot_api
+FROM node:latest
 
 LABEL owner = jgoralcz
 LABEL serviceVersion = 0.1.0
@@ -12,25 +12,9 @@ WORKDIR /usr/src/node
 
 COPY package*.json ./
 
-# graphicsmagick
-RUN apt-get update -y && apt-get install -y graphicsmagick graphicsmagick-imagemagick-compat
-# node canvas
-RUN apt-get update && apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-essential g++
-RUN apt-get clean
-
-# other garbage collector
-RUN apt-get update && apt-get install --force-yes -yy \
-  libjemalloc1 \
-  && rm -rf /var/lib/apt/lists/*
-ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.1
-
-# COPY --chown=node:node config.json /usr/src/node/
-# COPY --chown=node:node package*.json /usr/src/node/
-# COPY --chown=node:node src/ /usr/src/node/src/
-
-COPY config.json /usr/src/node/
-COPY package*.json /usr/src/node/
-COPY src/ /usr/src/node/src/
+COPY --chown=node:node config.json /usr/src/node/
+COPY --chown=node:node package*.json /usr/src/node/
+COPY --chown=node:node src/ /usr/src/node/src/
 
 EXPOSE 8443
 

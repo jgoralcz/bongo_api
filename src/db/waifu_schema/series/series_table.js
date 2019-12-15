@@ -26,22 +26,12 @@ const getAllSeriesByName = async name => poolQuery(`
     ELSE 3 END, wsst2.name;
 `, [name]);
 
-/**
- * get the series for scraping purposes
- * @param name the series nam
- * @returns {Promise<*>}
- */
 const getSeries = async name => poolQuery(`
   SELECT id
   FROM waifu_schema.series_table
   WHERE name ILIKE $1;
 `, [name]);
 
-/**
- * upserts the series.
- * @param series the waifu's series.
- * @returns {Promise<*>}
- */
 const upsertSeries = async (series) => poolQuery(`
   INSERT INTO waifu_schema.series_table (name, alternate_name, description, image_url, image_file_path, url, release_date, date_added)
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -58,9 +48,26 @@ const storeImageSeriesBufferByID = async (imageFilePath, filename, buffer, width
   RETURNING *;
 `, [imageFilePath, filename, buffer, width, height]);
 
+const storeNewSeriesImageBuffer = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+  UPDATE waifu_schema.series_table
+  SET image_url = $2, image_url_cdn = $2, buffer = $3, width = $4, height = $5,
+  nsfw = $6, buffer_length = $7, file_type = $8
+  WHERE id = $1
+  RETURNING *;
+`, [id, imageURL, buffer, width, height, nsfw, bufferLength, fileType]);
+
+const getSeriesImageNoCDNurl = async () => poolQuery(`
+  SELECT id, buffer, nsfw
+  FROM waifu_schema.series_table
+  WHERE image_url_cdn IS NULL AND buffer IS NOT NULL
+  LIMIT 1;
+`, []);
+
 module.exports = {
   getAllSeriesByName,
   getSeries,
   upsertSeries,
   storeImageSeriesBufferByID,
+  getSeriesImageNoCDNurl,
+  storeNewSeriesImageBuffer,
 };

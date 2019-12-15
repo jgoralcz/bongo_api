@@ -1,10 +1,15 @@
 const { poolQuery } = require('../../index');
 
-/**
- * upserts the waifu into
- * @param waifu
- * @returns {Promise<*>}
- */
+const insertWaifu = async waifu => poolQuery(`
+  INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
+  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+  
+  RETURNING *;
+`, [waifu.name, waifu.series, waifu.description, waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
+waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height,
+waifu.bloodType, waifu.likes, waifu.dislikes, waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id]);
+
 const upsertWaifu = async waifu => poolQuery(`
   INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
   date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id)
@@ -18,10 +23,14 @@ const upsertWaifu = async waifu => poolQuery(`
 waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes,
 waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id]);
 
-/**
- * gets all the waifu count.
- * @returns {Promise<void>}
- */
+const storeNewWaifuImageBuffer = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+  UPDATE waifu_schema.waifu_table
+  SET image_url = $2, buffer = $3, width = $4, height = $5,
+  nsfw = $6, buffer_length = $7, file_type = $8
+  WHERE id = $1
+  RETURNING *;
+`, [id, imageURL, buffer, width, height, nsfw, bufferLength, fileType]);
+
 const getWaifuCount = async () => {
   const query = await poolQuery(`
     SELECT count(*) AS count
@@ -233,6 +242,41 @@ const updateWaifuImage = async (id, buffer, CDNurl, width, height, nsfw, bufferL
   RETURNING *;
 `, [id, buffer, CDNurl, width, height, nsfw, bufferLength, fileType]);
 
+const deleteWaifuByID = async (id) => poolQuery(`
+  DELETE
+  FROM waifu_schema.waifu_table
+  WHERE id = $1;
+`, [id]);
+
+const mergeWaifus = async (mergeID, dupeID) => poolQuery(`
+  UPDATE cg_claim_waifu_table
+  SET waifu_id = $1
+  WHERE waifu_id = $2;
+`, [mergeID, dupeID]);
+
+const getWaifuByURL = async (url) => poolQuery(`
+  SELECT id, name, series, series_id
+  FROM waifu_schema.waifu_table
+  WHERE url = $1;
+`, [url]);
+
+const searchWaifuExactly = async (name, series) => poolQuery(`
+  SELECT id
+  FROM waifu_schema.waifu_table
+  WHERE name ILIKE $1
+    AND (series ILIKE $2
+      OR series ILIKE ANY (
+        SELECT UNNEST(string_to_array(wt1.series, ' ')) AS series
+        FROM (
+          SELECT series
+          FROM waifu_schema.appears_in wsai
+          JOIN waifu_schema.waifu_table wswt ON wswt.id = wsai.waifu_id
+          WHERE name ILIKE $1
+        ) wt1
+      )
+    );
+`, [name, series]);
+
 module.exports = {
   upsertWaifu,
   updateWaifuSeriesId,
@@ -251,4 +295,10 @@ module.exports = {
   getWaifuImageNoCDNurl,
   updateWaifuCDNurl,
   updateWaifuImage,
+  deleteWaifuByID,
+  mergeWaifus,
+  getWaifuByURL,
+  insertWaifu,
+  storeNewWaifuImageBuffer,
+  searchWaifuExactly,
 };

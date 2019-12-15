@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table_images (
   image_url_path_extra_mwl_backup TEXT,
   buffer_length BIGINT,
   file_type TEXT,
-  date_added TIMESTAMP now()
+  date_added TIMESTAMP now(),
+  uploader TEXT,
 
   FOREIGN KEY (waifu_id) REFERENCES waifu_table ON DELETE CASCADE ON UPDATE CASCADE
 );

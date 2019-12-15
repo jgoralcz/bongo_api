@@ -583,34 +583,18 @@ const getRemainingClaimWaifusServer = async (guildID) => {
   return 0;
 };
 
-/**
- * gets the unique members from the guild who have claimed.
- * @param guildID the guild's id.
- * @returns {Promise<Promise<*>|*>}
- */
 const getUniqueGuildMembersClaim = async guildID => poolQuery(`
   SELECT DISTINCT user_id
   FROM cg_claim_waifu_table
   WHERE guild_id = $1;
 `, [guildID]);
 
-/**
- * gets the sum of the waifu list for a user in a guild.
- * @param userId the user's id.
- * @param guildId the guild's id
- * @returns {Promise<*>}
- */
 const getClaimWaifuListSum = async (userId, guildId) => poolQuery(`
   SELECT count(*) AS top
   FROM cg_claim_waifu_table
   WHERE user_id = $1 AND guild_id = $2;
 `, [userId, guildId]);
 
-/**
- * removes half of the random waifus from a server
- * @param {BigInteger} guildID the guild's ID.
- * @param {BigInteger} limit the guild's waifu count / 2.
- */
 const removeClaimWaifusRandomHalf = async (guildID, limit) => poolQuery(`
   DELETE
   FROM cg_claim_waifu_table
@@ -641,12 +625,6 @@ const getClaimedWaifuServerCount = async (guildID) => {
   return 0;
 };
 
-/**
- * gets the unique members from the guild who have claimed.
- * @param guildID the guild's id.
- * @param date the number of days to filter by
- * @returns {Promise<Promise<*>|*>}
- */
 const getUniqueGuildMembersClaimLessThanDays = async (guildID, date) => poolQuery(`
   SELECT t.user_id, t.date AS "claimDate", cgcwt.date AS "customDate", cgt.latest_roll_date AS "rollDate"
   FROM (
@@ -660,6 +638,25 @@ const getUniqueGuildMembersClaimLessThanDays = async (guildID, date) => poolQuer
   LEFT JOIN "clientsGuildsTable" cgt ON t.user_id = cgt."userId" AND cgt."guildId" = $1
   WHERE t.date < $2 AND (cgcwt.date IS NULL OR cgcwt.date < $2) AND (cgt.latest_roll_date IS NULL OR cgt.latest_roll_date < $2);
 `, [guildID, date]);
+
+const removeDuplicateWaifuClaims = async (dupeID, mergeID) => poolQuery(`
+  DELETE
+  FROM cg_claim_waifu_table
+  WHERE (user_id, guild_id) IN (
+    SELECT user_id, guild_id
+    FROM cg_claim_waifu_table
+    WHERE (user_id, guild_id) IN (
+      SELECT user_id, guild_id
+      FROM cg_claim_waifu_table
+      WHERE waifu_id = $1
+    )
+    AND (user_id, guild_id) IN (
+      SELECT user_id, guild_id
+      FROM cg_claim_waifu_table
+      WHERE waifu_id = $1
+    )
+  ) AND waifu_id = $2;
+`, [dupeID, mergeID]);
 
 module.exports = {
   getWaifuRankById,
@@ -691,4 +688,5 @@ module.exports = {
   getClaimedWaifuServerCount,
   removeClaimWaifusAll,
   getUniqueGuildMembersClaimLessThanDays,
+  removeDuplicateWaifuClaims,
 };
