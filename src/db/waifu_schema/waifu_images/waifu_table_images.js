@@ -46,7 +46,7 @@ const selectAllImage = async (imageID) => poolQuery(`
   SELECT *
   FROM waifu_schema.waifu_table_images
   WHERE image_id = $1;
-`, imageID);
+`, [imageID]);
 
 const selectImageByURL = async (url) => poolQuery(`
   SELECT image_id, waifu_id, image_url_path_extra

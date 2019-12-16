@@ -130,7 +130,7 @@ route.post('/:id/images', async (req, res) => {
   const row = await storeImageBufferToURL(id, buffer, storeNewImageBuffer, false, height, width, nsfw, 'character', uploader);
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}.` });
 
-  const { imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];
+  const { image_id: imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];
 
   if (!waifu.buffer || !waifu.image_url || !waifu.image_url_cdn) {
     await updateWaifuImage(id, buffer, imageURLExtra, width,
