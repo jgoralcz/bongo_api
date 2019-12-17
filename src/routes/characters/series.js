@@ -17,7 +17,7 @@ route.put('/:id', async (req, res) => {
   const { series } = body;
   if (!series) return res.status(400).send({ error: 'Missing series.', message: 'Missing series object to insert.', body });
 
-  const { name, description } = series;
+  const { name, description } = body;
   if (!name || !description) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: name, description.', body });
 
   const updatedSeries = await upsertSeries(series);

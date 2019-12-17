@@ -2,7 +2,7 @@ const route = require('express-promise-router')();
 const logger = require('log4js').getLogger();
 const imageSize = require('image-size');
 
-const { getWaifuById, insertWaifu, searchWaifuExactly } = require('../../db/waifu_schema/waifu/waifu');
+const { getWaifuById, insertWaifu, searchWaifuExactly, upsertWaifu } = require('../../db/waifu_schema/waifu/waifu');
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
@@ -25,7 +25,7 @@ const {
 route.post('/', async (req, res) => {
   const { body } = req;
 
-  if (!body.imageURL || !body.uploader || !body.name || (!body.series && !body.url) || body.husbando == null || body.nsfw == null || !body.description) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: imageURL, name, series, husbando, nsfw, description.', body });
+  if (!body.imageURL || !body.uploader || !body.name || (!body.series && !body.url) || body.husbando == null || body.nsfw == null || !body.description) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: imageURL, name, uploader, series, husbando, nsfw, description.', body });
 
   const {
     imageURL, name, series,
@@ -38,7 +38,7 @@ route.post('/', async (req, res) => {
   if (!seriesExistsQuery || seriesExistsQuery.length <= 0) return res.status(400).send({ error: 'Series does not exist.', message: `The series ${series} does not exist. You must create the series first.`, body });
 
   const characterExistsQuery = await searchWaifuExactly(name, series);
-  if (characterExistsQuery && characterExistsQuery.length > 0) return res.status(409).send({ error: 'Character already exists.', message: 'Required body: imageURI, name, series, husbando, nsfw, description.', body });
+  if (characterExistsQuery && characterExistsQuery.length > 0 && !uri) return res.status(409).send({ error: 'Character already exists.', message: 'Required body: imageURL, name, series, husbando, nsfw, description.', body });
 
   const getImageInfo = await getBuffer(imageURL);
   if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
@@ -56,7 +56,9 @@ route.post('/', async (req, res) => {
   }
 
   let waifuQuery;
-  if (uri) {
+  if (characterExistsQuery && characterExistsQuery.length > 0 && uri) {
+    waifuQuery = await upsertWaifu(body);
+  } else if (uri) {
     waifuQuery = await insertWaifu(body);
   } else {
     const waifu = {
@@ -85,8 +87,8 @@ route.post('/', async (req, res) => {
     await insertSeries(id, series, uploader);
   }
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImageBuffer, false, height, width, nsfw, uploader);
-  if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading character ${name}.` });
+  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImageBuffer, false, height, width, nsfw, 'characters', uploader);
+  if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
   return res.status(201).send({ url: info.url, id: info.id });
