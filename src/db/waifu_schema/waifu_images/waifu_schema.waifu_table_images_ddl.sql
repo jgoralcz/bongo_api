@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table_images (
   nsfw BOOLEAN,
   reviewer TEXT,
   bad_image BOOLEAN,
-  buffer BYTEA,
+  -- buffer BYTEA,
   width REAL,
   height REAL,
   image_url_cdn_extra TEXT,

@@ -1,5 +1,3 @@
-const mbLimit = 10;
-
-module.exports = {
-  mbLimit,
-};
+module.exports = Object.freeze({
+  MBLIMIT: 10,
+});

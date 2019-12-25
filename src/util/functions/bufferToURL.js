@@ -7,13 +7,14 @@ const { apiKey } = require('../../../config.json');
 
 const { cdnURL, imageURL } = require('../constants/cdn');
 
-const storeImageBufferToURL = async (id, buffer, updateDBFunc, isThumbnail, height, width, nsfw, seriesOrCharacter = 'characters', uploader) => {
+const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
   const fileExtension = imageIdentifier(buffer);
+  const { isThumbnail, height, width, nsfw, type = 'characters', uploader } = config;
   if (!fileExtension || !uploader) return undefined;
 
   const characterUUID = uuid();
 
-  const uri = (isThumbnail) ? `${cdnURL}/${seriesOrCharacter}/${id}/${characterUUID}_thumb.${fileExtension}` : `${cdnURL}/${seriesOrCharacter}/${id}/${characterUUID}.${fileExtension}`;
+  const uri = (isThumbnail) ? `${cdnURL}/${type}/${id}/${characterUUID}_thumb.${fileExtension}` : `${cdnURL}/${type}/${id}/${characterUUID}.${fileExtension}`;
 
   const response = await request({
     uri,
@@ -25,7 +26,7 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, isThumbnail, heig
     },
   });
 
-  const cdnUpdatedURL = (isThumbnail) ? `${imageURL}/${seriesOrCharacter}/${id}/${characterUUID}_thumb.${fileExtension}` : `${imageURL}/${seriesOrCharacter}/${id}/${characterUUID}.${fileExtension}`;
+  const cdnUpdatedURL = (isThumbnail) ? `${imageURL}/${type}/${id}/${characterUUID}_thumb.${fileExtension}` : `${imageURL}/${type}/${id}/${characterUUID}.${fileExtension}`;
 
   if (response) {
     const rows = await updateDBFunc(id, cdnUpdatedURL, buffer, height, width, nsfw, buffer.length, fileExtension, uploader);

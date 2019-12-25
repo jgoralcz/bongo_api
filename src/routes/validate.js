@@ -1,0 +1,28 @@
+const route = require('express-promise-router')();
+
+const { getBuffer } = require('../util/functions/buffer');
+const { validateBuffer } = require('../handlers/validate');
+
+const mbLimit = 1024;
+
+route.post('/image', async (req, res) => {
+  const { uri } = req.body;
+  if (!uri) res.status(400).send({ error: 'No image provided.' });
+
+  const getImageInfo = await getBuffer(uri);
+  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${uri}.` });
+
+  const { buffer: tempBuffer } = getImageInfo;
+  const buffer = Buffer.from(tempBuffer);
+  const { height, width, error } = validateBuffer(req, res, buffer, mbLimit);
+
+  if (!height || !width) return res.status(400).send(error);
+
+  return res.status(200).send({ height, width });
+});
+
+route.get('/series', async (req, res) => {
+
+});
+
+module.exports = route;

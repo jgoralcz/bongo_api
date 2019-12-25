@@ -2,13 +2,13 @@ const { poolQuery } = require('../../index');
 
 const insertWaifu = async waifu => poolQuery(`
   INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
-  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id, unknown_gender)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
   
   RETURNING *;
 `, [waifu.name, waifu.series, waifu.description, waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
 waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height,
-waifu.bloodType, waifu.likes, waifu.dislikes, waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id]);
+waifu.bloodType, waifu.likes, waifu.dislikes, waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender]);
 
 const upsertWaifu = async waifu => poolQuery(`
   INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
@@ -25,13 +25,13 @@ const upsertWaifu = async waifu => poolQuery(`
 waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes,
 waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id]);
 
-const storeNewWaifuImageBuffer = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+const storeNewWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLength, fileType) => poolQuery(`
   UPDATE waifu_schema.waifu_table
-  SET image_url = $2, buffer = $3, width = $4, height = $5,
-  nsfw = $6, buffer_length = $7, file_type = $8
+  SET image_url = $2, width = $3, height = $4,
+  nsfw = $5, buffer_length = $6, file_type = $7
   WHERE id = $1
   RETURNING *;
-`, [id, imageURL, buffer, width, height, nsfw, bufferLength, fileType]);
+`, [id, imageURL, width, height, nsfw, bufferLength, fileType]);
 
 const getWaifuCount = async () => {
   const query = await poolQuery(`
@@ -159,10 +159,6 @@ const getSpecificWaifu = async (waifu, series) => poolQuery(`
   WHERE name = $1 AND series = $2;
 `, [waifu, series]);
 
-/**
- * gets a random, sfw waifu
- * @returns {Promise<*>}
- */
 const getRandomWaifuSFW = async () => poolQuery(`
   SELECT name, series, id, image_url, url
   FROM waifu_schema.waifu_table
@@ -301,6 +297,6 @@ module.exports = {
   mergeWaifus,
   getWaifuByURL,
   insertWaifu,
-  storeNewWaifuImageBuffer,
+  storeNewWaifuImage,
   searchWaifuExactly,
 };

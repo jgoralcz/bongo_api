@@ -94,20 +94,6 @@ const getWaifuImagesById = async (waifuID, nsfw = false) => {
 `, [waifuID]);
 };
 
-const getWaifuImageBufferByID = async (imageID) => poolQuery(`
-  SELECT buffer
-  FROM waifu_schema.waifu_table_images
-  WHERE image_id = $1;
-`, [imageID]);
-
-const getRandomImageBuffer = async () => poolQuery(`
-  SELECT buffer
-  FROM waifu_schema.waifu_table_images
-  WHERE buffer IS NOT NULL
-  ORDER BY random()
-  LIMIT 1;
-`, []);
-
 const storeImageBufferByID = async (imageFilePath, buffer, width, height) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
   SET buffer = $2, width = $3, height = $4
@@ -115,12 +101,12 @@ const storeImageBufferByID = async (imageFilePath, buffer, width, height) => poo
   RETURNING *;
 `, [imageFilePath, buffer, width, height]);
 
-const storeNewImageBuffer = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+const storeNewImage = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
   INSERT INTO waifu_schema.waifu_table_images (waifu_id, image_url_path_extra, 
-    buffer, width, height, nsfw, buffer_length, file_type, buffer_hash)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, h_int(encode($3::BYTEA, 'base64')))
+    width, height, nsfw, buffer_length, file_type, buffer_hash)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, h_int(encode($8::BYTEA, 'base64')))
   RETURNING *;
-`, [id, imageURL, buffer, width, height, nsfw, bufferLength, fileType]);
+`, [id, imageURL, width, height, nsfw, bufferLength, fileType, buffer]);
 
 const getHashFromBufferID = async (id, buffer) => poolQuery(`
   SELECT buffer_hash
@@ -205,15 +191,13 @@ module.exports = {
   insertWaifuImages,
   getWaifuImagesById,
   getWaifuImageByURL,
-  getWaifuImageBufferByID,
   storeImageBufferByID,
-  getRandomImageBuffer,
   getRandomNoBufferImageByURL,
   storeImageBufferByURL,
   deleteImageByURL,
   getWaifuImagesNoCDNurl,
   updateWaifusCDNurl,
-  storeNewImageBuffer,
+  storeNewImage,
   getHashFromBufferID,
   mergeWaifuImages,
   selectImage,

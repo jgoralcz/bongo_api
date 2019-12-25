@@ -1,17 +1,16 @@
 const route = require('express-promise-router')();
 const logger = require('log4js').getLogger();
-const imageSize = require('image-size');
 
 const { getWaifuById, insertWaifu, searchWaifuExactly, upsertWaifu } = require('../../db/waifu_schema/waifu/waifu');
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
+
 const { getBuffer } = require('../../util/functions/buffer');
-const { mbLimit } = require('../../util/constants/bytes');
-const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../util/constants/dimensions');
+const { validateBuffer } = require('../../handlers/validate');
 
 const {
-  storeNewImageBuffer,
+  storeNewImage,
   getHashFromBufferID, mergeWaifuImages,
 } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
@@ -19,7 +18,7 @@ const { removeDuplicateWaifuClaims } = require('../../db/tables/cg_claim_waifu/c
 
 const {
   updateWaifuImage, deleteWaifuByID,
-  mergeWaifus, getWaifuByURL, storeNewWaifuImageBuffer,
+  mergeWaifus, getWaifuByURL, storeNewWaifuImage,
 } = require('../../db/waifu_schema/waifu/waifu');
 
 route.post('/', async (req, res) => {
@@ -31,7 +30,7 @@ route.post('/', async (req, res) => {
     imageURL, name, series,
     husbando, nsfw, description,
     url: uri, seriesList,
-    uploader,
+    uploader, unknownGender,
   } = body;
 
   const seriesExistsQuery = await searchSeriesExactly(series);
@@ -46,14 +45,8 @@ route.post('/', async (req, res) => {
   const { buffer: tempBuffer } = getImageInfo;
   const buffer = Buffer.from(tempBuffer);
 
-  if (!buffer || !buffer.length) return res.status(400).send({ error: `${uri} is not a supported image type.` });
-  if ((buffer.length / 1024 / 1024) > mbLimit) return res.status(400).send({ error: `${uri} exceeds the ${mbLimit}mb limit.` });
-
-  const { height, width } = imageSize(buffer);
-  if (!uri) {
-    if (!height || !width) return res.status(400).send({ error: `No width or height found for url ${uri}; height=${height}, width=${width}` });
-    if (height % DEFAULT_HEIGHT !== 0 && width % DEFAULT_WIDTH !== 0) return res.status(400).send({ error: `Image is not a ratio of ${DEFAULT_HEIGHT}px height and ${DEFAULT_WIDTH}px width` })
-  }
+  const { height, width, error } = validateBuffer(req, res, buffer, {});
+  if (!height || !width) return res.status(400).send(error);
 
   let waifuQuery;
   if (characterExistsQuery && characterExistsQuery.length > 0 && uri) {
@@ -68,7 +61,9 @@ route.post('/', async (req, res) => {
       description,
       nsfw,
       url: '',
+      imageURL,
       uploader,
+      unknownGender,
     };
     waifuQuery = await insertWaifu(waifu);
   }
@@ -87,7 +82,7 @@ route.post('/', async (req, res) => {
     await insertSeries(id, series, uploader);
   }
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImageBuffer, false, height, width, nsfw, 'characters', uploader);
+  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImage, { isThumbnail: false, height, width, nsfw, type: 'characters', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
@@ -120,16 +115,13 @@ route.post('/:id/images', async (req, res) => {
   const { buffer: tempBuffer } = getImageInfo;
   const buffer = Buffer.from(tempBuffer);
 
-  if (!buffer || !buffer.length) return res.status(400).send({ error: `${uri} is not a supported image type.` });
-  if ((buffer.length / 1024 / 1024) > mbLimit) return res.status(400).send({ error: `${uri} exceeds the ${mbLimit}mb limit.` });
-
-  const { height, width } = imageSize(buffer);
-  if (!height || !width) return res.status(400).send({ error: `No width or height found for url ${uri}; height=${height}, width=${width}` });
+  const { height, width, error } = validateBuffer(req, res, buffer, {});
+  if (!height || !width || error) return res.status(400).send(error);
 
   const checkImageExists = await getHashFromBufferID(waifu.id, buffer);
   if (checkImageExists && checkImageExists[0]) return res.status(400).send({ error: `The hash for ${uri} already exists for ${waifu.id}.` });
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewImageBuffer, false, height, width, nsfw, 'character', uploader);
+  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { isThumbnail: false, height, width, nsfw, type: 'character', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}.` });
 
   const { image_id: imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];
@@ -170,15 +162,6 @@ route.patch('/merge', async (req, res) => {
 
   return res.status(204).send({ character: { dupe: waifuDupe, merge: waifuMerge } });
 });
-
-
-// route.get('/random', async (req, res) => {
-//   const query = await getRandomImageBuffer();
-
-//   res.set('Content-Type', 'image/png');
-//   res.set('Content-Length', query[0].buffer.length);
-//   res.status(200).send(query[0].buffer);
-// });
 
 route.get('/:id', async (req, res) => {
   const { id } = req.params;

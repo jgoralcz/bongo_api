@@ -12,9 +12,9 @@ const insertAppearsIn = async (waifuID, seriesID) => poolQuery(`
 `, [waifuID, seriesID]);
 
 const insertSeries = async (waifuID, series) => {
-  const sQuery = await getSeries(series).catch(error => logger.error(error));
+  const sQuery = await getSeries(series).catch((error) => logger.error(error));
   if (sQuery && sQuery[0] && sQuery[0].id) {
-    await insertAppearsIn(waifuID, sQuery[0].id).catch(error => logger.error(error));
+    await insertAppearsIn(waifuID, sQuery[0].id).catch((error) => logger.error(error));
   }
 };
 

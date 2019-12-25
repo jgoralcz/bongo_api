@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS waifu_schema.series_table (
   url TEXT UNIQUE,
   release_date DATE,
   date_added DATE
-  buffer bytea, 
+  -- buffer bytea, 
   width real,
   height real,
 );
