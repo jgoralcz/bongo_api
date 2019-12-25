@@ -94,13 +94,6 @@ const getWaifuImagesById = async (waifuID, nsfw = false) => {
 `, [waifuID]);
 };
 
-const storeImageBufferByID = async (imageFilePath, buffer, width, height) => poolQuery(`
-  UPDATE waifu_schema.waifu_table_images
-  SET buffer = $2, width = $3, height = $4
-  WHERE image_file_path_extra ILIKE $1
-  RETURNING *;
-`, [imageFilePath, buffer, width, height]);
-
 const storeNewImage = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
   INSERT INTO waifu_schema.waifu_table_images (waifu_id, image_url_path_extra, 
     width, height, nsfw, buffer_length, file_type, buffer_hash)
@@ -120,33 +113,11 @@ const getWaifuImageByURL = async (url) => poolQuery(`
   WHERE image_fi = $1;
 `, [url]);
 
-const getRandomNoBufferImageByURL = async () => poolQuery(`
-  SELECT image_url_path_extra
-  FROM waifu_schema.waifu_table_images
-  WHERE buffer is null
-  ORDER BY random()
-  LIMIT 1;
-`, []);
-
-const storeImageBufferByURL = async (url, buffer, width, height) => poolQuery(`
-  UPDATE waifu_schema.waifu_table_images
-  SET buffer = $2, width = $3, height = $4
-  WHERE image_url_path_extra ILIKE $1
-  RETURNING *;
-`, [url, buffer, width, height]);
-
 const deleteImageByURL = async (url) => poolQuery(`
   DELETE
   FROM waifu_schema.waifu_table_images
   WHERE image_url_path_extra = $1;
 `, [url]);
-
-const getWaifuImagesNoCDNurl = async () => poolQuery(`
-  SELECT waifu_id, buffer, image_id
-  FROM waifu_schema.waifu_table_images
-  WHERE image_url_cdn_extra_backup IS NULL AND buffer IS NOT NULL
-  LIMIT 1;
-`, []);
 
 const updateWaifusCDNurl = async (id, CDNurl) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
@@ -164,14 +135,14 @@ const mergeWaifuImages = async (mergeID, dupeID) => poolQuery(`
 const updateImage = async (updatedImage) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
   SET waifu_id = $2, image_file_path_extra = $3, image_url_path_extra = $4,
-    nsfw = $5, reviewer = $6, bad_image = $7, buffer = $8, width = $9,
-    height = $10, image_url_cdn_extra = $11, image_url_cdn_extra_backup = $12,
-    image_url_path_extra_mwl_backup = $13, buffer_length = $14, file_type = $15,
-    date_added = $16, uploader = $17;
+    nsfw = $5, reviewer = $6, bad_image = $7, width = $8,
+    height = $9, image_url_cdn_extra = $10, image_url_cdn_extra_backup = $11,
+    image_url_path_extra_mwl_backup = $12, buffer_length = $13, file_type = $14,
+    date_added = $15, uploader = $16;
   WHERE image_id = $1
   RETURNING *;
 `, [updatedImage.waifu_id, updatedImage.image_file_path_extra, updatedImage.image_url_path_extra,
-updatedImage.nsfw, updatedImage.reviewer, updatedImage.bad_image, updatedImage.buffer,
+updatedImage.nsfw, updatedImage.reviewer, updatedImage.bad_image,
 updatedImage.width, updatedImage.height, updatedImage.image_url_cdn_extra, updatedImage.image_url_cdn_extra_backup,
 updatedImage.image_url_path_extra_mwl_backup, updatedImage.buffer_length, updatedImage.file_type,
 updatedImage.date_added, updatedImage.uploader]);
@@ -191,11 +162,7 @@ module.exports = {
   insertWaifuImages,
   getWaifuImagesById,
   getWaifuImageByURL,
-  storeImageBufferByID,
-  getRandomNoBufferImageByURL,
-  storeImageBufferByURL,
   deleteImageByURL,
-  getWaifuImagesNoCDNurl,
   updateWaifusCDNurl,
   storeNewImage,
   getHashFromBufferID,

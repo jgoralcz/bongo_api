@@ -203,28 +203,6 @@ const todaysBirthdays = async () => poolQuery(`
     DATE_PART('month', date_of_birth) = date_part('month', CURRENT_DATE);
 `, []);
 
-const getRandomNoBufferWaifuImageByURL = async () => poolQuery(`
-  SELECT image_url
-  FROM waifu_schema.waifu_table
-  WHERE buffer is null
-  ORDER BY random()
-  LIMIT 1;
-`, []);
-
-const storeWaifuImageBufferByURL = async (url, buffer, width, height) => poolQuery(`
-  UPDATE waifu_schema.waifu_table
-  SET buffer = $2, width = $3, height = $4
-  WHERE image_url = $1
-  RETURNING *;
-`, [url, buffer, width, height]);
-
-const getWaifuImageNoCDNurl = async () => poolQuery(`
-  SELECT id, buffer
-  FROM waifu_schema.waifu_table
-  WHERE image_url_cdn IS NULL AND buffer IS NOT NULL
-  LIMIT 1;
-`, []);
-
 const updateWaifuCDNurl = async (id, CDNurl) => poolQuery(`
   UPDATE waifu_schema.waifu_table
   SET image_url_cdn = $2
@@ -232,13 +210,13 @@ const updateWaifuCDNurl = async (id, CDNurl) => poolQuery(`
   RETURNING *;
 `, [id, CDNurl]);
 
-const updateWaifuImage = async (id, buffer, CDNurl, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+const updateWaifuImage = async (id, CDNurl, width, height, nsfw, bufferLength, fileType) => poolQuery(`
   UPDATE waifu_schema.waifu_table
-  SET buffer = $2, image_url = $3, image_url_cdn = $3, 
-    width = $4, height = $5, nsfw_image = $6, buffer_length = $7, file_type = $8
+  SET image_url = $2, image_url_cdn = $2, 
+    width = $3, height = $4, nsfw_image = $5, buffer_length = $6, file_type = $7
   WHERE id = $1
   RETURNING *;
-`, [id, buffer, CDNurl, width, height, nsfw, bufferLength, fileType]);
+`, [id, CDNurl, width, height, nsfw, bufferLength, fileType]);
 
 const deleteWaifuByID = async (id) => poolQuery(`
   DELETE
@@ -288,9 +266,6 @@ module.exports = {
   todaysBirthdaysClaims,
   todaysBirthdays,
   getWaifuCount,
-  storeWaifuImageBufferByURL,
-  getRandomNoBufferWaifuImageByURL,
-  getWaifuImageNoCDNurl,
   updateWaifuCDNurl,
   updateWaifuImage,
   deleteWaifuByID,

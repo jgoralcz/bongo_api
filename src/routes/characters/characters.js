@@ -126,8 +126,8 @@ route.post('/:id/images', async (req, res) => {
 
   const { image_id: imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];
 
-  if (!waifu.buffer || !waifu.image_url || !waifu.image_url_cdn) {
-    await updateWaifuImage(id, buffer, imageURLExtra, width,
+  if (!waifu.image_url || !waifu.image_url_cdn) {
+    await updateWaifuImage(id, imageURLExtra, width,
       height, nsfw, buffer.length, fileType, uploader).catch((error) => logger.error(error));
   }
 
