@@ -6,7 +6,7 @@ const { validateBuffer } = require('../handlers/validate');
 const mbLimit = 1024;
 
 route.post('/image', async (req, res) => {
-  const { uri } = req.body;
+  const { uri, overrideDefaultHW, waifuID } = req.body;
   if (!uri) res.status(400).send({ error: 'No image provided.' });
 
   const getImageInfo = await getBuffer(uri);
@@ -14,15 +14,11 @@ route.post('/image', async (req, res) => {
 
   const { buffer: tempBuffer } = getImageInfo;
   const buffer = Buffer.from(tempBuffer);
-  const { height, width, error } = validateBuffer(req, res, buffer, mbLimit);
 
-  if (!height || !width) return res.status(400).send(error);
+  const { height, width, error } = await validateBuffer(req, res, buffer, { mbLimit, overrideDefaultHW, waifuID });
+  if (!height || !width || error) return res.status(400).send(error);
 
   return res.status(200).send({ height, width });
-});
-
-route.get('/series', async (req, res) => {
-
 });
 
 module.exports = route;

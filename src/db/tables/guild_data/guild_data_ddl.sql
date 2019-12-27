@@ -1,5 +1,3 @@
--- noinspection SqlNoDataSourceInspectionForFile
-
 CREATE TABLE IF NOT EXISTS "guildsTable" (
   "guildId" varchar(32) PRIMARY KEY NOT NULL,
   "prefixForAllEnable" BOOLEAN NOT NULL DEFAULT TRUE,
