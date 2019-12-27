@@ -708,6 +708,15 @@ const checkSnipe = async (userID) => {
   return true;
 };
 
+const updateUserBankPointsVote = async (userID, points) => poolQuery(`
+  UPDATE "clientsTable" 
+  SET "bankPoints" = "bankPoints" + $2, vote_date = NOW(), 
+  streak_vote_date = NOW() + INTERVAL '2 days', vote_enabled = TRUE,
+  streak_vote = streak_vote + 1
+  WHERE "userId" = $1
+  RETURNING *;
+`, [userID, points]);
+
 module.exports = {
   updateClientAnimeReactions,
   toggleClientPlayFirst,
@@ -762,4 +771,5 @@ module.exports = {
   updateAnimeSearchAchievement,
   clientBuyGauntlet,
   checkSnipe,
+  updateUserBankPointsVote,
 };
