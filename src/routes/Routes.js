@@ -5,11 +5,13 @@ const characters = require('./characters/characters');
 const series = require('./characters/series');
 const validate = require('./validate');
 const patrons = require('./patrons');
+const users = require('./users');
 
 router.use('/series', series);
 router.use('/characters', characters);
 router.use('/images', images);
 router.use('/validate', validate);
 router.use('/patrons', patrons);
+router.use('/users', users);
 
 module.exports = router;

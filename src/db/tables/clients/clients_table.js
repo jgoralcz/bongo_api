@@ -5,7 +5,7 @@ const { poolQuery } = require('../../index');
  * @param userId the user's id
  * @returns {Promise<*>}
  */
-const updateClientAnimeReactions = async userId => poolQuery(`
+const updateClientAnimeReactions = async (userId) => poolQuery(`
   UPDATE "clientsTable"
   SET anime_reactions = NOT anime_reactions
   WHERE "userId" = $1;
@@ -16,7 +16,7 @@ const updateClientAnimeReactions = async userId => poolQuery(`
  * @param userId the user's id
  * @returns {Promise<*>}
  */
-const toggleClientPlayFirst = async userId => poolQuery(`
+const toggleClientPlayFirst = async (userId) => poolQuery(`
   UPDATE "clientsTable"
   SET play_first = NOT play_first
   WHERE "userId" = $1;
@@ -62,7 +62,7 @@ const getTopPizzas = async () => poolQuery(`
  * @param guildId the guild's id
  * @returns {Promise<*>}
  */
-const getTopServerPizzas = async guildId => poolQuery(`
+const getTopServerPizzas = async (guildId) => poolQuery(`
   SELECT ct."userId", ct.top
   FROM (
       SELECT "userId", pizza AS top
@@ -94,7 +94,7 @@ const getTopStones = async () => poolQuery(`
  * @param guildId the guild's id.
  * @returns {Promise<*>}
  */
-const getTopServerStones = async guildId => poolQuery(`
+const getTopServerStones = async (guildId) => poolQuery(`
   SELECT ct."userId", ct.stones AS top
   FROM (
     SELECT "userId", stones
@@ -113,7 +113,7 @@ const getTopServerStones = async guildId => poolQuery(`
  * @param guildId
  * @returns {Promise<*>}
  */
-const getTopServerRamen = async guildId => poolQuery(`
+const getTopServerRamen = async (guildId) => poolQuery(`
   SELECT ct."userId", ct.top
   FROM (
     SELECT "userId", ramen AS top
@@ -144,7 +144,7 @@ const getTopRamen = async () => poolQuery(`
  * @param guildId
  * @returns {Promise<*>}
  */
-const getTopServerFuels = async guildId => poolQuery(`
+const getTopServerFuels = async (guildId) => poolQuery(`
 SELECT ct."userId", ct.top
   FROM (
     SELECT "userId", fuel AS top
@@ -174,7 +174,7 @@ const getTopFuels = async () => poolQuery(`
  * @param guildId
  * @returns {Promise<*>}
  */
-const getTopServerCookies = async guildId => poolQuery(`
+const getTopServerCookies = async (guildId) => poolQuery(`
   SELECT ct."userId", ct.top
   FROM (
     SELECT "userId", cookie AS top
@@ -204,7 +204,7 @@ const getTopCookies = async () => poolQuery(`
  * @param guildId
  * @returns {Promise<*>}
  */
-const getTopServerDonuts = async guildId => poolQuery(`
+const getTopServerDonuts = async (guildId) => poolQuery(`
   SELECT ct."userId", ct.top
   FROM (
     SELECT "userId", donut AS top
@@ -234,7 +234,7 @@ const getTopDonuts = async () => poolQuery(`
  * @param guildId {string} the guild id
  * @returns {Promise<*>}
  */
-const getTopServerPoints = async guildId => poolQuery(`
+const getTopServerPoints = async (guildId) => poolQuery(`
   SELECT ct."userId", "bankPoints" AS top
   FROM "clientsTable" ct
   WHERE ct."userId" IN
@@ -302,7 +302,7 @@ const setWaifuListTitle = async (userId, title) => poolQuery(`
  * @param userId
  * @returns {Promise<*>}
  */
-const getWaifuListTitleAndURL = async userId => poolQuery(`
+const getWaifuListTitleAndURL = async (userId) => poolQuery(`
   SELECT waifu_list_title, waifu_list_url
   FROM "clientsTable"
   WHERE "userId" = $1;
@@ -325,7 +325,7 @@ const setPokemonListTitle = async (userId, title) => poolQuery(`
  * @param userId
  * @returns {Promise<*>}
  */
-const getPokemonListTitle = async userId => poolQuery(`
+const getPokemonListTitle = async (userId) => poolQuery(`
   SELECT pokemon_list_title
   FROM "clientsTable"
   WHERE "userId" = $1;
@@ -349,7 +349,7 @@ const setAmiiboListTitle = async (userId, title) => poolQuery(`
  * @param userId the user's id
  * @returns {Promise<*>}
  */
-const getAmiiboListTitle = async userId => poolQuery(`
+const getAmiiboListTitle = async (userId) => poolQuery(`
   SELECT amiibo_list_title
   FROM "clientsTable"
   WHERE "userId" = $1;
@@ -368,24 +368,15 @@ const updateClientBankPointsDaily = async (userId, points, dailyGather) => poolQ
   WHERE "userId" = $1;
 `, [userId, points, dailyGather]);
 
-/**
- * set clients info
- * @param userInfo the user's info
- * @returns {Promise<*>}
- */
-const setClientInfo = async userInfo => poolQuery(`
-  INSERT INTO "clientsTable" ("userId", "prefix")
-  VALUES ($1, $2)
+const setClientInfo = async (userID) => poolQuery(`
+  INSERT INTO "clientsTable" ("userId")
+  VALUES ($1)
   ON CONFLICT("userId") DO NOTHING
   RETURNING *;
-`, [userInfo.userId, userInfo.prefix]);
+`, [userID]);
 
-/**
- * gets client's info based off id
- * @param userId the user's id
- * @returns {Promise<*>}
- */
-const getClientInfo = async userId => poolQuery(`
+
+const getClientInfo = async (userId) => poolQuery(`
   SELECT *
   FROM "clientsTable"
   WHERE "userId" = $1;
@@ -420,7 +411,7 @@ const updateClientAllowGuild = async (guildId, userId) => poolQuery(`
  * @param userId the user's id
  * @returns {Promise<*>}
  */
-const updateClientAllowAnyone = async userId => poolQuery(`
+const updateClientAllowAnyone = async (userId) => poolQuery(`
   UPDATE "clientsTable"
   SET "allowAnyone" = NOT "allowAnyone"
   WHERE "userId" = $1;
@@ -431,7 +422,7 @@ const updateClientAllowAnyone = async userId => poolQuery(`
  * @param userId
  * @returns {Promise<*>}
  */
-const respectsPaid = async userId => poolQuery(`
+const respectsPaid = async (userId) => poolQuery(`
   UPDATE "clientsTable"
   SET "paidRespectsCount" = "paidRespectsCount" + 1
   WHERE "userId" = $1
@@ -537,7 +528,7 @@ const subtractClientPoints = async (id, subtractPrice) => poolQuery(`
  * @param id the user's id.
  * @returns {Promise<*>}
  */
-const incrementClientGuessCorrect = async id => poolQuery(`
+const incrementClientGuessCorrect = async (id) => poolQuery(`
   UPDATE "clientsTable"
   SET waifu_guess_correct = waifu_guess_correct + 1
   WHERE "userId" = $1;
@@ -548,7 +539,7 @@ const incrementClientGuessCorrect = async id => poolQuery(`
  * @param id the user's id.
  * @returns {Promise<*>}
  */
-const incrementClientGuessWrong = async id => poolQuery(`
+const incrementClientGuessWrong = async (id) => poolQuery(`
   UPDATE "clientsTable"
   SET waifu_guess_wrong = waifu_guess_wrong + 1
   WHERE "userId" = $1;
@@ -559,7 +550,7 @@ const incrementClientGuessWrong = async id => poolQuery(`
  * @param id the user's id.
  * @returns {Promise<*>}
  */
-const incrementClientGuessSeriesCorrect = async id => poolQuery(`
+const incrementClientGuessSeriesCorrect = async (id) => poolQuery(`
   UPDATE "clientsTable"
   SET series_guess_correct = series_guess_correct + 1
   WHERE "userId" = $1;
@@ -570,7 +561,7 @@ const incrementClientGuessSeriesCorrect = async id => poolQuery(`
  * @param id the user's id.
  * @returns {Promise<*>}
  */
-const incrementClientGuessSeriesWrong = async id => poolQuery(`
+const incrementClientGuessSeriesWrong = async (id) => poolQuery(`
   UPDATE "clientsTable"
   SET series_guess_correct = series_guess_wrong + 1
   WHERE "userId" = $1;
@@ -581,7 +572,7 @@ const incrementClientGuessSeriesWrong = async id => poolQuery(`
  * @param userID the user's id
  * @returns {Promise<*>}
  */
-const toggleUserRollClaimed = async userID => poolQuery(`
+const toggleUserRollClaimed = async (userID) => poolQuery(`
   UPDATE "clientsTable"
   SET user_roll_claimed = NOT user_roll_claimed
   WHERE "userId" = $1;
@@ -592,7 +583,7 @@ const toggleUserRollClaimed = async userID => poolQuery(`
  * @param userID the user's id.
  * @returns {Promise<void>}
  */
-const checkUserGauntletQuest = async userID => poolQuery(`
+const checkUserGauntletQuest = async (userID) => poolQuery(`
   SELECT "userId" as user_id, pats, owoify, achievement_aki AS aki, 
     achievement_reddit AS reddit, achievement_search_anime AS "animeSearch", sniped, gauntlet, (
       SELECT count(*) as hugs
@@ -623,7 +614,7 @@ const checkUserGauntletQuest = async userID => poolQuery(`
  * @param userID the user's ID.
  * @returns {Promise<void>}
  */
-const updateClientsSnipe = async userID => poolQuery(`
+const updateClientsSnipe = async (userID) => poolQuery(`
   UPDATE "clientsTable"
   SET sniped = TRUE
   WHERE "userId" = $1;
@@ -634,7 +625,7 @@ const updateClientsSnipe = async userID => poolQuery(`
  * @param userID the user's ID.
  * @returns {Promise<void>}
  */
-const updatePatsCount = async userID => poolQuery(`
+const updatePatsCount = async (userID) => poolQuery(`
   UPDATE "clientsTable"
   SET pats = pats + 1
   WHERE "userId" = $1
@@ -646,7 +637,7 @@ const updatePatsCount = async userID => poolQuery(`
  * @param userID the user's ID.
  * @returns {Promise<void>}
  */
-const updateOwOAchievement = async userID => poolQuery(`
+const updateOwOAchievement = async (userID) => poolQuery(`
   UPDATE "clientsTable"
   SET owoify = TRUE
   WHERE "userId" = $1;
@@ -657,7 +648,7 @@ const updateOwOAchievement = async userID => poolQuery(`
  * @param userID the user's ID.
  * @returns {Promise<void>}
  */
-const updateAkiAchievement = async userID => poolQuery(`
+const updateAkiAchievement = async (userID) => poolQuery(`
   UPDATE "clientsTable"
   SET achievement_aki = TRUE
   WHERE "userId" = $1;
@@ -668,7 +659,7 @@ const updateAkiAchievement = async userID => poolQuery(`
  * @param userID the user's ID.
  * @returns {Promise<void>}
  */
-const updateRedditAchievement = async userID => poolQuery(`
+const updateRedditAchievement = async (userID) => poolQuery(`
   UPDATE "clientsTable"
   SET achievement_reddit = TRUE
   WHERE "userId" = $1;
@@ -679,7 +670,7 @@ const updateRedditAchievement = async userID => poolQuery(`
  * @param userID the user's ID.
  * @returns {Promise<void>}
  */
-const updateAnimeSearchAchievement = async userID => poolQuery(`
+const updateAnimeSearchAchievement = async (userID) => poolQuery(`
   UPDATE "clientsTable"
   SET achievement_search_anime = TRUE
   WHERE "userId" = $1;
