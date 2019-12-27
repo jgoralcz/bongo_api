@@ -5,7 +5,7 @@ const { poolQuery } = require('../../index');
  * @param guildId the guild's ID.
  * @returns {Promise<*>}
  */
-const getGuild = async guildId => poolQuery(`
+const getGuild = async (guildId) => poolQuery(`
   SELECT * FROM 
   "guildsTable" 
   WHERE "guildId" = $1;
@@ -16,7 +16,7 @@ const getGuild = async guildId => poolQuery(`
  * @param guildID the guild's ID.
  * @returns {Promise<*>}
  */
-const setupGuild = async guildID => poolQuery(`
+const setupGuild = async (guildID) => poolQuery(`
   INSERT INTO "guildsTable" ("guildId")
   VALUES ($1)
   ON CONFLICT ("guildId") DO NOTHING
@@ -128,7 +128,7 @@ const updateLoopStatus = async (guildID, loop) => poolQuery(`
  * @param guildID the guild's id.
  * @returns {Promise<Promise<*>|*>}
  */
-const getServerQueueMeta = async guildID => poolQuery(`
+const getServerQueueMeta = async (guildID) => poolQuery(`
   SELECT array_length("serverQueue", 1) AS length,
     voice_channel,
     seek,
@@ -151,7 +151,7 @@ const getServerQueueMeta = async guildID => poolQuery(`
  * @param guildID the guild's id.
  * @returns {Promise<Promise<*>|*>}
  */
-const getServerQueueAndMeta = async guildID => poolQuery(`
+const getServerQueueAndMeta = async (guildID) => poolQuery(`
   SELECT "serverQueue",
     array_length("serverQueue", 1) AS length,
     voice_channel,
@@ -211,7 +211,7 @@ const updateQueueBack = async (guildID, upsertQueue) => poolQuery(`
  * @param guildID the guild's ID.
  * @returns {Promise<Promise<*>|*>}
  */
-const cleanServerQueueMeta = async guildID => poolQuery(`
+const cleanServerQueueMeta = async (guildID) => poolQuery(`
   UPDATE "guildsTable"
   SET loop = 'off',
     shuffle = false,
@@ -281,7 +281,7 @@ const updateServerPlayerVolume = async (guildID, volume) => poolQuery(`
  * @param guildID the guild's id.
  * @returns {Promise<Promise<*>|*>}
  */
-const getServerVoiceAndTextChannel = async guildID => poolQuery(`
+const getServerVoiceAndTextChannel = async (guildID) => poolQuery(`
   SELECT voice_channel, music_channel
   FROM "guildsTable"
   WHERE "guildId" = $1;
@@ -316,7 +316,7 @@ const updateServerTextChannel = async (guildID, textChannelID) => poolQuery(`
  * @param guildID the guild's id.
  * @returns {Promise<Promise<*>|*>}
  */
-const getServerDJOnly = async guildID => poolQuery(`
+const getServerDJOnly = async (guildID) => poolQuery(`
   SELECT dj_only
   FROM "guildsTable"
   WHERE "guildId" = $1;
@@ -327,7 +327,7 @@ const getServerDJOnly = async guildID => poolQuery(`
  * @param guildID the guild's id.
  * @returns {Promise<Promise<*>|*>}
  */
-const getServerDJOnlyAndVoiceChannel = async guildID => poolQuery(`
+const getServerDJOnlyAndVoiceChannel = async (guildID) => poolQuery(`
   SELECT dj_only, voice_channel
   FROM "guildsTable"
   WHERE "guildId" = $1;
@@ -457,7 +457,7 @@ const updateVoteSkip = async (voteNum, guildId) => poolQuery(`
  * @param guildId the guild's id.
  * @returns {Promise<*>}
  */
-const resetVoteSkippersAndSeek = async guildId => poolQuery(`
+const resetVoteSkippersAndSeek = async (guildId) => poolQuery(`
   UPDATE "guildsTable"
   SET vote_skippers = '{}', seek = 0
   WHERE "guildId" = $1;
@@ -599,7 +599,7 @@ const restartBackupQueue = async () => poolQuery(`
  * @param guildId the guild id.
  * @returns {Promise<*>}
  */
-const getAutoPlay = async guildId => poolQuery(`
+const getAutoPlay = async (guildId) => poolQuery(`
   SELECT autoplay
   FROM "guildsTable"
   WHERE "guildId" = $1;
@@ -610,7 +610,7 @@ const getAutoPlay = async guildId => poolQuery(`
  * @param guildID the guild id
  * @returns {Promise<Promise<*>|*>}
  */
-const getAutoNowPlay = async guildID => poolQuery(`
+const getAutoNowPlay = async (guildID) => poolQuery(`
   SELECT auto_now_play
   FROM "guildsTable"
   WHERE "guildId" = $1
@@ -677,7 +677,7 @@ const updateShowSkippedSongs = async (guildId, bool) => poolQuery(`
  * @param guildId the guild id.
  * @returns {Promise<*>}
  */
-const getShowSkips = async guildId => poolQuery(`
+const getShowSkips = async (guildId) => poolQuery(`
   SELECT show_skips
   FROM "guildsTable"
   WHERE "guildId" = $1;
@@ -767,7 +767,7 @@ const getAutoLeave = async (guildID) => {
  * @param guildId the guild id.
  * @returns {Promise<*>}
  */
-const getMaxSongsPerUser = async guildId => poolQuery(`
+const getMaxSongsPerUser = async (guildId) => poolQuery(`
   SELECT max_songs_per_user AS maxSongs, "serverQueue"
   FROM "guildsTable"
   WHERE "guildId" = $1;
@@ -808,6 +808,18 @@ const updateGuildWishlistMultiplier = async (guildID, multiplier) => poolQuery(`
   SET wishlist_multiplier = $2
   WHERE "guildId" = $1;
 `, [guildID, multiplier]);
+
+const updateClaimsRollsPatronsWaiting = async () => poolQuery(`
+  UPDATE "guildsTable"
+  SET roll_claim_minute = wait_minutes, wait_minutes = 0
+  WHERE wait_minutes > 0;
+`, []);
+
+const clearStaleQueue = async () => poolQuery(`
+  UPDATE "guildsTable"
+  SET "serverQueue" = '{}', seek = 0
+  WHERE queue_last_updated IS NOT NULL AND queue_last_updated < NOW() - INTERVAL '3 days';
+`, []);
 
 module.exports = {
   getGuild,
@@ -871,4 +883,6 @@ module.exports = {
   moveServerQueueTrackTransaction,
   getAutoNowPlay,
   updateGuildWishlistMultiplier,
+  updateClaimsRollsPatronsWaiting,
+  clearStaleQueue,
 };

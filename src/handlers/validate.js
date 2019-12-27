@@ -18,7 +18,6 @@ const validateBuffer = async (req, res, buffer, config) => {
   }
 
   if (waifuID) {
-    console.log('here mf');
     const checkImageExists = await getHashFromBufferID(waifuID, buffer);
     if (checkImageExists && checkImageExists[0]) return res.status(400).send({ error: `The hash for ${uri} already exists for ${waifuID}.` });
   }

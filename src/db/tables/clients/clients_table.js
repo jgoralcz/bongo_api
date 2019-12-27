@@ -717,6 +717,33 @@ const updateUserBankPointsVote = async (userID, points) => poolQuery(`
   RETURNING *;
 `, [userID, points]);
 
+const resetAllClientDaily = async () => poolQuery(`
+  BEGIN;
+  
+  UPDATE "clientsTable"
+  SET game_points = 0
+  WHERE game_points > 0;
+  
+  UPDATE "clientsTable"
+  SET daily_gather = NULL
+  WHERE daily_gather IS NOT NULL;
+  
+  UPDATE "clientsGuildsTable"
+  SET daily = NULL
+  WHERE daily IS NOT NULL;
+  
+  UPDATE state
+  SET respects_paid_today = 0;
+  
+  COMMIT;
+`, []);
+
+const clearVoteStreaks = async () => poolQuery(`
+  UPDATE "clientsTable"
+  SET streak_vote = 0, streak_vote_date = NULL
+  WHERE streak_vote_date <= NOW();
+`, []);
+
 module.exports = {
   updateClientAnimeReactions,
   toggleClientPlayFirst,
@@ -772,4 +799,6 @@ module.exports = {
   clientBuyGauntlet,
   checkSnipe,
   updateUserBankPointsVote,
+  resetAllClientDaily,
+  clearVoteStreaks,
 };

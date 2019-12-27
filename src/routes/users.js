@@ -1,6 +1,7 @@
 const route = require('express-promise-router')();
 
-const { updateUserBankPointsVote, getClientInfo, setClientInfo } = require('../db/tables/clients/clients_table');
+const { updateUserBankPointsVote, getClientInfo, setClientInfo, resetAllClientDaily } = require('../db/tables/clients/clients_table');
+const { clearStreaks, clearVoteStreaks } = require('../db/tables/clients_guilds/clients_guilds_table');
 
 route.post('/', async (req, res) => {
   const { id } = req.body;
@@ -33,6 +34,26 @@ route.patch('/:id/points', async (req, res) => {
 
   await updateUserBankPointsVote(id, points);
 
+  return res.status(204).send();
+});
+
+route.patch('/guilds/streaks/reset', async (_, res) => {
+  await clearStreaks();
+  return res.status(204).send();
+});
+
+route.patch('/guilds/streaks/votes/reset', async (_, res) => {
+  await clearVoteStreaks();
+  return res.status(204).send();
+});
+
+route.patch('/guilds/streaks/votes/reset', async (_, res) => {
+  await clearVoteStreaks();
+  return res.status(204).send();
+});
+
+route.patch('/dailies/reset', async (_, res) => {
+  await resetAllClientDaily();
   return res.status(204).send();
 });
 
