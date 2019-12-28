@@ -15,7 +15,7 @@ route.patch('/patron-one/reset', async (_, res) => {
 });
 
 route.patch('/plebs/reset', async (_, res) => {
-  await resetClaimsPlebs;
+  await resetClaimsPlebs();
   return res.status(204).send();
 });
 

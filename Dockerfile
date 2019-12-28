@@ -1,5 +1,4 @@
-# docker build -t bongo_bot_api .
-# docker run -d -p 8443:8443 --name bongo_bot_api bongo_bot_api
+# docker stop bongo_bot_api || true && docker rm bongo_bot_api || true && docker build -t bongo_bot_api . && docker run -d -p 8443:8443 -v /etc/nginx/ssl/cert.key:/node/config/cert.key -v /etc/nginx/ssl/cert.pem:/node/config/cert.pem --restart always --memory="2048m" --name bongo_bot_api bongo_bot_api;
 FROM node:latest
 
 LABEL owner = jgoralcz
