@@ -66,7 +66,7 @@ route.post('/', async (req, res) => {
   const series = seriesQuery[0];
   const { id } = series;
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewSeriesImage, { isThumbnaiL: false, height, width, nsfw, type: 'series', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewSeriesImage, { isThumbnail: false, height, width, nsfw, type: 'series', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading series ${name}.` });
 
   const [info] = row;
