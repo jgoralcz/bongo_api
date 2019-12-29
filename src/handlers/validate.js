@@ -6,6 +6,11 @@ const { getHashFromBufferID } = require('../db/waifu_schema/waifu_images/waifu_t
 
 const validateBuffer = async (req, res, buffer, config) => {
   const { mbLimit = MBLIMIT, overrideDefaultHW = false, waifuID } = config;
+
+  if (!req.body.imageURL) req.body.imageURL = req.body.uri;
+  if (!req.body.uri) req.body.uri = req.body.imageURL;
+  if (!req.body.imageURL && !req.body.ur) return { error: 'uri or imageURL expected in body.' };
+
   const { imageURL: uri } = req.body;
 
   if (!getBufferLength(buffer)) return { error: `${uri} is not a supported image type.` };
