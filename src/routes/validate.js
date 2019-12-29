@@ -6,6 +6,7 @@ const { validateBuffer } = require('../handlers/validate');
 const mbLimit = 1024;
 
 route.post('/image', async (req, res) => {
+  if (!req.body.imageURL) req.body.imageURL = req.body.uri;
   const { imageURL, overrideDefaultHW, waifuID } = req.body;
   if (!imageURL) res.status(400).send({ error: 'No image provided.' });
 

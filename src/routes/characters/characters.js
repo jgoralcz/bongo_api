@@ -101,7 +101,6 @@ route.post('/:id/images', async (req, res) => {
     });
   }
 
-  req.body.imageURL = req.body.uri;
   const { id } = params;
   const { uri, nsfw = false, uploader } = body;
 
