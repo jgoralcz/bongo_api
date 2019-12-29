@@ -6,7 +6,7 @@ const { getHashFromBufferID } = require('../db/waifu_schema/waifu_images/waifu_t
 
 const validateBuffer = async (req, res, buffer, config) => {
   const { mbLimit = MBLIMIT, overrideDefaultHW = false, waifuID } = config;
-  const { uri } = req.body;
+  const { imageURL: uri } = req.body;
 
   if (!getBufferLength(buffer)) return { error: `${uri} is not a supported image type.` };
   if (testBufferLimit(buffer, mbLimit)) return { error: `${uri} exceeds the ${MBLIMIT}mb limit.` };
