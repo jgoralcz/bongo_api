@@ -86,7 +86,7 @@ route.post('/', async (req, res) => {
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
-  return res.status(201).send({ url: info.url, image_id: info.id, id });
+  return res.status(201).send({ url: info.image_url, image_id: info.id, id });
 });
 
 route.post('/:id/images', async (req, res) => {
