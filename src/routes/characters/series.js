@@ -70,7 +70,7 @@ route.post('/', async (req, res) => {
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading series ${name}.` });
 
   const [info] = row;
-  return res.status(201).send({ url: info.url });
+  return res.status(201).send({ url: info.url, image_id: info.id, id });
 });
 
 route.get('/', async (req, res) => {

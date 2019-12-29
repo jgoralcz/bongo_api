@@ -6,10 +6,10 @@ const { validateBuffer } = require('../handlers/validate');
 const mbLimit = 1024;
 
 route.post('/image', async (req, res) => {
-  const { uri, overrideDefaultHW, waifuID } = req.body;
-  if (!uri) res.status(400).send({ error: 'No image provided.' });
+  const { imageURL, overrideDefaultHW, waifuID } = req.body;
+  if (!imageURL) res.status(400).send({ error: 'No image provided.' });
 
-  const getImageInfo = await getBuffer(uri);
+  const getImageInfo = await getBuffer(imageURL);
   if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${uri}.` });
 
   const { buffer: tempBuffer } = getImageInfo;

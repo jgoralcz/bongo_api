@@ -86,7 +86,7 @@ route.post('/', async (req, res) => {
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
-  return res.status(201).send({ url: info.url, id: info.id });
+  return res.status(201).send({ url: info.url, image_id: info.id, id });
 });
 
 route.post('/:id/images', async (req, res) => {
@@ -101,6 +101,7 @@ route.post('/:id/images', async (req, res) => {
     });
   }
 
+  req.body.imageURL = req.body.uri;
   const { id } = params;
   const { uri, nsfw = false, uploader } = body;
 
@@ -128,7 +129,7 @@ route.post('/:id/images', async (req, res) => {
 
   if (!waifu.image_url || !waifu.image_url_cdn) {
     await updateWaifuImage(id, imageURLExtra, width,
-      height, nsfw, buffer.length, fileType, uploader).catch((error) => logger.error(error));
+      height, nsfw, buffer.length, fileType, uploader).catch((e) => logger.error(e));
   }
 
   return res.status(201).send({ url: imageURLExtra, id: imageID });
