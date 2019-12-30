@@ -1,35 +1,16 @@
 const { poolQuery } = require('../../index');
 
-/**
- * Get all series names by the information they give us.
- * We need to make sure we only get the ones that have at least 1 waifu
- * @param name the name to search
- * @returns {Promise<*>}
- */
 const getAllSeriesByName = async (name) => poolQuery(`
-  SELECT wsst2.name, wsst2.url, wsst2.id
-  FROM (
-    SELECT DISTINCT(wsst1.name), wsst1.url, wsst1.id
-    FROM (
-      SELECT name, url, id
-      FROM waifu_schema.series_table wsst
-      WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 3 
-      ORDER BY
-        CASE
-        WHEN wsst.name ILIKE $1 THEN 0
-        WHEN wsst.name ILIKE $1 || '%' THEN 1
-        WHEN wsst.name ILIKE '%' || $1 THEN 2
-        ELSE 3 END, wsst.name
-      LIMIT 20
-    ) wsst1
-    JOIN waifu_schema.waifu_table wswt ON wsst1.id = wswt.series_id
-  ) wsst2
+  SELECT name, url, id
+  FROM waifu_schema.series_table wsst
+  WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 3 
   ORDER BY
     CASE
-    WHEN wsst2.name ILIKE $1 THEN 0
-    WHEN wsst2.name ILIKE $1 || '%' THEN 1
-    WHEN wsst2.name ILIKE '%' || $1 THEN 2
-    ELSE 3 END, wsst2.name;
+    WHEN name ILIKE $1 THEN 0
+    WHEN name ILIKE $1 || '%' THEN 1
+    WHEN name ILIKE '%' || $1 THEN 2
+    ELSE 3 END, name
+  LIMIT 20;
 `, [name]);
 
 const getSeries = async (name) => poolQuery(`
