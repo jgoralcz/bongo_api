@@ -42,7 +42,7 @@ route.post('/', async (req, res) => {
   const { buffer: tempBuffer } = getImageInfo;
   const buffer = Buffer.from(tempBuffer);
 
-  const { height, width, error } = await validateBuffer(req, res, buffer, {});
+  const { height, width, error } = await validateBuffer(req, res, buffer, { overrideDefaultHW: true });
   if (!height || !width || error) return res.status(400).send(error);
 
   let seriesQuery;
