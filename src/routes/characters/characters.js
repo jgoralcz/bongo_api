@@ -35,6 +35,7 @@ route.post('/', async (req, res) => {
 
   const seriesExistsQuery = await searchSeriesExactly(series);
   if (!seriesExistsQuery || seriesExistsQuery.length <= 0) return res.status(400).send({ error: 'Series does not exist.', message: `The series ${series} does not exist. You must create the series first.`, body });
+  const seriesID = seriesExistsQuery[0].id;
 
   const characterExistsQuery = await searchWaifuExactly(name, series);
   if (characterExistsQuery && characterExistsQuery.length > 0 && !uri) return res.status(409).send({ error: 'Character already exists.', message: 'Required body: imageURL, name, series, husbando, nsfw, description.', body });
@@ -50,8 +51,10 @@ route.post('/', async (req, res) => {
 
   let waifuQuery;
   if (characterExistsQuery && characterExistsQuery.length > 0 && uri) {
+    body.series_id = seriesID;
     waifuQuery = await upsertWaifu(body);
   } else if (uri) {
+    body.series_id = seriesID;
     waifuQuery = await insertWaifu(body);
   } else {
     const waifu = {
@@ -64,6 +67,7 @@ route.post('/', async (req, res) => {
       imageURL,
       uploader,
       unknownGender,
+      series_id: seriesID,
     };
     waifuQuery = await insertWaifu(waifu);
   }
