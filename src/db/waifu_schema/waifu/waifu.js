@@ -236,7 +236,7 @@ const getWaifuByURL = async (url) => poolQuery(`
   WHERE url = $1;
 `, [url]);
 
-const searchWaifuExactly = async (name, series) => poolQuery(`
+const searchWaifuExactly = async (name, series, seriesID) => poolQuery(`
   SELECT id
   FROM waifu_schema.waifu_table
   WHERE name ILIKE $1
@@ -246,12 +246,12 @@ const searchWaifuExactly = async (name, series) => poolQuery(`
         FROM (
           SELECT series
           FROM waifu_schema.appears_in wsai
-          JOIN waifu_schema.waifu_table wswt ON wswt.id = wsai.waifu_id
+          JOIN waifu_schema.waifu_table wswt ON wswt.id = wsai.waifu_id AND wsai.series_id = $3
           WHERE name ILIKE $1
         ) wt1
       )
     );
-`, [name, series]);
+`, [name, series, seriesID]);
 
 module.exports = {
   upsertWaifu,
