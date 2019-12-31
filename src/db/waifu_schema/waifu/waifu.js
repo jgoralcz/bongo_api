@@ -2,7 +2,7 @@ const { poolQuery } = require('../../index');
 
 const insertWaifu = async waifu => poolQuery(`
   INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
-  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id, unknown_gender)
+  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id, unknown_gender, series_id)
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
   
   RETURNING *;
@@ -236,7 +236,7 @@ const getWaifuByURL = async (url) => poolQuery(`
   WHERE url = $1;
 `, [url]);
 
-const searchWaifuExactly = async (name, series, seriesID) => poolQuery(`
+const searchCharacterExactly = async (name, series, seriesID) => poolQuery(`
   SELECT id
   FROM waifu_schema.waifu_table
   WHERE name ILIKE $1
@@ -273,5 +273,5 @@ module.exports = {
   getWaifuByURL,
   insertWaifu,
   storeNewWaifuImage,
-  searchWaifuExactly,
+  searchCharacterExactly,
 };

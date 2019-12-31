@@ -1,7 +1,7 @@
 const route = require('express-promise-router')();
 const logger = require('log4js').getLogger();
 
-const { getWaifuById, insertWaifu, searchWaifuExactly, upsertWaifu } = require('../../db/waifu_schema/waifu/waifu');
+const { getWaifuById, insertWaifu, searchCharacterExactly, upsertWaifu } = require('../../db/waifu_schema/waifu/waifu');
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
@@ -37,7 +37,7 @@ route.post('/', async (req, res) => {
   if (!seriesExistsQuery || seriesExistsQuery.length <= 0) return res.status(400).send({ error: 'Series does not exist.', message: `The series ${series} does not exist. You must create the series first.`, body });
   const seriesID = seriesExistsQuery[0].id;
 
-  const characterExistsQuery = await searchWaifuExactly(name, series, seriesID);
+  const characterExistsQuery = await searchCharacterExactly(name, series, seriesID);
   if (characterExistsQuery && characterExistsQuery.length > 0 && !uri) return res.status(409).send({ error: 'Character already exists.', message: 'Required body: imageURL, name, series, husbando, nsfw, description.', body });
 
   const getImageInfo = await getBuffer(imageURL);
