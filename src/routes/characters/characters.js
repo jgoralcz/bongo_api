@@ -27,10 +27,8 @@ route.post('/', async (req, res) => {
   if (!body.imageURL || !body.uploader || !body.name || (!body.series && !body.url) || body.husbando == null || body.nsfw == null || !body.description) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: imageURL, name, uploader, series, husbando, nsfw, description.', body });
 
   const {
-    imageURL, name, series,
-    husbando, nsfw, description,
-    url: uri, seriesList,
-    uploader, unknownGender,
+    imageURL, name, series, nsfw,
+    url: uri, seriesList, uploader,
   } = body;
 
   const seriesExistsQuery = await searchSeriesExactly(series);
@@ -57,19 +55,9 @@ route.post('/', async (req, res) => {
     body.series_id = seriesID;
     waifuQuery = await insertWaifu(body);
   } else {
-    const waifu = {
-      name,
-      series,
-      husbando,
-      description,
-      nsfw,
-      url: '',
-      imageURL,
-      uploader,
-      unknownGender,
-      series_id: seriesID,
-    };
-    waifuQuery = await insertWaifu(waifu);
+    body.url = '';
+    body.series_id = seriesID;
+    waifuQuery = await upsertWaifu(body);
   }
 
   if (!waifuQuery || !waifuQuery[0] || !waifuQuery[0].id) return res.status(500).send({ error: `Failed uploading character ${name}.` });
@@ -130,7 +118,7 @@ route.post('/:id/images', async (req, res) => {
 
   const { image_id: imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];
 
-  if (!waifu.image_url || !waifu.image_url_cdn) {
+  if (!waifu.image_url) {
     await updateWaifuImage(id, imageURLExtra, width,
       height, nsfw, buffer.length, fileType, uploader).catch((e) => logger.error(e));
   }

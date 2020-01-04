@@ -23,6 +23,53 @@ route.put('/:id', async (req, res) => {
   return res.status(200).send(updatedSeries);
 });
 
+route.patch('/', async (req, res) => {
+  const { body } = req;
+
+  if (!body.imageURL || !body.name || body.nsfw == null || !body.description) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: imageURL, name, nsfw, description.', body });
+
+  const {
+    imageURL, name, nsfw, description, url,
+    uploader, is_western: western, is_game: game,
+  } = body;
+
+  const getImageInfo = await getBuffer(imageURL);
+  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
+
+  const { buffer: tempBuffer } = getImageInfo;
+  const buffer = Buffer.from(tempBuffer);
+
+  const { height, width, error } = await validateBuffer(req, res, buffer, { overrideDefaultHW: true });
+  if (!height || !width || error) return res.status(400).send(error);
+
+  let seriesQuery;
+  if (url) {
+    seriesQuery = await upsertSeries(body);
+  } else {
+    const series = {
+      name,
+      nsfw,
+      description,
+      uploader,
+      imageURL,
+      western,
+      game,
+    };
+    seriesQuery = await upsertSeries(series);
+  }
+
+  if (!seriesQuery || !seriesQuery[0] || !seriesQuery[0].id) return res.status(500).send({ error: `Failed uploading series ${name}.` });
+
+  const series = seriesQuery[0];
+  const { id } = series;
+
+  const row = await storeImageBufferToURL(id, buffer, storeNewSeriesImage, { isThumbnail: false, height, width, nsfw, type: 'series', uploader });
+  if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading series ${name}.` });
+
+  const [info] = row;
+  return res.status(201).send({ url: info.image_url, image_id: info.id, id });
+});
+
 route.post('/', async (req, res) => {
   const { body } = req;
 
