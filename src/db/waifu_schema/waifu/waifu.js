@@ -15,7 +15,7 @@ const upsertWaifu = async (waifu) => poolQuery(`
   date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id)
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
   
-  ON CONFLICT(url) DO UPDATE
+  ON CONFLICT(name, series_id, original_name, romaji_name) DO UPDATE
     SET name = $1, series = $2, description = $3, image_url = $4, image_file_path = $5, url = $6, origin = $7, original_name = $8,
     romaji_name = $9, age = $10, date_of_birth = $11, hip_cm = $12, waist_cm = $13, bust_cm = $14, weight_kg = $15, height_cm = $16,
     blood_type = $17, likes = $18, dislikes = $19, husbando = $20, nsfw = $21, date_added = $22, website_id = $23
@@ -32,6 +32,14 @@ const storeNewWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLe
   WHERE id = $1
   RETURNING *;
 `, [id, imageURL, width, height, nsfw, bufferLength, fileType]);
+
+const storeCleanWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+  UPDATE waifu_schema.waifu_table
+  SET image_url_clean = $2, width_clean = $3, height_clean = $4
+  buffer_length_clean = $5, file_type_clean = $6
+  WHERE id = $1
+  RETURNING *;
+`, [id, imageURL, width, height, bufferLength, fileType]);
 
 const getWaifuCount = async () => {
   const query = await poolQuery(`
@@ -248,6 +256,14 @@ const searchCharacterExactly = async (name, series, seriesID) => poolQuery(`
     );
 `, [name, series, seriesID]);
 
+const getWaifuByNoCleanImageRandom = async () => poolQuery(`
+  SELECT id, image_url, nsfw, uploader
+  FROM waifu_schema.waifu_table
+  WHERE image_url_clean is NULL
+  ORDER BY random()
+  LIMIT 1;
+`, []);
+
 module.exports = {
   upsertWaifu,
   updateWaifuSeriesId,
@@ -269,4 +285,6 @@ module.exports = {
   insertWaifu,
   storeNewWaifuImage,
   searchCharacterExactly,
+  storeCleanWaifuImage,
+  getWaifuByNoCleanImageRandom,
 };

@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table (
   husbando BOOLEAN,
   nsfw BOOLEAN,
   date_added DATE,
-  -- buffer bytea,
   website_id INTEGER,
   image_url_cdn TEXT,
   image_url_mwl_backup TEXT,
@@ -32,6 +31,11 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table (
   unknown_gender BOOLEAN,
   nsfw_image BOOLEAN DEFAULT FALSE,
   file_type TEXT,
+  image_url_clean varchar(256),
+  width_clean SMALLINT,
+  height_clean SMALLINT,
+  buffer_length_clean INTEGER,
+  file_type_clean varchar(16),
 
   UNIQUE (name, series),
   UNIQUE (url)

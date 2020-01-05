@@ -19,7 +19,6 @@ const validateBuffer = async (req, res, buffer, config) => {
   if (!height || !width) return { error: `No width or height found for url ${uri}; height=${height}, width=${width}` };
   if (!testHeightWidth(height, width, DEFAULT_HEIGHT, DEFAULT_WIDTH) && !overrideDefaultHW) return { error: 'Image ratio is not between 0.64 or 0.72.' };
 
-
   if (waifuID) {
     const checkImageExists = await getHashFromBufferID(waifuID, buffer);
     if (checkImageExists && checkImageExists[0]) return res.status(400).send({ error: `The hash for ${uri} already exists for ${waifuID}.` });

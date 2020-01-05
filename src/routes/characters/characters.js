@@ -1,10 +1,14 @@
 const route = require('express-promise-router')();
 const logger = require('log4js').getLogger();
 
+const { getBufferHeightWidth } = require('../../util/functions/buffer');
+const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../util/constants/dimensions');
 const { getWaifuById, insertWaifu, searchCharacterExactly, upsertWaifu } = require('../../db/waifu_schema/waifu/waifu');
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
+
+const { mimsAPI } = require('../../services/axios');
 
 const { getBuffer } = require('../../util/functions/buffer');
 const { validateBuffer } = require('../../handlers/validate');
@@ -19,6 +23,7 @@ const { removeDuplicateWaifuClaims } = require('../../db/tables/cg_claim_waifu/c
 const {
   updateWaifuImage, deleteWaifuByID,
   mergeWaifus, getWaifuByURL, storeNewWaifuImage,
+  storeCleanWaifuImage, getWaifuByNoCleanImageRandom,
 } = require('../../db/waifu_schema/waifu/waifu');
 
 route.post('/', async (req, res) => {
@@ -81,6 +86,31 @@ route.post('/', async (req, res) => {
   return res.status(201).send({ url: info.image_url, image_id: info.id, id });
 });
 
+route.patch('/clean-images', async (_, res) => {
+  const waifuRow = await getWaifuByNoCleanImageRandom();
+  if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: 'No character found.' });
+
+  const [waifu] = waifuRow;
+
+  const { image_url: imageURL, id, nsfw, uploader } = waifu;
+
+  if (!imageURL) return res.status(400).send({ error: `No url found for ${imageURL}.` });
+
+  const { status, data: mimsBuffer } = mimsAPI.post('/smartcrop', { image_url: imageURL, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, options: { animeFace: true } });
+  if (!mimsBuffer || status !== 200) return res.status(400).send({ error: `No buffer found for ${imageURL}.` });
+
+  const { height, width } = getBufferHeightWidth(mimsBuffer);
+  if (!height || !width || height !== DEFAULT_HEIGHT || width !== DEFAULT_WIDTH) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
+
+  const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
+    isThumbnail: false, height, width, nsfw, type: 'character', uploader,
+  });
+  if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
+  const { image_id: imageID, image_url_path_extra: imageURLExtra } = row[0];
+
+  return res.status(201).send({ url: imageURLExtra, id: imageID });
+});
+
 route.post('/:id/images', async (req, res) => {
   const { body, params, query } = req;
 
@@ -113,7 +143,7 @@ route.post('/:id/images', async (req, res) => {
   const checkImageExists = await getHashFromBufferID(waifu.id, buffer);
   if (checkImageExists && checkImageExists[0]) return res.status(400).send({ error: `The hash for ${uri} already exists for ${waifu.id}.` });
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { isThumbnail: false, height, width, nsfw, type: 'character', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { isThumbnail: false, height, width, nsfw, type: 'characters', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}.` });
 
   const { image_id: imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];
