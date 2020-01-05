@@ -7,6 +7,7 @@ const { getWaifuById, insertWaifu, searchCharacterExactly, upsertWaifu } = requi
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
+const { botID } = require('../../../config.json');
 
 const { mimsAPI } = require('../../services/axios');
 
@@ -91,24 +92,26 @@ route.patch('/clean-images', async (_, res) => {
   if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: 'No character found.' });
 
   const [waifu] = waifuRow;
+  const { image_url: imageURL, id, nsfw } = waifu;
 
-  const { image_url: imageURL, id, nsfw, uploader } = waifu;
+  let { uploader } = waifu;
+  if (!uploader) uploader = botID;
 
   if (!imageURL) return res.status(400).send({ error: `No url found for ${imageURL}.` });
 
-  const { status, data: mimsBuffer } = mimsAPI.post('/smartcrop', { image_url: imageURL, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, options: { animeFace: true } });
+  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, options: { animeFace: true } });
   if (!mimsBuffer || status !== 200) return res.status(400).send({ error: `No buffer found for ${imageURL}.` });
-
   const { height, width } = getBufferHeightWidth(mimsBuffer);
   if (!height || !width || height !== DEFAULT_HEIGHT || width !== DEFAULT_WIDTH) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
-    isThumbnail: false, height, width, nsfw, type: 'character', uploader,
+    isThumbnail: false, height, width, nsfw, type: 'characters', uploader,
   });
-  if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
-  const { image_id: imageID, image_url_path_extra: imageURLExtra } = row[0];
 
-  return res.status(201).send({ url: imageURLExtra, id: imageID });
+  if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
+  const { id: characterID, image_url_clean: imageURLClean, name, series, url } = row[0];
+
+  return res.status(201).send({ imageURLClean, characterID, name, imageURL, series, url });
 });
 
 route.post('/:id/images', async (req, res) => {
