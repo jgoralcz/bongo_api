@@ -5,6 +5,7 @@ const {
   deleteImage, selectImage,
   selectImageByURL, selectAllImage, storeCleanWaifuImage,
   updateImage, updateImageNSFW, getWaifuImagesByNoCleanImageRandom,
+  getWaifuImagesAndInfoByID,
 } = require('../../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { botID } = require('../../../../config.json');
@@ -37,9 +38,12 @@ route.patch('/clean-images', async (_, res) => {
   });
 
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
-  const { image_url_clean_path_extra: imageURLClean, image_url_path_extra } = row[0];
 
-  return res.status(201).send({ imageURLClean, imageURL: image_url_path_extra });
+  const wRow = await getWaifuImagesAndInfoByID(row[0].waifu_id, row[0].image_id);
+  if (!wRow || wRow.length <= 0 || !wRow[0]) return res.status(400).send({ error: `Could not find character ${row[0].waifu_id} with image url ${imageURL}.` });
+  const { image_url_clean_path_extra: imageURLClean, image_url_path_extra, name, series, url } = wRow[0];
+
+  return res.status(201).send({ imageURLClean, imageURLPathExtra: image_url_path_extra, name, series, url });
 });
 
 route.patch('/:id/nsfw', async (req, res) => {
