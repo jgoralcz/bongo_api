@@ -9,11 +9,13 @@ const {
 } = require('../../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { botID } = require('../../../../config.json');
-const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../../util/constants/dimensions');
 const { getBufferHeightWidth } = require('../../../util/functions/buffer');
 const { storeImageBufferToURL } = require('../../../util/functions/bufferToURL');
 
 const { mimsAPI } = require('../../../services/axios');
+
+const HEIGHT = 700;
+const WIDTH = 450;
 
 
 route.patch('/clean-images', async (_, res) => {
@@ -28,10 +30,11 @@ route.patch('/clean-images', async (_, res) => {
 
   if (!imageURL) return res.status(400).send({ error: `No url found for ${imageURL}.` });
 
-  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, options: { animeFace: true } });
+  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: WIDTH, height: HEIGHT, options: { animeFace: true } });
   if (!mimsBuffer || status !== 200) return res.status(400).send({ error: `No buffer found for ${imageURL}.` });
+
   const { height, width } = getBufferHeightWidth(mimsBuffer);
-  if (!height || !width || height !== DEFAULT_HEIGHT || width !== DEFAULT_WIDTH) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
+  if (!height || !width || height !== HEIGHT || width !== WIDTH) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
     isThumbnail: false, height, width, nsfw, type: 'characters', uploader,
