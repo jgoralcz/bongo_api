@@ -6,7 +6,6 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table_images (
   nsfw BOOLEAN,
   reviewer TEXT,
   bad_image BOOLEAN,
-  -- buffer BYTEA,
   width REAL,
   height REAL,
   image_url_cdn_extra TEXT,
@@ -16,8 +15,11 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table_images (
   file_type TEXT,
   date_added TIMESTAMP now(),
   uploader TEXT,
+  image_url_clean varchar(256),
+  width_clean SMALLINT,
+  height_clean SMALLINT,
+  buffer_length_clean INTEGER,
+  file_type_clean varchar(16),
 
   FOREIGN KEY (waifu_id) REFERENCES waifu_table ON DELETE CASCADE ON UPDATE CASCADE
 );
-
--- update waifu_schema.waifu_table_images set image_url_path_extra = image_url_cdn_extra_backup where image_url_cdn_extra_backup is not null and image_url_path_extra ilike '%mywaifulist%';

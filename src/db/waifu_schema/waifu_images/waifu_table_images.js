@@ -154,6 +154,22 @@ const updateImageNSFW = async (id, nsfw) => poolQuery(`
   RETURNING *;
 `, [id, nsfw]);
 
+const getWaifuImagesByNoCleanImageRandom = async () => poolQuery(`
+  SELECT image_id, image_url_path_extra, nsfw, uploader
+  FROM waifu_schema.waifu_table_images
+  WHERE image_url_clean_path_extra is NULL
+  ORDER BY random()
+  LIMIT 1;
+`, []);
+
+const storeCleanWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+  UPDATE waifu_schema.waifu_table_images
+  SET image_url_clean_path_extra = $2, width_clean = $3, height_clean = $4,
+  buffer_length_clean = $5, file_type_clean = $6
+  WHERE image_id = $1
+  RETURNING *;
+`, [id, imageURL, width, height, bufferLength, fileType]);
+
 module.exports = {
   getRandomWaifuImageNonReviewed,
   getRemainingImages,
@@ -172,4 +188,6 @@ module.exports = {
   selectAllImage,
   updateImage,
   updateImageNSFW,
+  getWaifuImagesByNoCleanImageRandom,
+  storeCleanWaifuImage,
 };
