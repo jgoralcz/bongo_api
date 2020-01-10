@@ -14,13 +14,12 @@ const { storeImageBufferToURL } = require('../../../util/functions/bufferToURL')
 
 const { mimsAPI } = require('../../../services/axios');
 
-const HEIGHT = 700;
-const WIDTH = 450;
-
-
-route.patch('/clean-images', async (_, res) => {
+route.patch('/clean-images', async (req, res) => {
   const waifuRow = await getWaifuImagesByNoCleanImageRandom();
   if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].image_id) return res.status(400).send({ error: 'No character found.' });
+
+  const { desiredWidth, desiredHeight } = req.body;
+  if (!desiredWidth || !desiredHeight) return res.status(400).send({ error: 'desired width and height required', body: req.body });
 
   const [waifu] = waifuRow;
   const { image_url_path_extra: imageURL, image_id: id, nsfw } = waifu;
@@ -30,11 +29,11 @@ route.patch('/clean-images', async (_, res) => {
 
   if (!imageURL) return res.status(400).send({ error: `No url found for ${imageURL}.` });
 
-  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: WIDTH, height: HEIGHT, options: { animeFace: true } });
+  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
   if (!mimsBuffer || status !== 200) return res.status(400).send({ error: `No buffer found for ${imageURL}.` });
 
   const { height, width } = getBufferHeightWidth(mimsBuffer);
-  if (!height || !width || height !== HEIGHT || width !== WIDTH) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
+  if (!height || !width || height !== desiredWidth || width !== desiredHeight) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
     isThumbnail: false, height, width, nsfw, type: 'characters', uploader,
@@ -44,14 +43,13 @@ route.patch('/clean-images', async (_, res) => {
 
   const wRow = await getWaifuImagesAndInfoByID(row[0].waifu_id, row[0].image_id);
   if (!wRow || wRow.length <= 0 || !wRow[0]) return res.status(400).send({ error: `Could not find character ${row[0].waifu_id} with image url ${imageURL}.` });
-  const { image_url_clean_path_extra: imageURLClean, image_url_path_extra, name, series, url } = wRow[0];
+  const { image_url_clean_path_extra: imageURLClean, image_url_path_extra: imageURLPathExtra, name, series, url } = wRow[0];
 
-  return res.status(201).send({ imageURLClean, imageURLPathExtra: image_url_path_extra, name, series, url });
+  return res.status(201).send({ imageURLClean, imageURLPathExtra, name, series, url });
 });
 
 route.patch('/:id/nsfw', async (req, res) => {
   const { id } = req.params;
-
   if (!id) return res.status(400).send({ error: 'id needed.' });
 
   const image = await selectAllImage(id);

@@ -2,7 +2,6 @@ const route = require('express-promise-router')();
 const logger = require('log4js').getLogger();
 
 const { getBufferHeightWidth } = require('../../util/functions/buffer');
-const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../util/constants/dimensions');
 const { getWaifuById, insertWaifu, searchCharacterExactly, upsertWaifu } = require('../../db/waifu_schema/waifu/waifu');
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
@@ -87,9 +86,12 @@ route.post('/', async (req, res) => {
   return res.status(201).send({ url: info.image_url, image_id: info.id, id });
 });
 
-route.patch('/clean-images', async (_, res) => {
+route.patch('/clean-images', async (req, res) => {
   const waifuRow = await getWaifuByNoCleanImageRandom();
   if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: 'No character found.' });
+
+  const { desiredWidth, desiredHeight } = req.body;
+  if (!desiredWidth || !desiredHeight) return res.status(400).send({ error: 'desired width and height required', body: req.body });
 
   const [waifu] = waifuRow;
   const { image_url: imageURL, id, nsfw } = waifu;
@@ -99,10 +101,11 @@ route.patch('/clean-images', async (_, res) => {
 
   if (!imageURL) return res.status(400).send({ error: `No url found for ${imageURL}.` });
 
-  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, options: { animeFace: true } });
+  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
   if (!mimsBuffer || status !== 200) return res.status(400).send({ error: `No buffer found for ${imageURL}.` });
+
   const { height, width } = getBufferHeightWidth(mimsBuffer);
-  if (!height || !width || height !== DEFAULT_HEIGHT || width !== DEFAULT_WIDTH) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
+  if (!height || !width || height !== desiredHeight || width !== desiredWidth) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
     isThumbnail: false, height, width, nsfw, type: 'characters', uploader,
