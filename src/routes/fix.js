@@ -12,7 +12,7 @@ route.get('/', async (req, res) => {
       const waifu = await getWaifuById(bad.id);
       if (waifu && waifu[0]) {
         console.log(waifu);
-        await updateWaifu(waifu[0]);
+        await updateWaifu(waifu[0]).catch(console.error);
       }
     }
   }
