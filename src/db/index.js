@@ -1,28 +1,12 @@
 const { Pool } = require('pg');
 
 const {
-  db: {
-    user, host, database, password, port, max, connectionTimeoutMillis, idleTimeoutMillis,
-  },
+  db, db2: test,
 } = require('../../config.json');
 
-const pool = new Pool({
-  user,
-  host,
-  database,
-  password,
-  port,
-  max,
-  connectionTimeoutMillis,
-  idleTimeoutMillis,
-});
+const pool = new Pool(db);
+const poolTest = new Pool(test);
 
-/**
- * pool query function
- * @param {string} query the query to use against
- * @param {array<string>} paramsArray
- * @returns {Promise<*>}
- */
 const poolQuery = async (query, paramsArray) => {
   const client = await pool.connect();
   try {
@@ -36,8 +20,22 @@ const poolQuery = async (query, paramsArray) => {
   }
 };
 
+const poolQueryTest = async (query, paramsArray) => {
+  const clientTest = await poolTest.connect();
+  try {
+    const result = await clientTest.query(query, paramsArray);
+
+    if (!result || !result.rows || !result.rowCount) return undefined;
+
+    return result.rows;
+  } finally {
+    clientTest.release();
+  }
+};
+
 module.exports = {
   poolQuery,
+  poolQueryTest,
 };
 
 // useful to restore 1 table

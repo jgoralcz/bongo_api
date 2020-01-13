@@ -1,4 +1,10 @@
-const { poolQuery } = require('../../index');
+const { poolQuery, poolQueryTest } = require('../../index');
+
+const getRandomBadWaifu = async () => poolQuery(`
+  SELECT *
+  FROM waifu_schema.waifu_table
+  WHERE name = 'Cupcake' and series = 'Emojis';
+`, []);
 
 const insertWaifu = async (waifu) => poolQuery(`
   INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
@@ -10,20 +16,31 @@ const insertWaifu = async (waifu) => poolQuery(`
 waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height,
 waifu.bloodType, waifu.likes, waifu.dislikes, waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender, waifu.series_id]);
 
+const updateWaifu = async (waifu) => poolQuery(`
+  UPDATE waifu_schema.waifu_table
+  SET name = $1, series = $2, description = $3, image_url = $4, image_file_path = $5, url = $6, origin = $7, original_name = $8,
+    romaji_name = $9, age = $10, date_of_birth = $11, hip_cm = $12, waist_cm = $13, bust_cm = $14, weight_kg = $15, height_cm = $16,
+    blood_type = $17, likes = $18, dislikes = $19, husbando = $20, nsfw = $21, date_added = $22, website_id = $23, unknown_gender = $24
+
+    WHERE id = $25
+`, [waifu.name, waifu.series, waifu.description, waifu.image_url || waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
+waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes,
+waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender, waifu.id]);
+
 const upsertWaifu = async (waifu) => poolQuery(`
   INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
-  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id, unknown_gender, series_id)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
   
   ON CONFLICT(name, series_id, original_name, romaji_name) DO UPDATE
     SET name = $1, series = $2, description = $3, image_url = $4, image_file_path = $5, url = $6, origin = $7, original_name = $8,
     romaji_name = $9, age = $10, date_of_birth = $11, hip_cm = $12, waist_cm = $13, bust_cm = $14, weight_kg = $15, height_cm = $16,
-    blood_type = $17, likes = $18, dislikes = $19, husbando = $20, nsfw = $21, date_added = $22, website_id = $23
+    blood_type = $17, likes = $18, dislikes = $19, husbando = $20, nsfw = $21, date_added = $22, website_id = $23, unknown_gender = $24, series_id = $25
   
   RETURNING *;
-    `, [waifu.name, waifu.series, waifu.description, waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
+    `, [waifu.name, waifu.series, waifu.description, waifu.image_url || waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
 waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes,
-waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id]);
+waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender, waifu.series_id]);
 
 const storeNewWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLength, fileType) => poolQuery(`
   UPDATE waifu_schema.waifu_table
@@ -52,29 +69,18 @@ const getWaifuCount = async () => {
   return 0;
 };
 
-/**
- * the waifu series id
- * @param url the waifu's url
- * @param seriesID the serie's id.
- * @returns {Promise<void>}
- */
 const updateWaifuSeriesId = async (url, seriesID) => poolQuery(`
   UPDATE waifu_schema.waifu_table
   SET series_id = $2
   WHERE url = $1;
 `, [url, seriesID]);
 
-const getWaifuById = async (waifuID) => poolQuery(`
+const getWaifuById = async (waifuID) => poolQueryTest(`
   SELECT *
   FROM waifu_schema.waifu_table
   WHERE id = $1;
 `, [waifuID]);
 
-/**
- * finds the waifu by the url
- * @param url the waifu's url
- * @returns {Promise<*>}
- */
 const findWaifuByURL = async (url) => poolQuery(`
   SELECT *
   FROM waifu_schema.waifu_table
@@ -101,35 +107,64 @@ const findWaifuByURL = async (url) => poolQuery(`
 //     ELSE 1 END, name;
 // `, [waifuName]);
 
-/**
-* gets all waifus by the requested name.
-* Then checks the guild id if available.
-* @param waifuName the waifu's name
-* @param guildID the guild's id.
-* @param limit the number to limit
-* @returns {Promise<*>}
-*/
-const getAllWaifusByName = async (waifuName, guildID, limit = 100) => poolQuery(`
-  SELECT name, series, user_id, image_url, url, description, ws.id, original_name, origin
-  FROM waifu_schema.waifu_table ws
-  LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-  WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 3 
-    OR (original_name ILIKE '%' || $1 || '%' AND original_name IS NOT NULL)
-    OR (romaji_name ILIKE '%' || $1 || '%' AND romaji_name IS NOT NULL) 
+// const getAllWaifusByName = async (waifuName, guildID, limit = 100) => poolQuery(`
+//   SELECT name, series, user_id, image_url, url, description, ws.id, original_name, origin
+//   FROM waifu_schema.waifu_table ws
+//   LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
+//   WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 3 
+//     OR (original_name ILIKE '%' || $1 || '%' AND original_name IS NOT NULL)
+//     OR (romaji_name ILIKE '%' || $1 || '%' AND romaji_name IS NOT NULL) 
+//   ORDER BY
+//     CASE
+//     WHEN name ILIKE $1 THEN 0
+//     WHEN name ILIKE $1 || '%' THEN 1
+//     WHEN name ILIKE '%' || $1 || '%' THEN 2
+//     WHEN levenshtein(name, $1) <= 3 THEN 3
+//     WHEN name ILIKE '%' || $1 || '%' THEN 4
+//     WHEN romaji_name ILIKE $1 THEN 5
+//     WHEN romaji_name ILIKE $1 || '%' THEN 6
+//     WHEN original_name ILIKE $1 THEN 7
+//     WHEN original_name ILIKE $1 || '%' THEN 8
+//     ELSE 8 END, name, romaji_name, original_name
+//   LIMIT $3;
+// `, [waifuName, guildID, limit]);
+
+const searchWaifuByName = async (waifuName, limit = 100) => poolQuery(`
+  SELECT name, series, husbando, unknown_gender, image_url, url, description, wt.id, original_name, origin
+  FROM (
+    SELECT name, series, husbando, unknown_gender, image_url, url, description, ws.id, original_name, origin
+    FROM waifu_schema.waifu_table ws
+    WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 1
+      OR (original_name ILIKE '%' || $1 || '%' AND original_name IS NOT NULL)
+      OR (romaji_name ILIKE '%' || $1 || '%' AND romaji_name IS NOT NULL)
+    ORDER BY
+      CASE
+      WHEN name ILIKE $1 THEN 0
+      WHEN name ILIKE $1 || '%' THEN 1
+      WHEN name ILIKE '%' || $1 || '%' THEN 2
+      WHEN romaji_name ILIKE $1 THEN 3
+      WHEN romaji_name ILIKE $1 || '%' THEN 4
+      WHEN original_name ILIKE $1 THEN 5
+      WHEN original_name ILIKE $1 || '%' THEN 6
+      WHEN levenshtein(name, $1) <= 1 THEN 7
+      ELSE 8 END, name, romaji_name, original_name
+    LIMIT $2
+  ) wt
   ORDER BY
     CASE
     WHEN name ILIKE $1 THEN 0
-    WHEN name ILIKE $1 || '%' THEN 1
-    WHEN name ILIKE '%' || $1 || '%' THEN 2
-    WHEN levenshtein(name, $1) <= 3 THEN 3
+    WHEN original_name ILIKE $1 THEN 1
+    WHEN $1 ILIKE ANY (
+      SELECT UNNEST(string_to_array(wt.name, ' ')) AS name
+    ) THEN 2
+    WHEN name ILIKE $1 || '%' THEN 3
     WHEN name ILIKE '%' || $1 || '%' THEN 4
-    WHEN romaji_name ILIKE $1 THEN 5
-    WHEN romaji_name ILIKE $1 || '%' THEN 6
-    WHEN original_name ILIKE $1 THEN 7
-    WHEN original_name ILIKE $1 || '%' THEN 8
-    ELSE 8 END, name, romaji_name, original_name
-  LIMIT $3;
-`, [waifuName, guildID, limit]);
+    WHEN original_name ILIKE $1 THEN 5
+    WHEN original_name ILIKE $1 || '%' THEN 6
+    WHEN levenshtein(name, $1) <= 1 THEN 7
+    ELSE 8 END, name, original_name
+  LIMIT $2;
+`, [waifuName, limit]);
 
 /**
  * gets all waifus by the series name.
@@ -270,7 +305,7 @@ module.exports = {
   getWaifuById,
   findWaifuByURL,
   // getAllWaifusByNameOrSeries,
-  getAllWaifusByName,
+  // getAllWaifusByName,
   getAllWaifusBySeries,
   getSpecificWaifu,
   getRandomWaifuSFW,
@@ -287,4 +322,7 @@ module.exports = {
   searchCharacterExactly,
   storeCleanWaifuImage,
   getWaifuByNoCleanImageRandom,
+  searchWaifuByName,
+  updateWaifu,
+  getRandomBadWaifu,
 };

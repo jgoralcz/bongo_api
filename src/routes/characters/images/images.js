@@ -36,7 +36,7 @@ route.patch('/clean-images', async (req, res) => {
   if (!height || !width || width !== desiredWidth || height !== desiredHeight) return res.status(400).send({ error: `No width or height found for buffer; height=${height}, width=${width}` });
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
-    isThumbnail: false, height, width, nsfw, type: 'characters', uploader,
+    isThumbnail: false, width, height, nsfw, type: 'characters', uploader,
   });
 
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });

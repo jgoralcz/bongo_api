@@ -2,7 +2,11 @@ const route = require('express-promise-router')();
 const logger = require('log4js').getLogger();
 
 const { getBufferHeightWidth } = require('../../util/functions/buffer');
-const { getWaifuById, insertWaifu, searchCharacterExactly, upsertWaifu } = require('../../db/waifu_schema/waifu/waifu');
+const {
+  getWaifuById, insertWaifu,
+  searchCharacterExactly, upsertWaifu,
+  searchWaifuByName, updateWaifu,
+} = require('../../db/waifu_schema/waifu/waifu');
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
@@ -79,7 +83,7 @@ route.post('/', async (req, res) => {
     await insertSeries(id, series, uploader);
   }
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImage, { isThumbnail: false, height, width, nsfw, type: 'characters', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImage, { isThumbnail: false, width, height, nsfw, type: 'characters', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
@@ -108,7 +112,7 @@ route.patch('/clean-images', async (req, res) => {
   if (!height || !width || height !== desiredHeight || width !== desiredWidth) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
-    isThumbnail: false, height, width, nsfw, type: 'characters', uploader,
+    isThumbnail: false, width, height, nsfw, type: 'characters', uploader,
   });
 
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
@@ -149,7 +153,7 @@ route.post('/:id/images', async (req, res) => {
   const checkImageExists = await getHashFromBufferID(waifu.id, buffer);
   if (checkImageExists && checkImageExists[0]) return res.status(400).send({ error: `The hash for ${uri} already exists for ${waifu.id}.` });
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { isThumbnail: false, height, width, nsfw, type: 'characters', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { isThumbnail: false, width, height, nsfw, type: 'characters', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}.` });
 
   const { image_id: imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];
@@ -191,6 +195,20 @@ route.patch('/merge', async (req, res) => {
   return res.status(204).send({ character: { dupe: waifuDupe, merge: waifuMerge } });
 });
 
+route.put('/:id', async (req, res) => {
+  const updatedWaifu = req.body;
+
+  if (!updatedWaifu || !updatedWaifu.id) return res.status(400).send({ error: 'Missing waifu.', message: 'Missing waifu object to insert.', body: req.body });
+
+  const oldWaifuRow = await getWaifuById(updatedWaifu.id);
+  if (!oldWaifuRow || !oldWaifuRow[0] || !oldWaifuRow[0].id) return res.status(404).send({ error: 'Waifu not found.', message: `${updatedWaifu.id} does not exist`, body: req.body });
+
+  const updatedWaifuObject = Object.assign(oldWaifuRow[0], updatedWaifu);
+  await updateWaifu(updatedWaifuObject);
+
+  return res.status(204).send();
+});
+
 route.get('/:id', async (req, res) => {
   const { id } = req.params;
   const query = await getWaifuById(id);
@@ -198,6 +216,14 @@ route.get('/:id', async (req, res) => {
   if (!query || !query[0]) return res.status(404).send({ error: `${id} is not a valid id.` });
 
   return res.status(200).send(query[0]);
+});
+
+route.get('/', async (req, res) => {
+  const { name, limit = 30 } = req.query;
+  if (!name) return res.status(400).send({ error: 'Need query parameter name.' });
+
+  const waifuRows = await searchWaifuByName(name, limit);
+  return res.status(200).send(waifuRows);
 });
 
 module.exports = route;
