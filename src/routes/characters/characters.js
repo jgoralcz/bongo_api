@@ -124,6 +124,8 @@ route.patch('/clean-images', async (req, res) => {
 route.post('/:id/images', async (req, res) => {
   const { body, params, query } = req;
 
+  console.log(body);
+
   if (!body || !body.uri || !params || !params.id || !body.uploader) {
     return res.status(400).send({
       error: 'Missing info. Required: params.id, body.uri, body.uploader',
