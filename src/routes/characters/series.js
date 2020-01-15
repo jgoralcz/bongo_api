@@ -3,24 +3,25 @@ const route = require('express-promise-router')();
 const { validateBuffer } = require('../../handlers/validate');
 
 const {
-  storeNewSeriesImage, upsertSeries,
-  getAllSeriesByName, getSeries,
+  storeNewSeriesImage, upsertSeries, getSeriesById,
+  getAllSeriesByName, getSeries, updateSeries,
 } = require('../../db/waifu_schema/series/series_table');
 
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
 const { getBuffer } = require('../../util/functions/buffer');
 
 route.put('/:id', async (req, res) => {
-  const { body } = req;
+  const updatedSeries = req.body;
 
-  const { series } = body;
-  if (!series) return res.status(400).send({ error: 'Missing series.', message: 'Missing series object to insert.', body });
+  if (!updatedSeries || !updatedSeries.id) return res.status(400).send({ error: 'Missing series.', message: 'Missing series object to insert.', body: req.body });
 
-  const { name, description } = series;
-  if (!name || !description) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: name, description.', body });
+  const oldSeriesRow = await getSeriesById(updatedSeries.id);
+  if (!oldSeriesRow || !oldSeriesRow[0] || !oldSeriesRow[0].id) return res.status(404).send({ error: 'Series not found.', message: `${updatedSeries.id} does not exist`, body: req.body });
 
-  const updatedSeries = await upsertSeries(series);
-  return res.status(200).send(updatedSeries);
+  const updatedSeriesObject = Object.assign(oldSeriesRow[0], updatedSeries);
+  await updateSeries(updatedSeriesObject);
+
+  return res.status(204).send();
 });
 
 route.patch('/', async (req, res) => {
