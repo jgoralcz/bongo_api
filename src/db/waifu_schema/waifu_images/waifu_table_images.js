@@ -1,9 +1,5 @@
 const { poolQuery } = require('../../index');
 
-/**
- * a user needs to review these images.
- * @returns {Promise<void>}
- */
 const getRandomWaifuImageNonReviewed = async () => poolQuery(`
   SELECT wti.image_id, wti.image_url_path_extra as image_url, name, url
   FROM waifu_schema.waifu_table_images wti
@@ -13,10 +9,6 @@ const getRandomWaifuImageNonReviewed = async () => poolQuery(`
   LIMIT 1;
 `, []);
 
-/**
- * get the total remaining images.
- * @returns {Promise<*>}
- */
 const getRemainingImages = async () => poolQuery(`
   SELECT count(*) AS remaining
   FROM waifu_schema.waifu_table_images

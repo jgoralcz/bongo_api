@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table (
   height_clean SMALLINT,
   buffer_length_clean INTEGER,
   file_type_clean varchar(16),
+  image_url_clean_discord varchar(256),
 
   UNIQUE (name, series),
   UNIQUE (url)

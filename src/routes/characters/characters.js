@@ -5,7 +5,7 @@ const { getBufferHeightWidth } = require('../../util/functions/buffer');
 const {
   getWaifuById, insertWaifu,
   searchCharacterExactly, upsertWaifu,
-  searchWaifuByName, updateWaifu,
+  searchWaifuByName, updateWaifu, updateWaifuCleanImage,
 } = require('../../db/waifu_schema/waifu/waifu');
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
@@ -118,7 +118,29 @@ route.patch('/clean-images', async (req, res) => {
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
   const { id: characterID, image_url_clean: imageURLClean, name, series, url } = row[0];
 
-  return res.status(201).send({ imageURLClean, characterID, name, imageURL, series, url });
+  return res.status(201).send({ imageURLClean, characterID, name, imageURL, series, url, buffer: mimsBuffer, id });
+});
+
+route.patch('/:id/images/clean-discord', async (req, res) => {
+  const { body, params } = req;
+
+  if (!body || !body.uri || !params || !params.id) {
+    return res.status(400).send({
+      error: 'Missing info. Required: params.id, body.uri',
+      body,
+      params,
+    });
+  }
+
+  const { id } = params;
+  const { uri } = body;
+
+  const waifuRow = await getWaifuById(id);
+  if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: `character not found with id ${id}.` });
+
+  await updateWaifuCleanImage(id, uri);
+
+  return res.status(200).send({ uri, id });
 });
 
 route.post('/:id/images', async (req, res) => {
@@ -202,6 +224,12 @@ route.put('/:id', async (req, res) => {
 
   const oldWaifuRow = await getWaifuById(updatedWaifu.id);
   if (!oldWaifuRow || !oldWaifuRow[0] || !oldWaifuRow[0].id) return res.status(404).send({ error: 'Waifu not found.', message: `${updatedWaifu.id} does not exist`, body: req.body });
+
+  // modified image_url, need to set the other two to null to keep it consistent.
+  if (updatedWaifu.image_url) {
+    updatedWaifu.image_url_clean = null;
+    updatedWaifu.image_url_clean_discord = null;
+  }
 
   const updatedWaifuObject = Object.assign(oldWaifuRow[0], updatedWaifu);
   await updateWaifu(updatedWaifuObject);
