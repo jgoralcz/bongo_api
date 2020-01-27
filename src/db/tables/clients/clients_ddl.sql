@@ -41,7 +41,10 @@ CREATE TABLE IF NOT EXISTS "clientsTable" (
   owoify BOOLEAN NOT NULL DEFAULT FALSE,
   achievement_aki BOOLEAN NOT NULL DEFAULT FALSE,
   achievement_reddit BOOLEAN NOT NULL DEFAULT FALSE,
-  achievement_search_anime BOOLEAN NOT NULL DEFAULT FALSE
+  achievement_search_anime BOOLEAN NOT NULL DEFAULT FALSE,
+  roll_game BOOLEAN NOT NULL DEFAULT TRUE,
+  roll_western BOOLEAN NOT NULL DEFAULT TRUE,
+  cropped_images BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE INDEX IF NOT EXISTS idx_cookie ON "clientsTable"(cookie);

@@ -177,7 +177,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID) => poolQuery(`
   ) ws
   LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
   ORDER BY series DESC, name ASC
-  LIMIT 200;
+  LIMIT 500;
 `, [waifuSeries, guildID]);
 
 /**
