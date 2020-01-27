@@ -18,8 +18,8 @@ const {
 } = require('../db/tables/clients/clients_table');
 
 
-const invalidBoolSetting = (req) => {
-  const { updatedBool } = req.body;
+const invalidBoolSetting = (body) => {
+  const { updatedBool } = body;
   if (updatedBool == null || (updatedBool !== false && updatedBool !== true)) return undefined;
   return updatedBool;
 };
@@ -27,13 +27,13 @@ const invalidBoolSetting = (req) => {
 const updateSettings = async (req, res, updateFunction) => {
   const { id } = req.params;
   if (!id) return res.status(400).send({ error: 'Expected id for updating user settings.' });
-  const updatedBool = invalidBoolSetting(req);
+  const updatedBool = invalidBoolSetting(req.body);
   if (updatedBool == null) return res.status(400).send({ error: 'updatedBool value needed as a boolean (true or false).' });
 
   const updated = await updateFunction(id, updatedBool);
   if (!updated || updated.length <= 0 || !updated[0] || updated[0].updatedBool == null) return res.status(404).send({ error: `User ${id} not found.` });
 
-  return res.status(204).send({ id, updatedBool: updated[0].updatedBool });
+  return res.status(200).send({ id, updatedBool: updated[0].updatedBool });
 };
 
 route.post('/', async (req, res) => {

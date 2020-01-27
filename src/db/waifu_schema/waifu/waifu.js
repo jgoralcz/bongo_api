@@ -35,7 +35,7 @@ const upsertWaifu = async (waifu) => poolQuery(`
   RETURNING *;
     `, [waifu.name, waifu.series, waifu.description, waifu.image_url || waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
 waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes,
-waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender, waifu.series_id]);
+waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender || waifu.unknownGender || false, waifu.series_id]);
 
 const storeNewWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLength, fileType) => poolQuery(`
   UPDATE waifu_schema.waifu_table

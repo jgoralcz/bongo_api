@@ -3,50 +3,58 @@ const { poolQuery } = require('../../index');
 const updateClientAnimeReactions = async (userId, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET anime_reactions = $2
-  WHERE "userId" = $1;
+  WHERE "userId" = $1
+  RETURNING anime_reactions AS "updatedBool";
 `, [userId, boolValue]);
 
 const updateClientPlayFirst = async (userId, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET play_first = $2
-  WHERE "userId" = $1;
+  WHERE "userId" = $1
+  RETURNING play_first AS "updatedBool";
 `, [userId, boolValue]);
 
 const updateClientRollClaimed = async (userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET user_roll_claimed = $2
-  WHERE "userId" = $1;
+  WHERE "userId" = $1
+  RETURNING user_roll_claimed AS "updatedBool";
 `, [userID, boolValue]);
 
 const updateClientWesternRolls = async (userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET roll_western = $2
-  WHERE "userId" = $1;
+  WHERE "userId" = $1
+  RETURNING roll_western AS "updatedBool";
 `, [userID, boolValue]);
 
 const updateClientGameRolls = async (userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET roll_game = $2
-  WHERE "userId" = $1;
+  WHERE "userId" = $1
+  RETURNING roll_game AS "updatedBool";
 `, [userID, boolValue]);
 
 const updateClientCroppedImages = async (userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET cropped_images = $2
-  WHERE "userId" = $1;
+  WHERE "userId" = $1
+  RETURNING cropped_images AS "updatedBool";
 `, [userID, boolValue]);
 
-const updateGuildCustomCommandUsage = async (guildId, userId) => poolQuery(`
+const updateGuildCustomCommandUsage = async (guildID, userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
-  SET "allowGuild" = NOT "allowGuild",
-  "allowGuildId" = $1 WHERE "userId" = $2;
-`, [guildId, userId]);
+  SET "allowGuildId" = $1, "allowGuild" = $3
+  WHERE "userId" = $2
+  RETURNING "allowGuild" AS "updatedBool";
+`, [guildID, userID, boolValue]);
 
-const updateUniversalCustomCommandsUsage = async (userId) => poolQuery(`
+const updateUniversalCustomCommandsUsage = async (userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
-  SET "allowAnyone" = NOT "allowAnyone"
-  WHERE "userId" = $1;
-`, [userId]);
+  SET "allowAnyone" = $2
+  WHERE "userId" = $1
+  RETURNING "allowAnyone" AS "updatedBool";
+`, [userID, boolValue]);
 
 const addGameAndBankPoints = async (userId, points) => poolQuery(`
   UPDATE "clientsTable"
