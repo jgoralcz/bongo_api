@@ -8,7 +8,7 @@ const insertWaifu = async (waifu) => poolQuery(`
   RETURNING *;
 `, [waifu.name, waifu.series, waifu.description, waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
 waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height,
-waifu.bloodType, waifu.likes, waifu.dislikes, waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender, waifu.series_id]);
+waifu.bloodType, waifu.likes, waifu.dislikes, waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender || waifu.unknownGender || false, waifu.series_id]);
 
 const updateWaifu = async (waifu) => poolQuery(`
   UPDATE waifu_schema.waifu_table
@@ -20,7 +20,7 @@ const updateWaifu = async (waifu) => poolQuery(`
     WHERE id = $28;
 `, [waifu.name, waifu.series, waifu.description, waifu.image_url || waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
 waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes,
-waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender, waifu.image_url_clean, waifu.image_url_clean_discord, waifu.series_id, waifu.id]);
+waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender || waifu.unknownGender || false, waifu.image_url_clean, waifu.image_url_clean_discord, waifu.series_id, waifu.id]);
 
 const upsertWaifu = async (waifu) => poolQuery(`
   INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 

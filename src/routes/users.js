@@ -17,17 +17,30 @@ const {
   updateGuildCustomCommandUsage,
 } = require('../db/tables/clients/clients_table');
 
+const {
+  getRandomWaifuOwnerNotClaimed,
+  getRandomWaifuOwnerWishlistClaimed,
+  getRandomWaifuOwnerClaimed,
+  getRandomWaifuOwnerWishlistNotClaimed,
+} = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
 
-const invalidBoolSetting = (body) => {
-  const { updatedBool } = body;
-  if (updatedBool == null || (updatedBool !== false && updatedBool !== true)) return undefined;
-  return updatedBool;
+const { invalidBoolSetting } = require('../util/functions/validators');
+
+const rollRequest = async (req, res, rollFunction) => {
+  const { userID, guildID } = req.params;
+  if (!userID || !guildID) return res.status(400).send({ error: 'Missing userID or guildID' });
+  const { nsfw, limitMultiplier, rollWestern, rollGame } = req.query;
+
+  const rows = await rollFunction(userID, guildID, invalidBoolSetting(nsfw) || false, invalidBoolSetting(rollWestern) || true, invalidBoolSetting(rollGame) || true, limitMultiplier || 1);
+  return res.status(200).send(rows || []);
 };
 
 const updateSettings = async (req, res, updateFunction) => {
   const { id } = req.params;
   if (!id) return res.status(400).send({ error: 'Expected id for updating user settings.' });
-  const updatedBool = invalidBoolSetting(req.body);
+
+  if (!req.body.updatedBool) return res.status(400).send({ error: 'updatedBool value needed as a boolean (true or false).' });
+  const updatedBool = invalidBoolSetting(req.body.updatedBool);
   if (updatedBool == null) return res.status(400).send({ error: 'updatedBool value needed as a boolean (true or false).' });
 
   const updated = await updateFunction(id, updatedBool);
@@ -94,8 +107,9 @@ route.patch('/:id/settings/roll-claimed', async (req, res) => updateSettings(req
 route.patch('/:id/settings/custom-commands', async (req, res) => updateSettings(req, res, updateUniversalCustomCommandsUsage));
 route.patch('/:id/settings/guilds/:guildID/custom-commands', async (req, res) => {
   const { id, guildID } = req.params;
-  if (!id || !guildID) return res.status(400).send({ error: 'Expected id and guildID for updating custom commands for guild settings.' });
-  const updatedBool = invalidBoolSetting(req);
+
+  if (!req.body.updatedBool) return res.status(400).send({ error: 'updatedBool value needed as a boolean (true or false).' });
+  const updatedBool = invalidBoolSetting(req.body.updatedBool);
   if (updatedBool == null) return res.status(400).send({ error: 'updatedBool value needed as a boolean (true or false).' });
 
   const updated = await updateGuildCustomCommandUsage(id, guildID, updatedBool);
@@ -103,5 +117,10 @@ route.patch('/:id/settings/guilds/:guildID/custom-commands', async (req, res) =>
 
   return res.status(204).send({ id, updatedBool });
 });
+
+route.get('/:userID/guilds/:guildID/rolls/random-owner-not-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerNotClaimed));
+route.get('/:userID/guilds/:guildID/rolls/random-owner-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerClaimed));
+route.get('/:userID/guilds/:guildID/rolls/random-owner-wishlist-not-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerWishlistNotClaimed));
+route.get('/:userID/guilds/:guildID/rolls/random-owner-wishlist-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerWishlistClaimed));
 
 module.exports = route;
