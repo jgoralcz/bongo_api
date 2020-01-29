@@ -269,6 +269,12 @@ const getWaifuByURL = async (url) => poolQuery(`
   WHERE url = $1;
 `, [url]);
 
+const getWaifuByImageURL = async (imageURL) => poolQuery(`
+  SELECT id, name, series, series_id
+  FROM waifu_schema.waifu_table
+  WHERE image_url = $1;
+`, [imageURL]);
+
 const searchCharacterExactly = async (name, series, seriesID) => poolQuery(`
   SELECT id
   FROM waifu_schema.waifu_table
@@ -326,4 +332,5 @@ module.exports = {
   searchWaifuByName,
   updateWaifu,
   updateWaifuCleanImage,
+  getWaifuByImageURL,
 };

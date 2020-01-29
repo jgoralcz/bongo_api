@@ -26,7 +26,7 @@ const { removeDuplicateWaifuClaims } = require('../../db/tables/cg_claim_waifu/c
 
 const {
   updateWaifuImage, deleteWaifuByID,
-  mergeWaifus, getWaifuByURL, storeNewWaifuImage,
+  mergeWaifus, getWaifuByImageURL, storeNewWaifuImage,
   storeCleanWaifuImage, getWaifuByNoCleanImageRandom,
 } = require('../../db/waifu_schema/waifu/waifu');
 
@@ -200,10 +200,10 @@ route.patch('/merge', async (req, res) => {
 
   const { mergeDupeURL, mergeIntoURL } = body;
 
-  const waifuDupeQuery = await getWaifuByURL(mergeDupeURL);
+  const waifuDupeQuery = await getWaifuByImageURL(mergeDupeURL);
   if (!waifuDupeQuery || !waifuDupeQuery[0] || !waifuDupeQuery[0].id) return res.status(404).send({ error: `No character found for url: ${mergeDupeURL}.` });
 
-  const waifuMergeQuery = await getWaifuByURL(mergeIntoURL);
+  const waifuMergeQuery = await getWaifuByImageURL(mergeIntoURL);
   if (!waifuMergeQuery || !waifuMergeQuery[0] || !waifuMergeQuery[0].id) return res.status(404).send({ error: `No character found for url: ${mergeIntoURL}.` });
 
   const [waifuDupe] = waifuDupeQuery;
