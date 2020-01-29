@@ -29,9 +29,9 @@ const { invalidBoolSetting } = require('../util/functions/validators');
 const rollRequest = async (req, res, rollFunction) => {
   const { userID, guildID } = req.params;
   if (!userID || !guildID) return res.status(400).send({ error: 'Missing userID or guildID' });
-  const { nsfw, limitMultiplier, rollWestern, rollGame } = req.query;
+  const { nsfw, limitMultiplier, rollWestern, rollGame, croppedDiscordImage = true } = req.query;
 
-  const rows = await rollFunction(userID, guildID, invalidBoolSetting(nsfw) || false, invalidBoolSetting(rollWestern) || true, invalidBoolSetting(rollGame) || true, limitMultiplier || 1);
+  const rows = await rollFunction(userID, guildID, invalidBoolSetting(nsfw) || false, invalidBoolSetting(rollWestern) || true, invalidBoolSetting(rollGame) || true, invalidBoolSetting(croppedDiscordImage), limitMultiplier || 1);
   return res.status(200).send(rows || []);
 };
 
