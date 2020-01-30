@@ -39,7 +39,7 @@ const updateSettings = async (req, res, updateFunction) => {
   const { id } = req.params;
   if (!id) return res.status(400).send({ error: 'Expected id for updating user settings.' });
 
-  if (!req.body.updatedBool) return res.status(400).send({ error: `updatedBool value needed as a boolean (true or false), received: ${req.body.updatedBool}` });
+  if (req.body.updatedBool == null) return res.status(400).send({ error: `updatedBool value needed as a boolean (true or false), received: ${req.body.updatedBool}` });
   const updatedBool = invalidBoolSetting(req.body.updatedBool);
   if (updatedBool == null) return res.status(400).send({ error: `updatedBool value needed as a boolean (true or false), received: ${req.body.updatedBool}` });
 
