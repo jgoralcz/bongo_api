@@ -5,7 +5,7 @@ const {
   deleteImage, selectImage,
   selectImageByURL, selectAllImage, storeCleanWaifuImage,
   updateImage, updateImageNSFW, getWaifuImagesByNoCleanImageRandom,
-  getWaifuImagesAndInfoByID,
+  getWaifuImagesAndInfoByID, updateWaifuDiscordImageURL,
 } = require('../../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { botID } = require('../../../../config.json');
@@ -42,10 +42,32 @@ route.patch('/clean-images', async (req, res) => {
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
 
   const wRow = await getWaifuImagesAndInfoByID(row[0].waifu_id, row[0].image_id);
-  if (!wRow || wRow.length <= 0 || !wRow[0]) return res.status(400).send({ error: `Could not find character ${row[0].waifu_id} with image url ${imageURL}.` });
+  if (!wRow || wRow.length <= 0 || !wRow[0]) return res.status(404).send({ error: `Could not find character ${row[0].waifu_id} with image url ${imageURL}.` });
   const { image_url_clean_path_extra: imageURLClean, image_url_path_extra: imageURLPathExtra, name, series, url } = wRow[0];
 
-  return res.status(201).send({ imageURLClean, imageURLPathExtra, name, series, url });
+  return res.status(201).send({ imageURLClean, imageURLPathExtra, name, series, url, imageID: id });
+});
+
+
+route.patch('/:id/clean-discord', async (req, res) => {
+  const { body, params } = req;
+
+  if (!body || !body.uri || !params || !params.id) {
+    return res.status(400).send({
+      error: 'Missing info. Required: params.id, body.uri',
+      body,
+      params,
+    });
+  }
+
+  const { id } = params;
+  const { uri } = body;
+
+  const imageRow = await selectImage(id);
+  if (!imageRow || imageRow.length <= 0 || !imageRow[0] || !imageRow[0].image_id) return res.status(404).send({ error: `image not found with id ${id}.` });
+
+  await updateWaifuDiscordImageURL(id, uri);
+  return res.status(200).send({ uri, id });
 });
 
 route.patch('/:id/nsfw', async (req, res) => {

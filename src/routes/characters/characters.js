@@ -136,10 +136,9 @@ route.patch('/:id/images/clean-discord', async (req, res) => {
   const { uri } = body;
 
   const waifuRow = await getWaifuById(id);
-  if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: `character not found with id ${id}.` });
+  if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(404).send({ error: `image not found with id ${id}.` });
 
   await updateWaifuCleanImage(id, uri);
-
   return res.status(200).send({ uri, id });
 });
 

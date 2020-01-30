@@ -163,11 +163,17 @@ const storeCleanWaifuImage = async (id, imageURL, _, width, height, nsfw, buffer
 `, [id, imageURL, width, height, bufferLength, fileType]);
 
 const getWaifuImagesAndInfoByID = async (id, imageID) => poolQuery(`
-  SELECT id, name, url, series, image_url_path_extra, image_url_clean_path_extra
+  SELECT id, image_id, name, url, series, image_url_path_extra, image_url_clean_path_extra
   FROM waifu_schema.waifu_table wswt
   JOIN waifu_schema.waifu_table_images wswti ON wswti.waifu_id = wswt.id
   WHERE wswt.id = $1 AND wswti.image_id = $2;
 `, [id, imageID]);
+
+const updateWaifuDiscordImageURL = async (id, imageDiscordURL) => poolQuery(`
+  UPDATE waifu_schema.waifu_table_images
+  SET image_url_clean_discord_path_extra = $2
+  WHERE image_id = $1;
+`, [id, imageDiscordURL]);
 
 module.exports = {
   getRandomWaifuImageNonReviewed,
@@ -190,4 +196,5 @@ module.exports = {
   getWaifuImagesByNoCleanImageRandom,
   storeCleanWaifuImage,
   getWaifuImagesAndInfoByID,
+  updateWaifuDiscordImageURL,
 };
