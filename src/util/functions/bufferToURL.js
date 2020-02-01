@@ -28,8 +28,11 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
 
   const cdnUpdatedURL = `${imageURL}/${type}/${id}/${characterUUID}.${fileExtension}`;
 
+  console.log(id, cdnUpdatedURL, buffer, height, width, nsfw, buffer.length, fileExtension, uploader);
+
   if (response) {
     const rows = await updateDBFunc(id, cdnUpdatedURL, buffer, height, width, nsfw, buffer.length, fileExtension, uploader);
+    console.log(rows);
     if (rows && rows.length > 0) {
       logger.info(`Finished uploading ${cdnUpdatedURL}`);
     } else {

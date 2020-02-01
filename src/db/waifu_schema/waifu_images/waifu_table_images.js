@@ -160,7 +160,7 @@ const getWaifuImagesByNoCleanImageRandom = async () => poolQuery(`
   LIMIT 1;
 `, []);
 
-const storeCleanWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+const storeCleanWaifuImage = async (id, imageURL, _, width, height, __, bufferLength, fileType) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
   SET image_url_clean_path_extra = $2, width_clean = $3, height_clean = $4,
   buffer_length_clean = $5, file_type_clean = $6

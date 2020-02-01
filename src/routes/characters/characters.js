@@ -190,8 +190,8 @@ route.post('/:id/images', async (req, res) => {
     const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: uri, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
     let urlCropped = '';
     if (mimsBuffer && status === 200) {
-      const rowClean = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImageExtra, {
-        isThumbnail: false, width, height, nsfw, type: 'characters', uploader,
+      const rowClean = await storeImageBufferToURL(imageID, mimsBuffer, storeCleanWaifuImageExtra, {
+        width, height, nsfw, type: 'characters', uploader,
       });
       if (rowClean && rowClean.length > 0 && rowClean[0]) {
         const wRow = await getWaifuImagesAndInfoByID(rowClean[0].waifu_id, rowClean[0].image_id);

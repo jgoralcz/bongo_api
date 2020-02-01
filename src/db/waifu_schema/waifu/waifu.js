@@ -48,7 +48,7 @@ const storeNewWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLe
   RETURNING *;
 `, [id, imageURL, width, height, nsfw, bufferLength, fileType]);
 
-const storeCleanWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLength, fileType) => poolQuery(`
+const storeCleanWaifuImage = async (id, imageURL, _, width, height, __, bufferLength, fileType) => poolQuery(`
   UPDATE waifu_schema.waifu_table
   SET image_url_clean = $2, width_clean = $3, height_clean = $4,
   buffer_length_clean = $5, file_type_clean = $6
