@@ -22,6 +22,8 @@ const {
   getHashFromBufferID, mergeWaifuImages,
 } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
+const { getWaifuImagesAndInfoByID, storeCleanWaifuImage: storeCleanWaifuImageExtra } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
+
 const { removeDuplicateWaifuClaims } = require('../../db/tables/cg_claim_waifu/cg_claim_waifu');
 
 const {
@@ -83,7 +85,7 @@ route.post('/', async (req, res) => {
     await insertSeries(id, series, uploader);
   }
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImage, { isThumbnail: false, width, height, nsfw, type: 'characters', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImage, { width, height, nsfw, type: 'characters', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
@@ -112,7 +114,7 @@ route.patch('/clean-images', async (req, res) => {
   if (!height || !width || height !== desiredHeight || width !== desiredWidth) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
-    isThumbnail: false, width, height, nsfw, type: 'characters', uploader,
+    width, height, nsfw, type: 'characters', uploader,
   });
 
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
@@ -155,7 +157,7 @@ route.post('/:id/images', async (req, res) => {
   }
 
   const { id } = params;
-  const { uri, nsfw = false, uploader } = body;
+  const { uri, nsfw = false, uploader, crop, desiredWidth = 300, desiredHeight = 467 } = body;
 
   const waifuRow = await getWaifuById(id);
   if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: `character not found with id ${id}.` });
@@ -174,7 +176,7 @@ route.post('/:id/images', async (req, res) => {
   const checkImageExists = await getHashFromBufferID(waifu.id, buffer);
   if (checkImageExists && checkImageExists[0]) return res.status(400).send({ error: `The hash for ${uri} already exists for ${waifu.id}.` });
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { isThumbnail: false, width, height, nsfw, type: 'characters', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { width, height, nsfw, type: 'characters', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}.` });
 
   const { image_id: imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];
@@ -182,6 +184,23 @@ route.post('/:id/images', async (req, res) => {
   if (!waifu.image_url) {
     await updateWaifuImage(id, imageURLExtra, width,
       height, nsfw, buffer.length, fileType, uploader).catch((e) => logger.error(e));
+  }
+
+  if (crop) {
+    const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: uri, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
+    let urlCropped = '';
+    if (mimsBuffer && status === 200) {
+      const rowClean = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImageExtra, {
+        isThumbnail: false, width, height, nsfw, type: 'characters', uploader,
+      });
+      if (rowClean && rowClean.length > 0 && rowClean[0]) {
+        const wRow = await getWaifuImagesAndInfoByID(rowClean[0].waifu_id, rowClean[0].image_id);
+        if (!wRow || wRow.length <= 0 || !wRow[0]) return res.status(404).send({ error: `Could not find character ${row[0].waifu_id} with image url ${imageURLExtra}.` });
+        const { image_url_clean_path_extra: imageClean } = wRow[0];
+        urlCropped = imageClean;
+      }
+    }
+    return res.status(201).send({ url: imageURLExtra, id: imageID, urlCropped });
   }
 
   return res.status(201).send({ url: imageURLExtra, id: imageID });
@@ -223,12 +242,6 @@ route.put('/:id', async (req, res) => {
 
   const oldWaifuRow = await getWaifuById(updatedWaifu.id);
   if (!oldWaifuRow || !oldWaifuRow[0] || !oldWaifuRow[0].id) return res.status(404).send({ error: 'Waifu not found.', message: `${updatedWaifu.id} does not exist`, body: req.body });
-
-  // modified image_url, need to set the other two to null to keep it consistent.
-  if (updatedWaifu.image_url) {
-    updatedWaifu.image_url_clean = null;
-    updatedWaifu.image_url_clean_discord = null;
-  }
 
   const updatedWaifuObject = Object.assign(oldWaifuRow[0], updatedWaifu);
   await updateWaifu(updatedWaifuObject);

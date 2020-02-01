@@ -15,11 +15,12 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table_images (
   file_type TEXT,
   date_added TIMESTAMP now(),
   uploader TEXT,
-  image_url_clean varchar(256),
+  image_url_clean_path_extra varchar(256),
   width_clean SMALLINT,
   height_clean SMALLINT,
   buffer_length_clean INTEGER,
   file_type_clean varchar(16),
+  image_url_clean_discord_path_extra varchar(256)
 
   FOREIGN KEY (waifu_id) REFERENCES waifu_table ON DELETE CASCADE ON UPDATE CASCADE
 );

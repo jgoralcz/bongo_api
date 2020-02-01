@@ -10,6 +10,7 @@ const leaderboards = require('./leaderboards');
 const rolls = require('./rolls');
 const claims = require('./claims');
 const guilds = require('./guilds');
+const mims = require('./mims');
 
 
 router.use('/series', series);
@@ -22,5 +23,6 @@ router.use('/leaderboards', leaderboards);
 router.use('/rolls', rolls);
 router.use('/claims', claims);
 router.use('/guilds', guilds);
+router.use('/mims', mims);
 
 module.exports = router;

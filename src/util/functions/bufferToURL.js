@@ -9,12 +9,12 @@ const { cdnURL, imageURL } = require('../constants/cdn');
 
 const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
   const fileExtension = imageIdentifier(buffer);
-  const { isThumbnail, height, width, nsfw, type = 'characters', uploader } = config;
+  const { height, width, nsfw, type = 'characters', uploader } = config;
   if (!fileExtension || !uploader) return undefined;
 
   const characterUUID = uuid();
 
-  const uri = (isThumbnail) ? `${cdnURL}/${type}/${id}/${characterUUID}_thumb.${fileExtension}` : `${cdnURL}/${type}/${id}/${characterUUID}.${fileExtension}`;
+  const uri = `${cdnURL}/${type}/${id}/${characterUUID}.${fileExtension}`;
 
   const response = await request({
     uri,
@@ -26,7 +26,7 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
     },
   });
 
-  const cdnUpdatedURL = (isThumbnail) ? `${imageURL}/${type}/${id}/${characterUUID}_thumb.${fileExtension}` : `${imageURL}/${type}/${id}/${characterUUID}.${fileExtension}`;
+  const cdnUpdatedURL = `${imageURL}/${type}/${id}/${characterUUID}.${fileExtension}`;
 
   if (response) {
     const rows = await updateDBFunc(id, cdnUpdatedURL, buffer, height, width, nsfw, buffer.length, fileExtension, uploader);
@@ -53,7 +53,7 @@ const deleteCDNImage = async (id, imageURLDelete, deleteDBFunc) => {
     },
   });
 
-  if (response) {
+  if (response && deleteDBFunc) {
     const rows = await deleteDBFunc(id);
     if (rows && rows.length > 0) {
       logger.info(`Deleted ${imageURLDelete}`);

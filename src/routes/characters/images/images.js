@@ -6,6 +6,7 @@ const {
   selectImageByURL, selectAllImage, storeCleanWaifuImage,
   updateImage, updateImageNSFW, getWaifuImagesByNoCleanImageRandom,
   getWaifuImagesAndInfoByID, updateWaifuDiscordImageURL,
+  getImageInfoByURL,
 } = require('../../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { botID } = require('../../../../config.json');
@@ -13,6 +14,19 @@ const { getBufferHeightWidth } = require('../../../util/functions/buffer');
 const { storeImageBufferToURL } = require('../../../util/functions/bufferToURL');
 
 const { mimsAPI } = require('../../../services/axios');
+
+route.post('/search', async (req, res) => {
+  const { uri } = req.body;
+  if (!uri) return res.status(400).send({ error: 'Missing uri in body.' });
+
+  const row = await getImageInfoByURL(uri);
+  if (!row || row.length <= 0 || !row[0]) return res.status(404).send({ error: `No image found for ${uri}` });
+
+  const [info] = row;
+  const { id, image_url_clean_path_extra: imageURLClean, image_url_path_extra: imageURL, image_url_clean_discord_path_extra: imageURLCleanDiscord } = info;
+
+  return res.status(200).send({ id, imageURLClean, imageURL, imageURLCleanDiscord });
+});
 
 route.patch('/clean-images', async (req, res) => {
   const waifuRow = await getWaifuImagesByNoCleanImageRandom();
@@ -36,7 +50,7 @@ route.patch('/clean-images', async (req, res) => {
   if (!height || !width || width !== desiredWidth || height !== desiredHeight) return res.status(400).send({ error: `No width or height found for buffer; height=${height}, width=${width}` });
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
-    isThumbnail: false, width, height, nsfw, type: 'characters', uploader,
+    width, height, nsfw, type: 'characters', uploader,
   });
 
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
@@ -124,10 +138,28 @@ route.delete('/:id', async (req, res) => {
   const image = await selectImage(id);
   if (!image || !image[0] || image.length <= 0) return res.status(404).send({ error: 'Image not found.' });
 
-  const { image_url_path_extra: imageURL, image_id: imageID, uploader } = image[0];
+  const { image_url_path_extra: imageURL, image_url_clean_path_extra: imageURLClean, image_id: imageID, uploader } = image[0];
   if ((uploader && uploader !== requester && !override)) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
 
+  await deleteCDNImage(imageID, imageURLClean);
   await deleteCDNImage(imageID, imageURL, deleteImage);
+
+  return res.status(204).send();
+});
+
+route.delete('/cropped/:id', async (req, res) => {
+  const { id } = req.params;
+  const { override = false, requester } = req.query;
+
+  if (!id || isNaN(parseInt(id, 10))) return res.status(400).send({ error: 'valid id needed.' });
+
+  const image = await selectImage(id);
+  if (!image || !image[0] || image.length <= 0) return res.status(404).send({ error: 'Image not found.' });
+
+  const { image_url_clean_path_extra: imageURLClean, image_id: imageID, uploader } = image[0];
+  if ((uploader && uploader !== requester && !override)) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
+
+  await deleteCDNImage(imageID, imageURLClean);
 
   return res.status(204).send();
 });
