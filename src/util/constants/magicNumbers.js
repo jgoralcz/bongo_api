@@ -5,6 +5,7 @@ const MAGIC = {
   gifNumber: '47494638',
   jpgGeneral: 'ffd8ff',
   webm: '1f45dfa3',
+  webp: '52494646',
 };
 
 const imageIdentifier = (buffer) => {
@@ -22,6 +23,10 @@ const imageIdentifier = (buffer) => {
 
   if (magicNumber === MAGIC.webm) {
     return 'webm';
+  }
+
+  if (magicNumber === MAGIC.webp) {
+    return 'webp';
   }
 
   return '';

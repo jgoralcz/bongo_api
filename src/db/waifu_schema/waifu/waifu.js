@@ -1,15 +1,19 @@
 const { poolQuery } = require('../../index');
 
 const insertWaifu = async (waifu) => poolQuery(`
-  INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
-  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id, unknown_gender, series_id)
+  INSERT INTO waifu_schema.waifu_table (
+    name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
+    date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id, unknown_gender,
+    series_id, image_url_clean, image_url_clean_discord
+  )
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
   
   RETURNING *;
-`, [waifu.name, waifu.series, waifu.description, waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
-waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height,
-waifu.bloodType, waifu.likes, waifu.dislikes, waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender || waifu.unknownGender || false, waifu.series_id,
-waifu.image_url_clean, waifu.image_url_clean_discord]);
+`, [
+  waifu.name, waifu.series, waifu.description, waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName, waifu.age,
+  waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes, waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender || waifu.unknownGender || false,
+  waifu.series_id, waifu.image_url_clean, waifu.image_url_clean_discord,
+]);
 
 const updateWaifu = async (waifu) => poolQuery(`
   UPDATE waifu_schema.waifu_table
@@ -24,8 +28,11 @@ waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, wai
 waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender || waifu.unknownGender || false, waifu.image_url_clean, waifu.image_url_clean_discord, waifu.series_id, waifu.id]);
 
 const upsertWaifu = async (waifu) => poolQuery(`
-  INSERT INTO waifu_schema.waifu_table (name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
-  date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id, unknown_gender, series_id)
+  INSERT INTO waifu_schema.waifu_table (
+    name, series, description, image_url, image_file_path, url, origin, original_name, romaji_name, age, 
+    date_of_birth, hip_cm, waist_cm, bust_cm, weight_kg, height_cm, blood_type, likes, dislikes, husbando, nsfw, date_added, website_id, unknown_gender,
+    series_id, image_url_clean, image_url_clean_discord
+  )
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
   
   ON CONFLICT(name, series_id, original_name, romaji_name) DO UPDATE
@@ -35,10 +42,12 @@ const upsertWaifu = async (waifu) => poolQuery(`
     image_url_clean = $26, image_url_clean_discord = $27
   
   RETURNING *;
-    `, [waifu.name, waifu.series, waifu.description, waifu.image_url || waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
-waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes,
-waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender || waifu.unknownGender || false, waifu.series_id,
-waifu.image_url_clean, waifu.image_url_clean_discord]);
+    `, [
+  waifu.name, waifu.series, waifu.description, waifu.image_url || waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
+  waifu.age, waifu.birthday, waifu.hip, waifu.waist, waifu.bust, waifu.weight, waifu.height, waifu.bloodType, waifu.likes, waifu.dislikes,
+  waifu.husbando, waifu.nsfw, waifu.date_added, waifu.website_id, waifu.unknown_gender || waifu.unknownGender || false, waifu.series_id,
+  waifu.image_url_clean, waifu.image_url_clean_discord,
+]);
 
 const storeNewWaifuImage = async (id, imageURL, _, width, height, nsfw, bufferLength, fileType) => poolQuery(`
   UPDATE waifu_schema.waifu_table

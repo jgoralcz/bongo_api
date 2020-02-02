@@ -34,6 +34,13 @@ const deleteImage = async (imageID) => poolQuery(`
   RETURNING *;
 `, [imageID]);
 
+const deleteCleanImage = async (url) => poolQuery(`
+  UPDATE waifu_schema.waifu_table_images
+  SET image_url_clean_path_extra = null, image_url_clean_discord_path_extra = null
+  WHERE image_url_clean_path_extra = $1 OR image_url_path_extra = 1
+  RETURNING *;
+`, [url]);
+
 const selectImage = async (imageID) => poolQuery(`
   SELECT image_id, waifu_id, image_url_path_extra, image_url_clean_path_extra
   FROM waifu_schema.waifu_table_images
@@ -155,7 +162,7 @@ const updateImageNSFW = async (id, nsfw) => poolQuery(`
 const getWaifuImagesByNoCleanImageRandom = async () => poolQuery(`
   SELECT image_id, image_url_path_extra, nsfw, uploader
   FROM waifu_schema.waifu_table_images
-  WHERE image_url_clean_path_extra is NULL
+  WHERE image_url_clean_path_extra is NULL AND review_cropped = FALSE
   ORDER BY random()
   LIMIT 1;
 `, []);
@@ -163,13 +170,13 @@ const getWaifuImagesByNoCleanImageRandom = async () => poolQuery(`
 const storeCleanWaifuImage = async (id, imageURL, _, width, height, __, bufferLength, fileType) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
   SET image_url_clean_path_extra = $2, width_clean = $3, height_clean = $4,
-  buffer_length_clean = $5, file_type_clean = $6
+  buffer_length_clean = $5, file_type_clean = $6, review_cropped = TRUE
   WHERE image_id = $1
   RETURNING waifu_id, image_id, image_url_clean_path_extra, image_url_path_extra;
 `, [id, imageURL, width, height, bufferLength, fileType]);
 
 const getWaifuImagesAndInfoByID = async (id, imageID) => poolQuery(`
-  SELECT id, image_id, name, url, series, image_url_path_extra, image_url_clean_path_extra
+  SELECT id, waifu_id, image_id, name, url, series, wswti.nsfw, image_url_path_extra, image_url_clean_path_extra
   FROM waifu_schema.waifu_table wswt
   JOIN waifu_schema.waifu_table_images wswti ON wswti.waifu_id = wswt.id
   WHERE wswt.id = $1 AND wswti.image_id = $2;
@@ -204,4 +211,5 @@ module.exports = {
   getWaifuImagesAndInfoByID,
   updateWaifuDiscordImageURL,
   getImageInfoByURL,
+  deleteCleanImage,
 };

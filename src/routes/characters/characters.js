@@ -23,8 +23,8 @@ const {
 } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { getWaifuImagesAndInfoByID, storeCleanWaifuImage: storeCleanWaifuImageExtra } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
-
 const { removeDuplicateWaifuClaims } = require('../../db/tables/cg_claim_waifu/cg_claim_waifu');
+const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../util/constants/dimensions');
 
 const {
   updateWaifuImage, deleteWaifuByID,
@@ -40,6 +40,7 @@ route.post('/', async (req, res) => {
   const {
     imageURL, name, series, nsfw,
     url: uri, seriesList, uploader,
+    crop, desiredWidth, desiredHeight,
   } = body;
 
   const seriesExistsQuery = await searchSeriesExactly(series);
@@ -89,6 +90,22 @@ route.post('/', async (req, res) => {
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
+
+  if (crop) {
+    const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
+    let urlCropped = '';
+    if (mimsBuffer && status === 200) {
+      const rowClean = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
+        width, height, nsfw, type: 'characters', uploader,
+      });
+
+      if (rowClean && rowClean.length > 0 && rowClean[0]) {
+        urlCropped = rowClean[0].image_url_clean;
+      }
+    }
+    return res.status(201).send({ url: info.image_url, image_id: info.id, id, urlCropped });
+  }
+
   return res.status(201).send({ url: info.image_url, image_id: info.id, id });
 });
 
@@ -111,7 +128,10 @@ route.patch('/clean-images', async (req, res) => {
   if (!mimsBuffer || status !== 200) return res.status(400).send({ error: `No buffer found for ${imageURL}.` });
 
   const { height, width } = getBufferHeightWidth(mimsBuffer);
-  if (!height || !width || height !== desiredHeight || width !== desiredWidth) return { error: `No width or height found for buffer; height=${height}, width=${width}` };
+  if (!width || (width !== desiredWidth && width !== DEFAULT_WIDTH)
+    || !height || (height !== desiredHeight && height !== DEFAULT_HEIGHT)) {
+    return res.status(500).send({ error: `No width or height found for buffer; height=${height}, width=${width}` });
+  }
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
     width, height, nsfw, type: 'characters', uploader,
@@ -193,6 +213,7 @@ route.post('/:id/images', async (req, res) => {
       const rowClean = await storeImageBufferToURL(imageID, mimsBuffer, storeCleanWaifuImageExtra, {
         width, height, nsfw, type: 'characters', uploader,
       });
+
       if (rowClean && rowClean.length > 0 && rowClean[0]) {
         const wRow = await getWaifuImagesAndInfoByID(rowClean[0].waifu_id, rowClean[0].image_id);
         if (!wRow || wRow.length <= 0 || !wRow[0]) return res.status(404).send({ error: `Could not find character ${row[0].waifu_id} with image url ${imageURLExtra}.` });
