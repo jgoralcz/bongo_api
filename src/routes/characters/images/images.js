@@ -1,4 +1,5 @@
 const route = require('express-promise-router')();
+const logger = require('log4js').getLogger();
 
 const { deleteCDNImage } = require('../../../util/functions/bufferToURL');
 const {
@@ -124,10 +125,9 @@ route.delete('/clean-url', async (req, res) => {
   const image = await selectImageByURL(url);
   if (!image || !image[0] || image.length <= 0) return res.status(404).send({ error: 'Image not found.' });
 
-  const { image_url_path_extra: imageURL, image_id: imageID, uploader } = image[0];
+  const { image_url_clean_path_extra: imageURLClean, image_id: imageID, uploader } = image[0];
   if ((!uploader || !requester || uploader !== requester) && !override) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
-
-  await deleteCDNImage(imageID, imageURL, deleteCleanImage);
+  await deleteCDNImage(imageID, imageURLClean, deleteCleanImage);
 
   return res.status(204).send();
 });
@@ -140,10 +140,11 @@ route.delete('/url', async (req, res) => {
   const image = await selectImageByURL(url);
   if (!image || !image[0] || image.length <= 0) return res.status(404).send({ error: 'Image not found.' });
 
-  const { image_url_path_extra: imageURL, image_id: imageID, uploader } = image[0];
+  const { image_url_path_extra: imageURL, image_url_clean_path_extra: imageURLClean, image_id: imageID, uploader } = image[0];
   if ((!uploader || !requester || uploader !== requester) && !override) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
 
-  await deleteCDNImage(imageID, imageURL, deleteCleanImage);
+  await deleteCDNImage(imageID, imageURLClean, deleteCleanImage).catch((error) => logger.error(error));
+  await deleteCDNImage(imageID, imageURL, deleteImage);
 
   return res.status(204).send();
 });

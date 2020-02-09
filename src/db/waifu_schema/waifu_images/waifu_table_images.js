@@ -34,12 +34,12 @@ const deleteImage = async (imageID) => poolQuery(`
   RETURNING *;
 `, [imageID]);
 
-const deleteCleanImage = async (url) => poolQuery(`
+const deleteCleanImage = async (id) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
   SET image_url_clean_path_extra = null, image_url_clean_discord_path_extra = null
-  WHERE image_url_clean_path_extra = $1 OR image_url_path_extra = 1
+  WHERE image_id = $1
   RETURNING *;
-`, [url]);
+`, [id]);
 
 const selectImage = async (imageID) => poolQuery(`
   SELECT image_id, waifu_id, image_url_path_extra, image_url_clean_path_extra
@@ -54,9 +54,9 @@ const selectAllImage = async (imageID) => poolQuery(`
 `, [imageID]);
 
 const selectImageByURL = async (url) => poolQuery(`
-  SELECT image_id, waifu_id, image_url_path_extra
+  SELECT image_id, waifu_id, image_url_path_extra, image_url_clean_path_extra
   FROM waifu_schema.waifu_table_images
-  WHERE image_url_path_extra = $1;
+  WHERE image_url_path_extra = $1 OR image_url_clean_path_extra = $1;
 `, [url]);
 
 /**
