@@ -11,7 +11,7 @@ const rolls = require('./rolls');
 const claims = require('./claims');
 const guilds = require('./guilds');
 const mims = require('./mims');
-
+const prefixes = require('./prefixes');
 
 router.use('/series', series);
 router.use('/characters', characters);
@@ -24,5 +24,6 @@ router.use('/rolls', rolls);
 router.use('/claims', claims);
 router.use('/guilds', guilds);
 router.use('/mims', mims);
+router.use('/prefixes', prefixes);
 
 module.exports = router;

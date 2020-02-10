@@ -276,11 +276,11 @@ const getClientInfo = async (userId) => poolQuery(`
   WHERE "userId" = $1;
 `, [userId]);
 
-const updateClientPrefix = async (prefix, userId) => poolQuery(`
+const updateClientPrefix = async (userID, prefix) => poolQuery(`
   UPDATE "clientsTable"
-  SET prefix = $1
-  WHERE "userId" = $2;
-`, [prefix, userId]);
+  SET prefix = $2
+  WHERE "userId" = $1;
+`, [userID, prefix]);
 
 const respectsPaid = async (userId) => poolQuery(`
   UPDATE "clientsTable"

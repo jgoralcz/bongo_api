@@ -4,7 +4,6 @@ const { clearStreaks } = require('../db/tables/clients_guilds/clients_guilds_tab
 const {
   updateUserBankPointsVote,
   getClientInfo,
-  setClientInfo,
   resetAllClientDaily,
   clearVoteStreaks,
   updateClientPlayFirst,
@@ -23,6 +22,8 @@ const {
   getRandomWaifuOwnerClaimed,
   getRandomWaifuOwnerWishlistNotClaimed,
 } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
+
+const { initializeGetNewUser } = require('../util/functions/user');
 
 const { invalidBoolSetting } = require('../util/functions/validators');
 
@@ -51,23 +52,18 @@ const updateSettings = async (req, res, updateFunction) => {
 
 route.post('/', async (req, res) => {
   const { id } = req.body;
+  if (!id) return res.status(400).send({ error: 'User id not provided. Expected id.' });
 
-  if (!id) return res.status(400).send({ error: 'user id not provided. Expected id.' });
-
-  const userQuery = await getClientInfo(id);
-  if (userQuery && userQuery.length > 0 && userQuery[0]) return res.status(409).send(userQuery[0]);
-
-  const setUserQuery = await setClientInfo(id);
-  if (!setUserQuery || setUserQuery <= 0 || !setUserQuery[0]) return res.status(500).send({ error: `Could not make a user with id: ${id}` });
-
-  return res.status(201).send(setUserQuery[0]);
+  const { status, send } = await initializeGetNewUser(id);
+  return res.status(status).send(send);
 });
 
 route.get('/:id', async (req, res) => {
   const { id } = req.params;
+  if (!id) return res.status(400).send({ error: 'Expected id' });
 
   const userQuery = await getClientInfo(id);
-  if (!userQuery || userQuery.length <= 0 || !userQuery[0]) return res.status(404).send({ error: 'User not found.' });
+  if (!userQuery || userQuery.length <= 0 || !userQuery[0]) return res.status(404).send({ error: `User not found with id ${id}.` });
 
   return res.status(200).send(userQuery[0]);
 });

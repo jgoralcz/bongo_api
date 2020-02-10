@@ -17,6 +17,7 @@
     "express-promise-router": "^3.0.3",
     "hsts": "^2.2.0",
     "image-size": "^0.8.3",
+    "ioredis": "^4.14.1",
     "log4js": "^5.3.0",
     "pg": "^7.12.1",
     "request": "^2.88.0",

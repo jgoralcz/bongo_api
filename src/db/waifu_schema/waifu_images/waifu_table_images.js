@@ -56,7 +56,9 @@ const selectAllImage = async (imageID) => poolQuery(`
 const selectImageByURL = async (url) => poolQuery(`
   SELECT image_id, waifu_id, image_url_path_extra, image_url_clean_path_extra
   FROM waifu_schema.waifu_table_images
-  WHERE image_url_path_extra = $1 OR image_url_clean_path_extra = $1;
+  WHERE image_url_path_extra = $1 OR
+    image_url_clean_path_extra = $1 OR
+    image_url_clean_discord_path_extra = $1;
 `, [url]);
 
 /**

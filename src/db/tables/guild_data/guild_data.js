@@ -1,21 +1,11 @@
 const { poolQuery } = require('../../index');
 
-/**
- * gets all the contents of the guild.
- * @param guildId the guild's ID.
- * @returns {Promise<*>}
- */
 const getGuild = async (guildId) => poolQuery(`
   SELECT * FROM 
   "guildsTable" 
   WHERE "guildId" = $1;
 `, [guildId]);
 
-/**
- * sets up a basic guild.
- * @param guildID the guild's ID.
- * @returns {Promise<*>}
- */
 const setupGuild = async (guildID) => poolQuery(`
   INSERT INTO "guildsTable" ("guildId")
   VALUES ($1)
@@ -23,22 +13,17 @@ const setupGuild = async (guildID) => poolQuery(`
   RETURNING *;
 `, [guildID]);
 
-/**
- * gets the server queue info.
- * @param guildID the guild's id.
- * @returns {Promise<Promise<*>|*>}
- */
-const getServerQueue = async (guildID) => {
-  const query = await poolQuery(`
-    SELECT "serverQueue"
-    FROM "guildsTable"
-    WHERE "guildId" = $1;
-  `, [guildID]);
-  if (query != null && query.rowCount > 0 && query.rows[0]) {
-    return query.rows[0].serverQueue || [];
-  }
-  return [];
-};
+// const getServerQueue = async (guildID) => {
+//   const query = await poolQuery(`
+//     SELECT "serverQueue"
+//     FROM "guildsTable"
+//     WHERE "guildId" = $1;
+//   `, [guildID]);
+//   if (query != null && query.rowCount > 0 && query.rows[0]) {
+//     return query.rows[0].serverQueue || [];
+//   }
+//   return [];
+// };
 
 /**
  * gets the server queue info.
@@ -391,30 +376,11 @@ const moveServerQueueTrackTransaction = async (guildID, moveFrom, position, trac
 //   WHERE "guildId" = $1;
 // `, [guildId]);
 
-/**
- * enables the prefix so users can use their own prefix.
- * @param prefixForAllEnable the prefix to enable or disable.
- * @param guildId the guild id.
- * @returns {Promise<*>}
- */
-const enablePrefix = async (prefixForAllEnable, guildId) => poolQuery(`
-  UPDATE "guildsTable" 
-  SET "prefixForAllEnable" = $1 
-  WHERE "guildId" = $2
-`, [prefixForAllEnable, guildId]);
-
-
-/**
- * sets the guild prefix.
- * @param guildPrefix the guild's prefix.
- * @param guildId the guild id.
- * @returns {Promise<*>}
- */
-const setGuildPrefix = async (guildPrefix, guildId) => poolQuery(`
-  UPDATE "guildsTable" 
-  SET "guildPrefix" = $1 
-  WHERE "guildId" = $2
-`, [guildPrefix, guildId]);
+const updatePrefix = async (guildID, prefix, prefixForAllEnable) => poolQuery(`
+  UPDATE "guildsTable"
+  SET "guildPrefix" = $2, "prefixForAllEnable" = $3
+  WHERE "guildId" = $1
+`, [guildID, prefix, prefixForAllEnable]);
 
 /**
  * updates the max volume
@@ -825,8 +791,7 @@ module.exports = {
   getGuild,
   setupGuild,
   // removeGuild,
-  enablePrefix,
-  setGuildPrefix,
+  updatePrefix,
   updateMaxVolume,
   updateVoteSkip,
   updateUnlimitedClaims,
@@ -847,7 +812,7 @@ module.exports = {
   getMaxSongsPerUser,
   updateGuildBuyRolls,
   updateGuildBuyClaims,
-  getServerQueue,
+  // getServerQueue,
   getServerQueueMeta,
   getServerQueueAndMeta,
   getServerVoiceAndTextChannel,
