@@ -20,11 +20,13 @@ const statusRules = [
   { from: 400, to: 1000, level: levels.ERROR },
 ];
 
-const httpLogger = () => connectLogger(logger, {
+const httpLogger = (setupOptions) => connectLogger(logger, {
   level: 'auto',
   statusRules,
   format: (req, res, format) => {
     if (!req || !req.headers) return undefined;
+    const path = req.originalUrl;
+    if (setupOptions.ignorePaths.some((p) => (typeof p === 'string' && p === path) || (p instanceof RegExp && p.test(path)))) return undefined;
 
     return format(`{ "User Agent": "${req.headers['user-agent']}", "Host": "${req.headers.host}", "Url": "${req.originalUrl}", "Method": "${req.method}", "Params": ${JSON.stringify(req.params)}, "Query": ${JSON.stringify(req.query)}, "Body": ${JSON.stringify(req.body)}, "Status Code": "${res.statusCode}", "Status Message": "${res.statusMessage}", "Response Time": ${res.responseTime}, "Content-Type": "${req.headers['content-type']}", "Content-Length": "${req.headers['content-length']}"}`);
   },
