@@ -63,7 +63,7 @@ route.patch('/guilds/:id', async (req, res) => {
   if (!foundGuild || foundGuild.length <= 0 || !foundGuild[0]) return res.status(404).send({ error: `guild not found with id: ${id}.` });
 
   const { status, send } = await updateRedisGuildPrefix(id, req.body);
-  await updateRedisGuildPrefix(id, {});
+  await updateRedisGuildPrefix(id, { prefix, prefixForAllEnable });
   return res.status(status).send(send);
 });
 

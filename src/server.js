@@ -36,7 +36,7 @@ server.use('/', router, errorHandler);
 
 if (env.toUpperCase() === PROD || env.toUpperCase() === TEST) {
   const certificate = { key: fs.readFileSync(serverKey), cert: fs.readFileSync(serverCert) };
-  https.createServer(certificate, server).listen(port, () => logger.info(`${env.toUpperCase()} https server started on ${port}.`))
+  https.createServer(certificate, server).listen(port, () => logger.info(`${env.toUpperCase()} https server started on ${port}.`));
 } else {
   server.listen(port, () => logger.info(`${env.toUpperCase()} server started on ${port}.`));
 }
