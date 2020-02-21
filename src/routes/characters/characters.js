@@ -240,10 +240,10 @@ route.patch('/merge', async (req, res) => {
   const { mergeDupeURL, mergeIntoURL } = body;
 
   const waifuDupeQuery = await getWaifuByImageURL(mergeDupeURL);
-  if (!waifuDupeQuery || !waifuDupeQuery[0] || !waifuDupeQuery[0].id) return res.status(404).send({ error: `No character found for url: ${mergeDupeURL}.` });
+  if (!waifuDupeQuery || !waifuDupeQuery[0] || !waifuDupeQuery[0].id) return res.status(404).send({ error: `No dupe character found for url: ${mergeDupeURL}.` });
 
   const waifuMergeQuery = await getWaifuByImageURL(mergeIntoURL);
-  if (!waifuMergeQuery || !waifuMergeQuery[0] || !waifuMergeQuery[0].id) return res.status(404).send({ error: `No character found for url: ${mergeIntoURL}.` });
+  if (!waifuMergeQuery || !waifuMergeQuery[0] || !waifuMergeQuery[0].id) return res.status(404).send({ error: `No merge character found for url: ${mergeIntoURL}.` });
 
   const [waifuDupe] = waifuDupeQuery;
   const [waifuMerge] = waifuMergeQuery;

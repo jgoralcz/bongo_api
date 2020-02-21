@@ -12,3 +12,6 @@ CREATE TABLE IF NOT EXISTS waifu_schema.series_table (
   width real,
   height real,
 );
+
+create index name_trgm_idx ON waifu_schema.series_table using gist (name gist_trgm_ops);
+create index alternate_name_trgm_idx ON waifu_schema.series_table using gist (alternate_name gist_trgm_ops);

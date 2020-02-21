@@ -67,4 +67,23 @@ route.patch('/guilds/:id', async (req, res) => {
   return res.status(status).send(send);
 });
 
+route.get('/guilds/:guildID/users/:userID', async (req, res) => {
+  const { guildID, userID } = req.params;
+  if (!guildID || !userID) return res.status(400).send({ error: 'guildID, userID is needed in params.' });
+
+  const customPrefix = await getRedisUserPrefix(userID);
+  if (customPrefix == null) return res.status(404).send({ error: `user not found with id: ${guildID}.` });
+
+  const guild = await getRedisGuildPrefix(guildID);
+  if (!guild || guild.guildPrefix == null) return res.status(404).send({ error: `guild not found with id: ${guildID}.` });
+
+  return res.status(200).send({
+    guildID,
+    userID,
+    guildPrefix: guild.guildPrefix,
+    prefixForAllEnable: guild.prefixForAllEnable,
+    userPrefix: customPrefix,
+  });
+});
+
 module.exports = route;

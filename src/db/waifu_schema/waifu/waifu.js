@@ -284,7 +284,9 @@ const getWaifuByURL = async (url) => poolQuery(`
 const getWaifuByImageURL = async (imageURL) => poolQuery(`
   SELECT id, name, series, series_id
   FROM waifu_schema.waifu_table
-  WHERE image_url = $1;
+  WHERE image_url = $1
+    OR image_url_clean = $1
+    OR image_url_clean_discord = $1;
 `, [imageURL]);
 
 const searchCharacterExactly = async (name, series, seriesID) => poolQuery(`

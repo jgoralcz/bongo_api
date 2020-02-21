@@ -7,6 +7,7 @@ const {
   selectImageByURL, selectAllImage, storeCleanWaifuImage,
   updateImage, updateImageNSFW, getWaifuImagesByNoCleanImageRandom,
   getWaifuImagesAndInfoByID, updateWaifuDiscordImageURL, getImageInfoByURL,
+  markSFWImageByURL,
 } = require('../../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { botID } = require('../../../../config.json');
@@ -181,6 +182,14 @@ route.delete('/cropped/:id', async (req, res) => {
 
   await deleteCDNImage(imageID, imageURLClean, deleteCleanImage);
 
+  return res.status(204).send();
+});
+
+route.patch('/nsfw', async (req, res) => {
+  const { imageURL, nsfw } = req.body;
+  if (!imageURL || nsfw == null) return res.status(400).send({ error: 'Expecting imageURL and nsfw' });
+
+  await markSFWImageByURL(imageURL, nsfw);
   return res.status(204).send();
 });
 
