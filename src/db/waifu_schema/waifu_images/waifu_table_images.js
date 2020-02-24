@@ -20,7 +20,9 @@ const markSFWImageByURL = async (uri, nsfw) => poolQuery(`
 const getImageInfoByURL = async (uri) => poolQuery(`
   SELECT waifu_id, image_id, image_url_path_extra, image_url_clean_path_extra, image_url_clean_discord_path_extra
   FROM waifu_schema.waifu_table_images
-  WHERE image_url_path_extra = $1 OR image_url_clean_path_extra = $1;
+  WHERE image_url_path_extra = $1
+    OR image_url_clean_path_extra = $1
+    OR image_url_clean_discord_path_extra = $1;
 `, [uri]);
 
 const getRemainingImages = async () => poolQuery(`
