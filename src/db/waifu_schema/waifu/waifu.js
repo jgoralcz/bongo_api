@@ -204,13 +204,31 @@ const getSpecificWaifu = async (waifu, series) => poolQuery(`
   WHERE name = $1 AND series = $2;
 `, [waifu, series]);
 
-const getRandomWaifuSFW = async () => poolQuery(`
-  SELECT name, series, id, image_url, url
+const getRandomWaifu = async (nsfw, userID, useDiscordImage = false) => poolQuery(`
+  SELECT name, series, id, url, (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $3 AND image_url_clean_discord IS NOT NULL THEN
+        image_url_clean_discord
+      ELSE
+        image_url_clean
+      END
+    FROM (
+      SELECT cropped_images
+      FROM "clientsTable"
+      WHERE "userId" = $2
+    ) ct
+  ) AS image_url
   FROM waifu_schema.waifu_table
-  WHERE (nsfw = FALSE OR nsfw IS NULL)
+  WHERE (((nsfw = $1 AND nsfw = FALSE))
+    OR ((nsfw = $1 AND nsfw = TRUE) OR nsfw = FALSE)
+    OR nsfw IS NULL
+  )
   ORDER BY random()
   LIMIT 1;
-`, []);
+`, [nsfw, userID, useDiscordImage]);
 
 /**
  * gets today's birthday for the waifus
@@ -329,7 +347,7 @@ module.exports = {
   // getAllWaifusByName,
   getAllWaifusBySeries,
   getSpecificWaifu,
-  getRandomWaifuSFW,
+  getRandomWaifu,
   todaysBirthdaysClaims,
   todaysBirthdays,
   getWaifuCount,

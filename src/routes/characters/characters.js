@@ -30,6 +30,7 @@ const {
   updateWaifuImage, deleteWaifuByID,
   mergeWaifus, getWaifuByImageURL, storeNewWaifuImage,
   storeCleanWaifuImage, getWaifuByNoCleanImageRandom,
+  getRandomWaifu,
 } = require('../../db/waifu_schema/waifu/waifu');
 
 route.post('/', async (req, res) => {
@@ -268,6 +269,15 @@ route.put('/:id', async (req, res) => {
   await updateWaifu(updatedWaifuObject);
 
   return res.status(204).send();
+});
+
+route.get('/random', async (req, res) => {
+  const { id, discordCrop, nsfw = false } = req.query;
+
+  const query = await getRandomWaifu(nsfw, id, discordCrop);
+  if (!query || !query[0]) return res.status(404).send({ error: `Could not find a character with query string ${req.query}` });
+
+  return res.status(200).send(query[0]);
 });
 
 route.get('/:id', async (req, res) => {
