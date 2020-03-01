@@ -26,12 +26,6 @@ const updateWishListVisibility = async (userID, guildID, visibility) => poolQuer
 `, [userID, guildID, visibility]);
 
 
-/**
-* increment the user's rolls
-* @param userID the user's id.
-* @param guildID the guild's id.
-* @returns {Promise<void>}
-*/
 const incrementClaimWaifuRoll = async (userID, guildID) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET rolls_waifu = rolls_waifu + 1, latest_roll_date = now()
@@ -87,12 +81,6 @@ const resetClaimByUserId = async (userId, guildId) => poolQuery(`
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userId, guildId]);
 
-/**
-* increment the user's rolls
-* @param userId the user's id
-* @param guildId the guild's id
-* @returns {Promise<void>}
-*/
 const resetRollsByIdVote = async (userId, guildId) => poolQuery(`                
   WITH cte AS (
     UPDATE "clientsGuildsTable"
@@ -121,13 +109,8 @@ const resetRollsByIdVote = async (userId, guildId) => poolQuery(`
 // `, [userId, guildId]);
 
 
-/**
-* get the total of dailies this user has.
-* @param userId the user's id.
-* @returns {Promise<*>}
-*/
 const getTotalMemberDailies = async (userId) => poolQuery(`
-  SELECT count(*) AS max
+  SELECT count(*) AS "totalDailies"
   FROM "clientsGuildsTable"
   WHERE "userId" = $1 AND daily IS NOT NULL;
 `, [userId]);
@@ -352,12 +335,6 @@ const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
   JOIN "guildsTable" gt on cgt."guildId" = gt."guildId";
 `, [userId, guildId]);
 
-/**
-* initializes a new guild client. Needed for every message to ensure we have it.
-* @param userId the user's id.
-* @param guildId the guild's id.
-* @returns {Promise<*>}
-*/
 const initializeGuildClient = async (userId, guildId) => poolQuery(`
   INSERT INTO "clientsGuildsTable" (id, "userId", "guildId")
   VALUES ($1, $2, $3)
@@ -365,77 +342,33 @@ const initializeGuildClient = async (userId, guildId) => poolQuery(`
   RETURNING *;
 `, [`${guildId}-${userId}`, userId, guildId]);
 
-const resetRollsPatronsTwo = async (minute) => poolQuery(`
+const resetRolls = async (minute) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET rolls_waifu = 0
   WHERE rolls_waifu IS NOT NULL AND rolls_waifu > 0
-    AND (
-      "guildId" IN (
-        SELECT "guildId"
-        FROM "guildsTable"
-        WHERE patron_two = TRUE and "guildId" IS NOT NULL AND patron_two IS NOT NULL
-          AND roll_claim_minute IS NOT NULL AND roll_claim_minute = $1
-      )
-    );
+    AND "guildId" IN (
+      SELECT "guildId"
+      FROM "guildsTable"
+      WHERE "guildId" IS NOT NULL 
+        AND roll_claim_minute IS NOT NULL
+        AND roll_claim_minute = $1
+  );
 `, [minute]);
 
-const resetClaimsPatronsTwo = async (minute) => poolQuery(`
+const resetClaims = async (hours, minute) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET claim_waifu = NULL
   WHERE claim_waifu IS NOT NULL
-    AND (
-      "guildId" IN (
-        SELECT "guildId"
-        FROM "guildsTable"
-        WHERE 
-          patron_two = TRUE 
-          AND "guildId" IS NOT NULL
-          AND patron_two IS NOT NULL
-          AND roll_claim_minute IS NOT NULL AND roll_claim_minute = $1
-      )
+    AND "guildId" IN (
+      SELECT "guildId"
+      FROM "guildsTable"
+      WHERE "guildId" IS NOT NULL
+        AND roll_claim_minute IS NOT NULL
+        AND roll_claim_minute = $2
+        AND roll_claim_hour IS NOT NULL
+        AND MOD($1, roll_claim_hour) = 0
     );
-`, [minute]);
-
-const resetRolls = async () => poolQuery(`
-  UPDATE "clientsGuildsTable"
-  SET rolls_waifu = 0
-  WHERE rolls_waifu > 0;
-`, []);
-
-const resetClaimsPatronsOne = async () => poolQuery(`
-  UPDATE "clientsGuildsTable"
-  SET claim_waifu = NULL
-  WHERE claim_waifu IS NOT NULL 
-    AND (
-      "userId" IN (
-        SELECT "userId"
-        FROM "clientsTable"
-        WHERE patron = TRUE AND "userId" IS NOT NULL AND patron IS NOT NULL
-      )
-    OR
-      "guildId" IN (
-        SELECT "guildId"
-        FROM "guildsTable"
-        WHERE patron_one = TRUE AND "guildId" IS NOT NULL AND patron_one IS NOT NULL
-      )
-    );
-`, []);
-
-const resetClaimsPlebs = async () => poolQuery(`
-  UPDATE "clientsGuildsTable"
-  SET claim_waifu = NULL
-  WHERE claim_waifu IS NOT NULL AND
-    "userId" IN (
-      SELECT "userId"
-      FROM "clientsTable"
-      WHERE patron = FALSE AND "userId" IS NOT NULL AND patron IS NOT NULL
-    )
-  AND "guildId" IN (
-    SELECT "guildId"
-    FROM "guildsTable"
-    WHERE patron_one = FALSE AND "guildId" IS NOT NULL AND patron_one IS NOT NULL
-  );
-`, []);
+`, [hours, minute]);
 
 const clearStreaks = async () => poolQuery(`
   UPDATE "clientsGuildsTable"
@@ -469,10 +402,7 @@ module.exports = {
   getClientsGuildsInfoById,
   getClientsGuildsInfo,
   initializeGuildClient,
-  resetRollsPatronsTwo,
-  resetClaimsPatronsTwo,
+  resetClaims,
   resetRolls,
-  resetClaimsPatronsOne,
-  resetClaimsPlebs,
   clearStreaks,
 };

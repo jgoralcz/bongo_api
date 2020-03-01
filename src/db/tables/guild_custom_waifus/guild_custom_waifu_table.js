@@ -160,21 +160,11 @@ const getAllCustomWaifusByName = async (waifuName, guildID, limit = 100) => pool
   LIMIT $3;
 `, [waifuName, guildID, limit]);
 
-/**
- * gets all the waifu count.
- * @returns {Promise<number|*>}
- */
-const getCustomWaifuCount = async (guildID) => {
-  const query = await poolQuery(`
-    SELECT count(*) AS count
-    FROM guild_custom_waifus
-    WHERE guild_id = $1;
-  `, [guildID]);
-  if (query && query.rowCount > 0 && query.rows[0]) {
-    return query.rows[0].count;
-  }
-  return 0;
-};
+const getCustomWaifuCount = async (guildID) => poolQuery(`
+  SELECT count(*) AS count
+  FROM guild_custom_waifus
+  WHERE guild_id = $1;
+`, [guildID]);
 
 
 module.exports = {

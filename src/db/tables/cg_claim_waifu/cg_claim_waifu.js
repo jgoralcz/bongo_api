@@ -41,112 +41,110 @@ const getTopClaimWaifus = async (offset, limit, guildID) => poolQuery(`
   LIMIT $2;
 `, [offset, limit, guildID]);
 
-const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier) => {
-  return poolQuery(`
-    SELECT name, husbando, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, url, t1.id, t1.date, is_game, is_western, (
-      SELECT COALESCE (
-        (
-          SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw)
-          FROM (
-            SELECT image_id
-            FROM claim_waifu_user_images
-            WHERE user_id = t1.user_id AND waifu_id = t1.id
-          ) cwui
-          JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
-        ),
-        (
-          SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) 
-          FROM (
-            SELECT image_id
-            FROM claim_waifu_user_images
-            WHERE user_id = $1 AND waifu_id = t1.id
-          ) cwui
-          JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
-        )
-      ) AS user_image
-    ),
-    (
-      SELECT
-        CASE
-        WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
-          image_url
-        WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
-          image_url_clean_discord
-        ELSE
-          image_url_clean
-        END
-      FROM (
-        SELECT cropped_images
-        FROM "clientsTable"
-        WHERE "userId" = $1
-      ) ct
-    ) AS image_url
-    FROM (
-      SELECT name, husbando, unknown_gender, cgw.id, user_id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, date, series_id, is_game, is_western
-      FROM (
-        SELECT name, husbando, unknown_gender, id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, series_id, is_game, is_western
+const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier) => poolQuery(`
+  SELECT name, husbando, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, url, t1.id, t1.date, is_game, is_western, (
+    SELECT COALESCE (
+      (
+        SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw)
         FROM (
-          SELECT ws.name, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
-          FROM waifu_schema.waifu_table ws
-          JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
-          WHERE ws.id NOT IN (
-            SELECT waifu_id as id
-            FROM cg_claim_waifu_table
-            WHERE guild_id = $2 AND waifu_id IS NOT NULL
-          ) 
-          AND ws.series_id NOT IN (
-            SELECT series_id
-            FROM clients_disable_series
-            WHERE user_id = $1 AND series_id IS NOT NULL
-          )
-          AND (((ws.nsfw = $3 AND ws.nsfw = FALSE))
-            OR ((ws.nsfw = $3 AND ws.nsfw = TRUE) OR ws.nsfw = FALSE)
-            OR ws.nsfw IS NULL
-          )
-          AND (((is_western = $4 AND is_western = FALSE))
-            OR ((is_western = $4 AND is_western = TRUE) OR is_western = FALSE)
-          )
-          AND (((is_game = $5 AND is_game = FALSE))
-            OR ((is_game = $5 AND is_game = TRUE) OR is_game = FALSE)
-          )
-          ORDER BY random()
-          LIMIT 10 * $7 / 6 + 10
-        ) s1
-        WHERE s1.id IN (
-          SELECT DISTINCT(waifu_id) AS id
-          FROM cg_wishlist_waifu_table cgt
-          WHERE cgt.user_id = $1 and cgt.guild_id = $2
+          SELECT image_id
+          FROM claim_waifu_user_images
+          WHERE user_id = t1.user_id AND waifu_id = t1.id
+        ) cwui
+        JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+      ),
+      (
+        SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) 
+        FROM (
+          SELECT image_id
+          FROM claim_waifu_user_images
+          WHERE user_id = $1 AND waifu_id = t1.id
+        ) cwui
+        JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+      )
+    ) AS user_image
+  ),
+  (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
+        image_url_clean_discord
+      ELSE
+        image_url_clean
+      END
+    FROM (
+      SELECT cropped_images
+      FROM "clientsTable"
+      WHERE "userId" = $1
+    ) ct
+  ) AS image_url
+  FROM (
+    SELECT name, husbando, unknown_gender, cgw.id, user_id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, date, series_id, is_game, is_western
+    FROM (
+      SELECT name, husbando, unknown_gender, id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, series_id, is_game, is_western
+      FROM (
+        SELECT ws.name, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
+        FROM waifu_schema.waifu_table ws
+        JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
+        WHERE ws.id NOT IN (
+          SELECT waifu_id as id
+          FROM cg_claim_waifu_table
+          WHERE guild_id = $2 AND waifu_id IS NOT NULL
         ) 
-        OR s1.series_id IN (
-          SELECT DISTINCT(series_id) AS id
-          FROM cg_wishlist_series_table cgt
-          WHERE cgt.user_id = $1 AND cgt.guild_id = $2
+        AND ws.series_id NOT IN (
+          SELECT series_id
+          FROM clients_disable_series
+          WHERE user_id = $1 AND series_id IS NOT NULL
         )
-        OR s1.id IN (
-          SELECT DISTINCT(waifu_id) AS id
-          FROM cg_wishlist_waifu_table cgt
-          WHERE cgt.guild_id = $2
+        AND (((ws.nsfw = $3 AND ws.nsfw = FALSE))
+          OR ((ws.nsfw = $3 AND ws.nsfw = TRUE) OR ws.nsfw = FALSE)
+          OR ws.nsfw IS NULL
         )
-        OR s1.series_id IN (
-          SELECT DISTINCT(series_id) AS id
-          FROM cg_wishlist_series_table cgt
-          WHERE cgt.guild_id = $2
+        AND (((is_western = $4 AND is_western = FALSE))
+          OR ((is_western = $4 AND is_western = TRUE) OR is_western = FALSE)
         )
-        OR ($7 > 20
-          AND s1.id IN (
-            SELECT waifu_id AS id
-            FROM mat_view_top_thousand_waifus
-            ORDER BY random()
-            LIMIT 1
-          )
+        AND (((is_game = $5 AND is_game = FALSE))
+          OR ((is_game = $5 AND is_game = TRUE) OR is_game = FALSE)
         )
         ORDER BY random()
-        LIMIT 1
-      ) cgw
-      LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
-    ) t1;
-  `, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier]);
-};
+        LIMIT 10 * $7 / 6 + 10
+      ) s1
+      WHERE s1.id IN (
+        SELECT DISTINCT(waifu_id) AS id
+        FROM cg_wishlist_waifu_table cgt
+        WHERE cgt.user_id = $1 and cgt.guild_id = $2
+      ) 
+      OR s1.series_id IN (
+        SELECT DISTINCT(series_id) AS id
+        FROM cg_wishlist_series_table cgt
+        WHERE cgt.user_id = $1 AND cgt.guild_id = $2
+      )
+      OR s1.id IN (
+        SELECT DISTINCT(waifu_id) AS id
+        FROM cg_wishlist_waifu_table cgt
+        WHERE cgt.guild_id = $2
+      )
+      OR s1.series_id IN (
+        SELECT DISTINCT(series_id) AS id
+        FROM cg_wishlist_series_table cgt
+        WHERE cgt.guild_id = $2
+      )
+      OR ($7 > 20
+        AND s1.id IN (
+          SELECT waifu_id AS id
+          FROM mat_view_top_thousand_waifus
+          ORDER BY random()
+          LIMIT 1
+        )
+      )
+      ORDER BY random()
+      LIMIT 1
+    ) cgw
+    LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
+  ) t1;
+`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier]);
 
 const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage) => poolQuery(`
   SELECT name, husbando, nsfw, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, url, t1.id, t1.date, is_game, is_western, (
@@ -502,7 +500,8 @@ const findClaimWaifuByNameAndIDJoinURL = async (userID, guildID, waifuName) => p
  */
 const claimClientWaifuID = async (userID, guildID, waifuID, date) => poolQuery(`
   INSERT INTO cg_claim_waifu_table (guild_user_id, guild_id, user_id, waifu_id, date)
-  VALUES ($1, $2, $3, $4, $5);
+  VALUES ($1, $2, $3, $4, $5)
+  RETURNING *;
 `, [`${guildID}-${userID}`, guildID, userID, waifuID, date]);
 
 /**
@@ -621,16 +620,11 @@ const getTopServerClaimWaifu = async (guildID) => poolQuery(`
 `, [guildID]);
 
 
-const getRemainingClaimWaifusServer = async (guildID) => {
-  const query = await poolQuery(`
-    SELECT count(DISTINCT(waifu_id)) AS claimed_waifus
-    FROM cg_claim_waifu_table
-    WHERE guild_id = $1;
-  `, [guildID]);
-
-  if (query && query.rows && query.rows[0] && query.rows[0].claimed_waifus) return query.rows[0].claimed_waifus;
-  return 0;
-};
+const getRemainingClaimWaifusServer = async (guildID) => poolQuery(`
+  SELECT count(DISTINCT(waifu_id)) AS claimed_waifus
+  FROM cg_claim_waifu_table
+  WHERE guild_id = $1;
+`, [guildID]);
 
 const getUniqueGuildMembersClaim = async (guildID) => poolQuery(`
   SELECT DISTINCT user_id

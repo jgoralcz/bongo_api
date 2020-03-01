@@ -12,6 +12,10 @@ const claims = require('./claims');
 const guilds = require('./guilds');
 const mims = require('./mims');
 const prefixes = require('./prefixes');
+const votes = require('./votes');
+const states = require('./states');
+const userGuilds = require('./userGuilds');
+const achievements = require('./achievements');
 
 router.use('/series', series);
 router.use('/characters', characters);
@@ -25,5 +29,9 @@ router.use('/claims', claims);
 router.use('/guilds', guilds);
 router.use('/mims', mims);
 router.use('/prefixes', prefixes);
+router.use('/votes', votes);
+router.use('/states', states);
+router.use('/user-guilds', userGuilds);
+router.use('/achievements', achievements);
 
 module.exports = router;

@@ -387,11 +387,11 @@ const checkUserGauntletQuest = async (userID) => poolQuery(`
   WHERE "userId" = $1;
 `, [userID]);
 
-const updateClientsSnipe = async (userID) => poolQuery(`
+const updateClientsSnipe = async (userID, bool) => poolQuery(`
   UPDATE "clientsTable"
-  SET sniped = TRUE
+  SET sniped = $2
   WHERE "userId" = $1;
-`, [userID]);
+`, [userID, bool]);
 
 const updatePatsCount = async (userID) => poolQuery(`
   UPDATE "clientsTable"
@@ -430,19 +430,11 @@ const clientBuyGauntlet = async (userId, gauntletPrice) => poolQuery(`
   WHERE "userId" = $1;
 `, [userId, gauntletPrice]);
 
-const checkSnipe = async (userID) => {
-  const sniperQuery = await poolQuery(`
-        SELECT sniped
-        FROM "clientsTable"
-        WHERE "userId" = $1;
-    `, [userID]);
-
-  if (sniperQuery.rowCount > 0 && sniperQuery.rows[0]) {
-    return sniperQuery.rows[0].sniped;
-  }
-
-  return true;
-};
+const checkSnipe = async (userID) => poolQuery(`
+  SELECT sniped
+  FROM "clientsTable"
+  WHERE "userId" = $1;
+`, [userID]);
 
 const updateUserBankPointsVote = async (userID, points) => poolQuery(`
   UPDATE "clientsTable" 

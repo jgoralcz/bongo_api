@@ -1,8 +1,8 @@
 const { poolQuery } = require('../../index');
 
 const getGuild = async (guildId) => poolQuery(`
-  SELECT * FROM 
-  "guildsTable" 
+  SELECT *
+  FROM "guildsTable" 
   WHERE "guildId" = $1;
 `, [guildId]);
 
@@ -13,17 +13,12 @@ const setupGuild = async (guildID) => poolQuery(`
   RETURNING *;
 `, [guildID]);
 
-// const getServerQueue = async (guildID) => {
-//   const query = await poolQuery(`
-//     SELECT "serverQueue"
-//     FROM "guildsTable"
-//     WHERE "guildId" = $1;
-//   `, [guildID]);
-//   if (query != null && query.rowCount > 0 && query.rows[0]) {
-//     return query.rows[0].serverQueue || [];
-//   }
-//   return [];
-// };
+const updateGuildShowGender = async (guildID, showGender) => poolQuery(`
+  UPDATE "guildsTable"
+  SET show_gender = $2
+  WHERE "guildId" = $1
+  RETURNING show_gender AS "updatedBool";
+`, [guildID, showGender]);
 
 /**
  * gets the server queue info.
@@ -429,18 +424,12 @@ const resetVoteSkippersAndSeek = async (guildId) => poolQuery(`
   WHERE "guildId" = $1;
 `, [guildId]);
 
-/**
- * unlimited claims
- * @param guildID the guild id
- * @param unlimitedClaims whether to enable unlimited claims for a waifu or not
- * @returns {Promise<void>}
- */
 const updateUnlimitedClaims = async (guildID, unlimitedClaims) => poolQuery(`
   UPDATE "guildsTable"
   SET unlimited_claims = $2
-  WHERE "guildId" = $1;
+  WHERE "guildId" = $1
+  RETURNING unlimited_claims AS "updatedBool";
 `, [guildID, unlimitedClaims]);
-
 
 /**
  * updates the guild claim seconds
@@ -454,17 +443,17 @@ const updateGuildClaimSeconds = async (guildID, seconds) => poolQuery(`
   WHERE "guildId" = $1;
 `, [guildID, seconds]);
 
-/**
- * updates the guild claim seconds
- * @param guildID the guild id
- * @param minutes the number of minutes
- * @returns {Promise<*>}
- */
 const updateGuildResetClaimsRollsMinutes = async (guildID, minutes) => poolQuery(`
   UPDATE "guildsTable"
   SET roll_claim_minute = $2
   WHERE "guildId" = $1;
 `, [guildID, minutes]);
+
+const updateResetClaimsHour = async (guildID, hour) => poolQuery(`
+  UPDATE "guildsTable"
+  SET roll_claim_hour = $2
+  WHERE "guildId" = $1;
+`, [guildID, hour]);
 
 /**
  * updates the guild claim seconds
@@ -739,34 +728,25 @@ const getMaxSongsPerUser = async (guildId) => poolQuery(`
   WHERE "guildId" = $1;
 `, [guildId]);
 
-/**
- * updates whether the server should buy rolls or not
- * @param guildID the guild's ID.
- * @param buyRolls whether the server should buy rolls or not
- * @returns {Promise<*>}
- */
 const updateGuildBuyRolls = async (guildID, buyRolls) => poolQuery(`
   UPDATE "guildsTable"
   SET buy_rolls = $2
-  WHERE "guildId" = $1;
+  WHERE "guildId" = $1
+  RETURNING buy_rolls AS "updatedBool";
 `, [guildID, buyRolls]);
 
-/**
- * updates whether the server should buy claims or not
- * @param guildID the guild's ID.
- * @param buyClaims whether the server should buy claims or not
- * @returns {Promise<*>}
- */
 const updateGuildBuyClaims = async (guildID, buyClaims) => poolQuery(`
   UPDATE "guildsTable"
   SET buy_claims = $2
-  WHERE "guildId" = $1;
+  WHERE "guildId" = $1
+  RETURNING buy_claims AS "updatedBool";
 `, [guildID, buyClaims]);
 
 const updateGuildRarity = async (guildID, percentage) => poolQuery(`
   UPDATE "guildsTable"
   SET rarity = $2
-  WHERE "guildId" = $1;
+  WHERE "guildId" = $1
+  RETURNING *;
 `, [guildID, percentage]);
 
 const updateGuildWishlistMultiplier = async (guildID, multiplier) => poolQuery(`
@@ -786,6 +766,13 @@ const clearStaleQueue = async () => poolQuery(`
   SET "serverQueue" = '{}', seek = 0
   WHERE queue_last_updated IS NOT NULL AND queue_last_updated < NOW() - INTERVAL '3 days';
 `, []);
+
+const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQuery(`
+  UPDATE "guildsTable"
+  SET show_waifu_rank = $2
+  WHERE "guildId" = $1
+  RETURNING show_waifu_rank AS "updatedBool";
+`, [guildID, waifuRankBool]);
 
 module.exports = {
   getGuild,
@@ -850,4 +837,7 @@ module.exports = {
   updateGuildWishlistMultiplier,
   updateClaimsRollsPatronsWaiting,
   clearStaleQueue,
+  updateResetClaimsHour,
+  updateGuildShowGender,
+  updateGuildShowRankRollingWaifus,
 };

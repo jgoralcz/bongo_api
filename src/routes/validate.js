@@ -10,7 +10,7 @@ route.post('/image', async (req, res) => {
   if (!imageURL) res.status(400).send({ error: 'No image provided.' });
 
   const getImageInfo = await getBuffer(imageURL);
-  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${uri}.` });
+  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
 
   const { buffer: tempBuffer } = getImageInfo;
   const buffer = Buffer.from(tempBuffer);

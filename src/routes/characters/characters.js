@@ -3,10 +3,18 @@ const logger = require('log4js').getLogger();
 
 const { getBufferHeightWidth } = require('../../util/functions/buffer');
 const {
-  getWaifuById, insertWaifu,
-  searchCharacterExactly, upsertWaifu,
-  searchWaifuByName, updateWaifu, updateWaifuCleanImage,
+  getWaifuById,
+  insertWaifu,
+  searchCharacterExactly,
+  upsertWaifu,
+  searchWaifuByName,
+  updateWaifu,
+  updateWaifuCleanImage,
+  getWaifuCount,
 } = require('../../db/waifu_schema/waifu/waifu');
+
+const { getRankClaimedWaifuByID } = require('../../db/tables/cg_claim_waifu_rank/cg_claim_waifu_rank');
+
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
@@ -178,7 +186,14 @@ route.post('/:id/images', async (req, res) => {
   }
 
   const { id } = params;
-  const { uri, nsfw = false, uploader, crop, desiredWidth = 300, desiredHeight = 467 } = body;
+  const {
+    uri,
+    nsfw = false,
+    uploader,
+    crop,
+    desiredWidth = 300,
+    desiredHeight = 467,
+  } = body;
 
   const waifuRow = await getWaifuById(id);
   if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: `character not found with id ${id}.` });
@@ -280,10 +295,26 @@ route.get('/random', async (req, res) => {
   return res.status(200).send(query[0]);
 });
 
+route.get('/count', async (_, res) => {
+  const query = await getWaifuCount();
+  if (!query || !query[0]) return res.status(404).send({ error: 'Could not get the count for all characters.' });
+
+  return res.status(200).send(query[0]);
+});
+
+route.get('/:id/rank', async (req, res) => {
+  const { id } = req.params;
+
+  const query = await getRankClaimedWaifuByID(id);
+  if (!query || !query[0]) return res.status(404).send({ error: `${id} is not a valid id.` });
+
+  return res.status(200).send(query[0]);
+});
+
 route.get('/:id', async (req, res) => {
   const { id } = req.params;
-  const query = await getWaifuById(id);
 
+  const query = await getWaifuById(id);
   if (!query || !query[0]) return res.status(404).send({ error: `${id} is not a valid id.` });
 
   return res.status(200).send(query[0]);

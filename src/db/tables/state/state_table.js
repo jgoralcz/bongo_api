@@ -15,22 +15,10 @@ const incrementRespectsToday = async () => {
   return 1;
 };
 
-/**
- * gets the now date from the database.
- * @returns {Promise<*>}
- */
-const getNowDatabase = async () => {
-  const query = await poolQuery(`
-    SELECT NOW() AS now;
-  `, []);
+const getNowDatabase = async () => poolQuery(`
+  SELECT NOW() AS now;
+`, []);
 
-  return query.rows[0].now;
-};
-
-// /**
-//  * increments the paid respects today.
-//  * @returns {Promise<void>}
-//  */
 // const resetRespectsToday = async () => poolQuery(`
 //   UPDATE state
 //   SET respects_paid_today = 0;

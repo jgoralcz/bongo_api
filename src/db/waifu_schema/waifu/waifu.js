@@ -65,16 +65,10 @@ const storeCleanWaifuImage = async (id, imageURL, _, width, height, __, bufferLe
   RETURNING *;
 `, [id, imageURL, width, height, bufferLength, fileType]);
 
-const getWaifuCount = async () => {
-  const query = await poolQuery(`
-    SELECT count(*) AS count
-    FROM waifu_schema.waifu_table;
-  `, []);
-  if (query && query.rowCount > 0 && query.rows[0]) {
-    return query.rows[0].count;
-  }
-  return 0;
-};
+const getWaifuCount = async () => poolQuery(`
+  SELECT count(*) AS count
+  FROM waifu_schema.waifu_table;
+`, []);
 
 const updateWaifuSeriesId = async (url, seriesID) => poolQuery(`
   UPDATE waifu_schema.waifu_table
