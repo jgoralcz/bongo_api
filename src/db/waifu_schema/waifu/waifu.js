@@ -108,28 +108,6 @@ const findWaifuByURL = async (url) => poolQuery(`
 //     ELSE 1 END, name;
 // `, [waifuName]);
 
-// const getAllWaifusByName = async (waifuName, guildID, limit = 100) => poolQuery(`
-//   SELECT name, series, user_id, image_url, url, description, ws.id, original_name, origin
-//   FROM waifu_schema.waifu_table ws
-//   LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-//   WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 3 
-//     OR (original_name ILIKE '%' || $1 || '%' AND original_name IS NOT NULL)
-//     OR (romaji_name ILIKE '%' || $1 || '%' AND romaji_name IS NOT NULL) 
-//   ORDER BY
-//     CASE
-//     WHEN name ILIKE $1 THEN 0
-//     WHEN name ILIKE $1 || '%' THEN 1
-//     WHEN name ILIKE '%' || $1 || '%' THEN 2
-//     WHEN levenshtein(name, $1) <= 3 THEN 3
-//     WHEN name ILIKE '%' || $1 || '%' THEN 4
-//     WHEN romaji_name ILIKE $1 THEN 5
-//     WHEN romaji_name ILIKE $1 || '%' THEN 6
-//     WHEN original_name ILIKE $1 THEN 7
-//     WHEN original_name ILIKE $1 || '%' THEN 8
-//     ELSE 8 END, name, romaji_name, original_name
-//   LIMIT $3;
-// `, [waifuName, guildID, limit]);
-
 const searchWaifuByName = async (waifuName, limit = 100) => poolQuery(`
   SELECT name, series, husbando, unknown_gender, image_url, url, description, wt.id, original_name, origin
   FROM (
@@ -338,7 +316,6 @@ module.exports = {
   getWaifuById,
   findWaifuByURL,
   // getAllWaifusByNameOrSeries,
-  // getAllWaifusByName,
   getAllWaifusBySeries,
   getSpecificWaifu,
   getRandomWaifu,

@@ -16,6 +16,7 @@ const {
   updateGuildBuyClaims,
   updateGuildShowRankRollingWaifus,
   updateUnlimitedClaims,
+  getAllWaifusByName,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -231,6 +232,16 @@ route.get('/:id/characters/custom/count', async (req, res) => {
   if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any claimed custom characters and may not exist.` });
 
   return res.status(200).send(query[0]);
+});
+
+route.get('/:id/requester/:requesterID/characters', async (req, res) => {
+  const { id, requesterID } = req.params;
+
+  const { name, limit, useDiscordImage } = req.query;
+  if (!name || (limit != null && isNaN(limit)) || (useDiscordImage != null && useDiscordImage !== 'true' && useDiscordImage !== 'false')) return res.status(400).send({ error: 'Incorrect query string.', query: req.query });
+
+  const query = await getAllWaifusByName(name, id, limit, requesterID, useDiscordImage);
+  return res.status(200).send(query);
 });
 
 route.get('/:id', async (req, res) => {

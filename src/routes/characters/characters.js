@@ -222,25 +222,25 @@ route.post('/:id/images', async (req, res) => {
       height, nsfw, buffer.length, fileType, uploader).catch((e) => logger.error(e));
   }
 
-  if (crop) {
-    const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: uri, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
-    let urlCropped = '';
-    if (mimsBuffer && status === 200) {
-      const rowClean = await storeImageBufferToURL(imageID, mimsBuffer, storeCleanWaifuImageExtra, {
-        width, height, nsfw, type: 'characters', uploader,
-      });
-
-      if (rowClean && rowClean.length > 0 && rowClean[0]) {
-        const wRow = await getWaifuImagesAndInfoByID(rowClean[0].waifu_id, rowClean[0].image_id);
-        if (!wRow || wRow.length <= 0 || !wRow[0]) return res.status(404).send({ error: `Could not find character ${row[0].waifu_id} with image url ${imageURLExtra}.` });
-        const { image_url_clean_path_extra: imageClean } = wRow[0];
-        urlCropped = imageClean;
-      }
-    }
-    return res.status(201).send({ url: imageURLExtra, id: imageID, urlCropped });
+  if (!crop) {
+    return res.status(201).send({ url: imageURLExtra, id: imageID });
   }
 
-  return res.status(201).send({ url: imageURLExtra, id: imageID });
+  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: uri, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
+  let urlCropped = '';
+  if (mimsBuffer && status === 200) {
+    const rowClean = await storeImageBufferToURL(imageID, mimsBuffer, storeCleanWaifuImageExtra, {
+      width, height, nsfw, type: 'characters', uploader,
+    });
+
+    if (rowClean && rowClean.length > 0 && rowClean[0]) {
+      const wRow = await getWaifuImagesAndInfoByID(rowClean[0].waifu_id, rowClean[0].image_id);
+      if (!wRow || wRow.length <= 0 || !wRow[0]) return res.status(404).send({ error: `Could not find character ${row[0].waifu_id} with image url ${imageURLExtra}.` });
+      const { image_url_clean_path_extra: imageClean } = wRow[0];
+      urlCropped = imageClean;
+    }
+  }
+  return res.status(201).send({ url: imageURLExtra, id: imageID, urlCropped });
 });
 
 route.patch('/merge', async (req, res) => {

@@ -774,6 +774,119 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
   RETURNING show_waifu_rank AS "updatedBool";
 `, [guildID, waifuRankBool]);
 
+const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false) => poolQuery(`
+  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, wt.id, original_name, origin, (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
+        COALESCE (
+          (
+            SELECT json_build_object('url', image_url_clean_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = wt.user_id AND waifu_id = wt.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          ),
+          (
+            SELECT json_build_object('url', image_url_clean_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = $4 AND waifu_id = wt.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          )
+        )
+      ELSE
+        COALESCE (
+          (
+            SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = wt.user_id AND waifu_id = wt.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          ),
+          (
+            SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = $4 AND waifu_id = wt.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          )
+        )
+      END
+    FROM (
+      SELECT cropped_images, image_url_clean_path_extra, image_url_path_extra, nsfw
+      FROM (
+        SELECT image_id, user_id
+        FROM claim_waifu_user_images
+        WHERE user_id = $4 AND waifu_id = wt.id
+      ) cwui
+      JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+      JOIN "clientsTable" c ON c."userId" = cwui.user_id
+    ) ct
+  ) AS user_image,
+  (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $5 AND image_url_clean_discord IS NOT NULL THEN
+        image_url_clean_discord
+      ELSE
+        image_url_clean
+      END
+    FROM (
+      SELECT cropped_images
+      FROM "clientsTable"
+      WHERE "userId" = $4
+    ) ct
+  ) AS image_url
+  FROM (
+    SELECT name, nsfw, series, husbando, unknown_gender, user_id, image_url, image_url_clean_discord, image_url_clean, url, description, ws.id, original_name, origin
+    FROM waifu_schema.waifu_table ws
+    LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
+    WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 2
+      OR name ILIKE ANY (
+        SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
+      )
+      OR (original_name ILIKE '%' || $1 || '%' AND original_name IS NOT NULL)
+      OR (romaji_name ILIKE '%' || $1 || '%' AND romaji_name IS NOT NULL)
+    ORDER BY
+      CASE
+      WHEN name ILIKE $1 THEN 0
+      WHEN name ILIKE $1 || '%' THEN 1
+      WHEN name ILIKE '%' || $1 || '%' THEN 2
+      WHEN romaji_name ILIKE $1 THEN 3
+      WHEN romaji_name ILIKE $1 || '%' THEN 4
+      WHEN original_name ILIKE $1 THEN 5
+      WHEN original_name ILIKE $1 || '%' THEN 6
+      WHEN levenshtein(name, $1) <= 1 THEN 7
+      ELSE 8 END, name, romaji_name, original_name
+    LIMIT $3
+  ) wt
+  ORDER BY
+    CASE
+    WHEN name ILIKE $1 THEN 0
+    WHEN original_name ILIKE $1 THEN 1
+    WHEN name ILIKE ANY (
+      SELECT UNNEST(string_to_array('%' || $1 || '%', ' ')) AS name
+    ) THEN 2
+    WHEN name ILIKE $1 || '%' THEN 3
+    WHEN name ILIKE '%' || $1 || '%' THEN 4
+    WHEN original_name ILIKE $1 THEN 5
+    WHEN original_name ILIKE $1 || '%' THEN 6
+    WHEN levenshtein(name, $1) <= 1 THEN 7
+    ELSE 8 END, name, original_name
+  LIMIT $3;
+`, [waifuName, guildID, limit, userID, useDiscordImage]);
+
 module.exports = {
   getGuild,
   setupGuild,
@@ -840,4 +953,5 @@ module.exports = {
   updateResetClaimsHour,
   updateGuildShowGender,
   updateGuildShowRankRollingWaifus,
+  getAllWaifusByName,
 };
