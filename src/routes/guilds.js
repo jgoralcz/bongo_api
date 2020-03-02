@@ -17,6 +17,7 @@ const {
   updateGuildShowRankRollingWaifus,
   updateUnlimitedClaims,
   getAllWaifusByName,
+  getWaifusByTagGuildOwners,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -242,6 +243,14 @@ route.get('/:id/requester/:requesterID/characters', async (req, res) => {
 
   const query = await getAllWaifusByName(name, id, limit, requesterID, useDiscordImage);
   return res.status(200).send(query);
+});
+
+route.get('/:id/characters/tags/:tag', async (req, res) => {
+  const { id, tag } = req.params;
+
+  const characters = await getWaifusByTagGuildOwners(id, tag);
+
+  return res.status(200).send(characters);
 });
 
 route.get('/:id', async (req, res) => {

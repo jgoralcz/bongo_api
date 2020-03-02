@@ -887,6 +887,22 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
   LIMIT $3;
 `, [waifuName, guildID, limit, userID, useDiscordImage]);
 
+const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`
+  SELECT distinct(wswt.id), name, nsfw, series, user_id, image_url, url, description, original_name, origin
+  FROM (
+      SELECT tag_id
+      FROM waifu_schema.waifu_table_tag_type
+      WHERE tag_name ILIKE '%' || $2 || '%'
+  )  wswttt
+  
+  JOIN waifu_schema.waifu_table_tags wswtt ON wswtt.tag_id = wswttt.tag_id 
+  JOIN waifu_schema.waifu_table wswt ON wswt.id = wswtt.waifu_id
+  LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = wswt.id AND cgcwt.guild_id = $1
+
+  ORDER BY series DESC, name ASC
+  LIMIT 500;
+`, [guildID, tag]);
+
 module.exports = {
   getGuild,
   setupGuild,
@@ -954,4 +970,5 @@ module.exports = {
   updateGuildShowGender,
   updateGuildShowRankRollingWaifus,
   getAllWaifusByName,
+  getWaifusByTagGuildOwners,
 };
