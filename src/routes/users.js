@@ -23,6 +23,8 @@ const {
   getRandomWaifuOwnerWishlistClaimed,
   getRandomWaifuOwnerClaimed,
   getRandomWaifuOwnerWishlistNotClaimed,
+  findClaimWaifuByIdJoinURL,
+  findClaimWaifuByIdJoinURLFavorites,
 } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
 
 const {
@@ -167,6 +169,26 @@ route.get('/:userID:/guilds/:guildID/characters/:characterID', async (req, res) 
   if (!query || query.length <= 0 || !query[0]) return res.status(404).send({ error: `User ${userID} with guild ${guildID} does not have character ${characterID}.` });
 
   return res.status(200).send(query[0]);
+});
+
+route.get('/:userID/guilds/:guildID/claims/favorites', async (req, res) => {
+  const { userID, guildID } = req.params;
+  const { name, favorite } = req.query;
+
+  if (!name || (favorite != null && favorite !== 'true' && favorite !== 'false')) return res.status(400).send({ error: 'Name query parameter expected and favorite parameter expected as a booelan.' });
+
+  const query = await findClaimWaifuByIdJoinURLFavorites(userID, guildID, name, favorite);
+  return res.status(200).send(query || []);
+});
+
+route.get('/:userID/guilds/:guildID/claims', async (req, res) => {
+  const { userID, guildID } = req.params;
+  const { name } = req.query;
+
+  if (!name) return res.status(400).send({ error: 'Name query parameter expected.' });
+
+  const query = await findClaimWaifuByIdJoinURL(userID, guildID, name);
+  return res.status(200).send(query || []);
 });
 
 route.post('/:userID/guilds/:guildID/characters/:customID/custom', async (req, res) => {

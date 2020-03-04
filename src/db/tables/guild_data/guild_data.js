@@ -852,7 +852,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
     SELECT name, nsfw, series, husbando, unknown_gender, user_id, image_url, image_url_clean_discord, image_url_clean, url, description, ws.id, original_name, origin
     FROM waifu_schema.waifu_table ws
     LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-    WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 2
+    WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 1
       OR name ILIKE ANY (
         SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
       )
@@ -874,12 +874,12 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
   ORDER BY
     CASE
     WHEN name ILIKE $1 THEN 0
-    WHEN original_name ILIKE $1 THEN 1
+    WHEN name ILIKE $1 || '%' THEN 1
+    WHEN name ILIKE '%' || $1 || '%' THEN 2
+    WHEN original_name ILIKE $1 THEN 3
     WHEN name ILIKE ANY (
       SELECT UNNEST(string_to_array('%' || $1 || '%', ' ')) AS name
-    ) THEN 2
-    WHEN name ILIKE $1 || '%' THEN 3
-    WHEN name ILIKE '%' || $1 || '%' THEN 4
+    ) THEN 4
     WHEN original_name ILIKE $1 THEN 5
     WHEN original_name ILIKE $1 || '%' THEN 6
     WHEN levenshtein(name, $1) <= 1 THEN 7

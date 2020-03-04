@@ -396,47 +396,227 @@ const getClaimWaifuList = async (id, offset, limit, guildID) => poolQuery(`
   LIMIT $3 OFFSET $2;
 `, [id, offset, limit, guildID]);
 
-/**
- * finds the bought waifu by name, has all the needed stuff in it.
- * @param userID the user's ID
- * @param guildID the guild's id.
- * @param waifuName the waifu's name to search.
- * @returns {Promise<*>}
- */
 const findClaimWaifuByIdJoinURL = async (userID, guildID, waifuName) => poolQuery(`
-  SELECT waifu_id, wt.name, wt.url, wt.series, favorite, wt.image_url
+  SELECT waifu_id, wt2.name, wt2.url, wt2.series, wt2.favorite, wt2.image_url, wt2.original_name, wt2.romaji_name, (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
+        COALESCE (
+          (
+            SELECT json_build_object('url', image_url_clean_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = wt2.user_id AND waifu_id = wt2.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          ),
+          (
+            SELECT json_build_object('url', image_url_clean_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = $1 AND waifu_id = wt2.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          )
+        )
+      ELSE
+        COALESCE (
+          (
+            SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = wt2.user_id AND waifu_id = wt2.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          ),
+          (
+            SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = $1 AND waifu_id = wt2.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          )
+        )
+      END
+    FROM (
+      SELECT cropped_images, image_url_clean_path_extra, image_url_path_extra, nsfw
+      FROM (
+        SELECT image_id, user_id
+        FROM claim_waifu_user_images
+        WHERE user_id = $1 AND waifu_id = wt2.id
+      ) cwui
+      JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+      JOIN "clientsTable" c ON c."userId" = cwui.user_id
+    ) ct
+  ) AS user_image,
+  (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = FALSE OR wt2.image_url_clean IS NULL THEN
+        image_url
+      ELSE
+        wt2.image_url_clean
+      END
+    FROM (
+      SELECT cropped_images
+      FROM "clientsTable"
+      WHERE "userId" = $1
+    ) ct
+  ) AS image_url
   FROM (
-    SELECT waifu_id, favorite
-    FROM cg_claim_waifu_table
-    WHERE user_id = $1 AND guild_id = $2
-  ) cgcwt
-  LEFT JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-  WHERE wt.name ILIKE '%' || $3 || '%'
+    SELECT wt.id, user_id, waifu_id, wt.name, wt.url, wt.series, cgcwt.favorite, wt.image_url, wt.image_url_clean, wt.original_name, wt.romaji_name
+    FROM (
+      SELECT user_id, waifu_id, favorite
+      FROM cg_claim_waifu_table
+      WHERE user_id = $1 AND guild_id = $2
+    ) cgcwt
+    LEFT JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
+    WHERE wt.name ILIKE '%' || $3 || '%' OR levenshtein(wt.name, $3) <= 1
+      OR (wt.original_name ILIKE '%' || $3 || '%' AND wt.original_name IS NOT NULL)
+      OR (wt.romaji_name ILIKE '%' || $3 || '%' AND wt.romaji_name IS NOT NULL)
+    ORDER BY
+      CASE
+      WHEN wt.name ILIKE $3 THEN 0
+      WHEN wt.name ILIKE $3 || '%' THEN 1
+      WHEN wt.name ILIKE '%' || $3 || '%' THEN 2
+      WHEN wt.romaji_name ILIKE $3 THEN 3
+      WHEN wt.romaji_name ILIKE $3 || '%' THEN 4
+      WHEN wt.original_name ILIKE $3 THEN 5
+      WHEN wt.original_name ILIKE $3 || '%' THEN 6
+      WHEN levenshtein(wt.name, $3) <= 1 THEN 7
+      ELSE 8 END, wt.name, wt.romaji_name, wt.original_name
+    LIMIT 100
+  ) wt2
   ORDER BY
-    CASE WHEN wt.name ILIKE $3 || '%' THEN 0 ELSE 1 END, wt.name
+    CASE
+    WHEN wt2.name ILIKE $3 THEN 0
+    WHEN wt2.original_name ILIKE $3 THEN 1
+    WHEN $3 ILIKE ANY (
+      SELECT UNNEST(string_to_array(wt2.name, ' ')) AS name
+    ) THEN 2
+    WHEN wt2.name ILIKE $3 || '%' THEN 3
+    WHEN wt2.name ILIKE '%' || $3 || '%' THEN 4
+    WHEN wt2.original_name ILIKE $3 THEN 5
+    WHEN wt2.original_name ILIKE $3 || '%' THEN 6
+    WHEN levenshtein(wt2.name, $3) <= 1 THEN 7
+    ELSE 8 END, wt2.name, wt2.original_name
   LIMIT 20;
 `, [userID, guildID, waifuName]);
 
-/**
- * finds the bought waifu by name, has all the needed stuff in it.
- * @param userID the user's ID
- * @param guildID the guild's id.
- * @param waifuName the waifu's ID.
- * @param favorite whether it's favorited or not.
- * @returns {Promise<*>}
- */
 const findClaimWaifuByIdJoinURLFavorites = async (userID, guildID, waifuName, favorite = true) => poolQuery(`
-  SELECT waifu_id, wt.name, wt.url, wt.series, favorite, wt.image_url
+  SELECT waifu_id, wt2.name, wt2.url, wt2.series, favorite, wt2.original_name, wt2.romaji_name, (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
+        COALESCE (
+          (
+            SELECT json_build_object('url', image_url_clean_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = wt2.user_id AND waifu_id = wt2.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          ),
+          (
+            SELECT json_build_object('url', image_url_clean_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = $1 AND waifu_id = wt2.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          )
+        )
+      ELSE
+        COALESCE (
+          (
+            SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = wt2.user_id AND waifu_id = wt2.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          ),
+          (
+            SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = $1 AND waifu_id = wt2.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          )
+        )
+      END
+    FROM (
+      SELECT cropped_images, image_url_clean_path_extra, image_url_path_extra, nsfw
+      FROM (
+        SELECT image_id, user_id
+        FROM claim_waifu_user_images
+        WHERE user_id = $1 AND waifu_id = wt2.id
+      ) cwui
+      JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+      JOIN "clientsTable" c ON c."userId" = cwui.user_id
+    ) ct
+  ) AS user_image,
+  (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = FALSE OR wt2.image_url_clean IS NULL THEN
+        image_url
+      ELSE
+        image_url_clean
+      END
+    FROM (
+      SELECT cropped_images
+      FROM "clientsTable"
+      WHERE "userId" = $1
+    ) ct
+  ) AS image_url
   FROM (
-    SELECT waifu_id, favorite
-    FROM cg_claim_waifu_table
-    WHERE user_id = $1 AND guild_id = $2 AND favorite = $4
-  ) cgcwt
-  
-  JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-  WHERE wt.name ILIKE '%' || $3 || '%'
+    SELECT waifu_id, user_id, wt.id, wt.name, wt.url, wt.series, favorite, wt.image_url, wt.image_url_clean, wt.original_name, wt.romaji_name
+    FROM (
+      SELECT user_id, waifu_id, favorite
+      FROM cg_claim_waifu_table
+      WHERE user_id = $1 AND guild_id = $2 AND favorite = $4
+    ) cgcwt
+    JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
+    WHERE wt.name ILIKE '%' || $3 || '%' OR levenshtein(wt.name, $3) <= 1 
+      OR (wt.original_name ILIKE '%' || $3 || '%' AND wt.original_name IS NOT NULL)
+      OR (wt.romaji_name ILIKE '%' || $3 || '%' AND wt.romaji_name IS NOT NULL)
+    ORDER BY
+      CASE
+      WHEN wt.name ILIKE $3 THEN 0
+      WHEN wt.name ILIKE $3 || '%' THEN 1
+      WHEN wt.name ILIKE '%' || $3 || '%' THEN 2
+      WHEN wt.romaji_name ILIKE $3 THEN 3
+      WHEN wt.romaji_name ILIKE $3 || '%' THEN 4
+      WHEN wt.original_name ILIKE $3 THEN 5
+      WHEN wt.original_name ILIKE $3 || '%' THEN 6
+      WHEN levenshtein(wt.name, $3) <= 1 THEN 7
+      ELSE 8 END, wt.name, wt.romaji_name, wt.original_name
+    LIMIT 100
+  ) wt2
   ORDER BY
-    CASE WHEN wt.name ILIKE $3 || '%' THEN 0 ELSE 1 END, wt.name
+    CASE
+    WHEN wt2.name ILIKE $3 THEN 0
+    WHEN wt2.original_name ILIKE $3 THEN 1
+    WHEN $3 ILIKE ANY (
+      SELECT UNNEST(string_to_array(wt2.name, ' ')) AS name
+    ) THEN 2
+    WHEN wt2.name ILIKE $3 || '%' THEN 3
+    WHEN wt2.name ILIKE '%' || $3 || '%' THEN 4
+    WHEN wt2.original_name ILIKE $3 THEN 5
+    WHEN wt2.original_name ILIKE $3 || '%' THEN 6
+    WHEN levenshtein(wt2.name, $3) <= 1 THEN 7
+    ELSE 8 END, wt2.name, wt2.original_name
   LIMIT 20;
 `, [userID, guildID, waifuName, favorite]);
 
