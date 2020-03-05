@@ -146,25 +146,6 @@ const searchWaifuByName = async (waifuName, limit = 100) => poolQuery(`
 `, [waifuName, limit]);
 
 /**
- * gets all waifus by the series name.
- * Then checks the guild id if available
- * @param waifuSeries the series to search for.
- * @param guildID the guild's id.
- * @returns {Promise<*>}
- */
-const getAllWaifusBySeries = async (waifuSeries, guildID) => poolQuery(`
-  SELECT name, series, user_id, image_url, url, description, ws.id, original_name, origin
-  FROM (
-    SELECT name, series, image_url, url, description, id, original_name, origin
-    FROM waifu_schema.waifu_table
-    WHERE series ILIKE '%' || $1 || '%' OR levenshtein(series, $1) <= 3
-  ) ws
-  LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-  ORDER BY series DESC, name ASC
-  LIMIT 500;
-`, [waifuSeries, guildID]);
-
-/**
  * gets specific waifus by the name and series
  * @param waifu the waifu
  * @param series the series
@@ -315,8 +296,6 @@ module.exports = {
   updateWaifuSeriesId,
   getWaifuById,
   findWaifuByURL,
-  // getAllWaifusByNameOrSeries,
-  getAllWaifusBySeries,
   getSpecificWaifu,
   getRandomWaifu,
   todaysBirthdaysClaims,

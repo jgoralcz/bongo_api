@@ -633,21 +633,45 @@ const checkWaifuOwner = async (userID, guildID, waifuID) => poolQuery(`
   WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
 `, [userID, guildID, waifuID]);
 
-/**
- * finds the bought waifu by name, has all the needed stuff in it.
- * @param guildID the guild's id.
- * @param waifuName the waifu's ID.
- * @returns {Promise<*>}
- */
 const findClaimWaifuByNameJoinURL = async (guildID, waifuName) => poolQuery(`
-  SELECT waifu_id, wt.name, wt.url, wt.series, wt.image_url, cgcwt.user_id
+  SELECT *
   FROM (
-    SELECT waifu_id, user_id
-    FROM cg_claim_waifu_table
-    WHERE guild_id = $1
-  ) cgcwt
-  JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-  WHERE wt.name ILIKE '%' || $2 || '%'
+    SELECT waifu_id, wt.name, wt.url, wt.series, wt.image_url, wt.original_name, wt.romaji_name, cgcwt.user_id
+    FROM (
+      SELECT waifu_id, user_id
+      FROM cg_claim_waifu_table
+      WHERE guild_id = $1
+    ) cgcwt
+    JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
+    WHERE wt.name ILIKE '%' || $2 || '%' OR levenshtein(wt.name, $2) <= 1 
+      OR (wt.original_name ILIKE '%' || $2 || '%' AND wt.original_name IS NOT NULL)
+      OR (wt.romaji_name ILIKE '%' || $2 || '%' AND wt.romaji_name IS NOT NULL)
+    ORDER BY
+      CASE
+      WHEN wt.name ILIKE $2 THEN 0
+      WHEN wt.name ILIKE $2 || '%' THEN 1
+      WHEN wt.name ILIKE '%' || $2 || '%' THEN 2
+      WHEN wt.romaji_name ILIKE $2 THEN 3
+      WHEN wt.romaji_name ILIKE $2 || '%' THEN 4
+      WHEN wt.original_name ILIKE $2 THEN 5
+      WHEN wt.original_name ILIKE $2 || '%' THEN 6
+      WHEN levenshtein(wt.name, $2) <= 1 THEN 7
+      ELSE 8 END, wt.name, wt.romaji_name, wt.original_name
+    LIMIT 100
+  ) wt2
+  ORDER BY
+    CASE
+    WHEN wt2.name ILIKE $2 THEN 0
+    WHEN wt2.original_name ILIKE $2 THEN 1
+    WHEN $2 ILIKE ANY (
+      SELECT UNNEST(string_to_array(wt2.name, ' ')) AS name
+    ) THEN 2
+    WHEN wt2.name ILIKE $2 || '%' THEN 3
+    WHEN wt2.name ILIKE '%' || $2 || '%' THEN 4
+    WHEN wt2.original_name ILIKE $2 THEN 5
+    WHEN wt2.original_name ILIKE $2 || '%' THEN 6
+    WHEN levenshtein(wt2.name, $2) <= 1 THEN 7
+    ELSE 8 END, wt2.name, wt2.original_name
   LIMIT 20;
 `, [guildID, waifuName]);
 

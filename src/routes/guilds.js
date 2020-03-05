@@ -18,6 +18,7 @@ const {
   updateUnlimitedClaims,
   getAllWaifusByName,
   getWaifusByTagGuildOwners,
+  getAllWaifusBySeries,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -33,7 +34,7 @@ const { getCustomWaifuCount } = require('../db/tables/guild_custom_waifus/guild_
 const { getUsersWishWaifu } = require('../db/tables/cg_wishlist_waifu/cg_wishlist_waifu_table');
 const { getUsersWishSeries } = require('../db/tables/cg_wishlist_series/cg_wishlist_series_table');
 
-const { getRemainingClaimWaifusServer } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
+const { getRemainingClaimWaifusServer, findClaimWaifuByNameJoinURL } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
 
 const { invalidBoolSetting } = require('../util/functions/validators');
 const {
@@ -226,6 +227,16 @@ route.get('/:id/remaining-claimed', async (req, res) => {
   return res.status(200).send(query[0]);
 });
 
+route.get('/:guildID/characters/claims', async (req, res) => {
+  const { guildID } = req.params;
+  const { name } = req.query;
+
+  if (!name) return res.status(400).send({ error: 'Expected name for character claims.' });
+  const query = await findClaimWaifuByNameJoinURL(guildID, name);
+
+  return res.status(200).send(query || []);
+});
+
 route.get('/:id/characters/custom/count', async (req, res) => {
   const { id } = req.params;
 
@@ -243,6 +254,16 @@ route.get('/:id/requester/:requesterID/characters', async (req, res) => {
 
   const query = await getAllWaifusByName(name, id, limit, requesterID, useDiscordImage);
   return res.status(200).send(query);
+});
+
+route.get('/:id/requester/:requesterID/characters/series', async (req, res) => {
+  const { id, requesterID } = req.params;
+
+  const { name, useDiscordImage } = req.query;
+  if (!name || (useDiscordImage != null && useDiscordImage !== 'true' && useDiscordImage !== 'false')) return res.status(400).send({ error: 'Incorrect query string.', query: req.query });
+
+  const query = await getAllWaifusBySeries(name, id, requesterID, useDiscordImage);
+  return res.status(200).send(query || []);
 });
 
 route.get('/:id/characters/tags/:tag', async (req, res) => {

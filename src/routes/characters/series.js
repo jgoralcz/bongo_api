@@ -122,12 +122,13 @@ route.post('/', async (req, res) => {
 });
 
 route.get('/', async (req, res) => {
-  const { search: name } = req.query;
+  const { name } = req.query;
 
-  const seriesExistsQuery = await getAllSeriesByName(name);
-  if (!seriesExistsQuery || seriesExistsQuery.length <= 0) return res.status(400).send({ error: 'Series does not exist.', message: `The series ${name} does not exist.` });
+  if (!name) return res.status(400).send({ error: 'Name query parameter expected.' });
 
-  return res.status(200).send(seriesExistsQuery);
+  const series = await getAllSeriesByName(name);
+
+  return res.status(200).send(series || []);
 });
 
 module.exports = route;
