@@ -16,6 +16,7 @@ const votes = require('./votes');
 const states = require('./states');
 const userGuilds = require('./userGuilds');
 const achievements = require('./achievements');
+const wishlists = require('./wishlists');
 
 router.use('/series', series);
 router.use('/characters', characters);
@@ -33,5 +34,6 @@ router.use('/votes', votes);
 router.use('/states', states);
 router.use('/user-guilds', userGuilds);
 router.use('/achievements', achievements);
+router.use('/wishlists', wishlists);
 
 module.exports = router;
