@@ -10,8 +10,8 @@ const addWishlistWaifuUserGuild = async (userID, guildID, waifuID) => poolQuery(
 const removeWishlistWaifuUserGuild = async (userID, guildID, waifuID) => poolQuery(`
   DELETE
   FROM cg_wishlist_waifu_table
-  WHERE user_guild_id = $1 AND waifu_id = $2;
-`, [`${guildID}-${userID}`, waifuID]);
+  WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $2;
+`, [userID, guildID, waifuID]);
 
 const getWishlistWaifuUserGuild = async (userID, guildID) => poolQuery(`
   SELECT name, series, url, cgt.waifu_id AS id, cgcwt.user_id AS "ownerID", public_wish_list
@@ -27,8 +27,8 @@ const getAllWaifusByNameWishlist = async (userID, guildID, name) => poolQuery(`
   SELECT name, series, url, waifu_id AS id
   FROM cg_wishlist_waifu_table cgt
   JOIN waifu_schema.waifu_table wt ON wt.id = cgt.waifu_id
-  WHERE user_guild_id = $1 AND name ILIKE '%' || $2 || '%';
-`, [`${guildID}-${userID}`, name]);
+  WHERE user_id = $1 AND guild_id = $2 AND name ILIKE '%' || $3 || '%';
+`, [userID, guildID, name]);
 
 const getUsersWishWaifu = async (guildID, waifuID) => poolQuery(`
   SELECT user_id, public_wish_list AS public

@@ -1,13 +1,32 @@
 const route = require('express-promise-router')();
 
-const { addWishlistWaifuUserGuild, getWishlistWaifuUserGuild } = require('../db/tables/cg_wishlist_waifu/cg_wishlist_waifu_table');
-const { addWishlistSeriesUserGuild, getWishlistSeriesUserGuild } = require('../db/tables/cg_wishlist_series/cg_wishlist_series_table');
+const {
+  addWishlistWaifuUserGuild,
+  getWishlistWaifuUserGuild,
+  removeWishlistWaifuUserGuild,
+  getAllWaifusByNameWishlist,
+} = require('../db/tables/cg_wishlist_waifu/cg_wishlist_waifu_table');
+const {
+  addWishlistSeriesUserGuild,
+  getWishlistSeriesUserGuild,
+  removeWishlistSeriesUserGuild,
+  getAllSeriesByNameWishlist,
+} = require('../db/tables/cg_wishlist_series/cg_wishlist_series_table');
 
 
 route.get('/users/:userID/guilds/:guildID/characters', async (req, res) => {
   const { userID, guildID } = req.params;
 
   const query = await getWishlistWaifuUserGuild(userID, guildID);
+
+  return res.status(200).send(query || []);
+});
+
+route.get('/users/:userID/guilds/:guildID/characters/search', async (req, res) => {
+  const { userID, guildID } = req.params;
+  const { name } = req.query;
+
+  const query = await getAllWaifusByNameWishlist(userID, guildID, name);
 
   return res.status(200).send(query || []);
 });
@@ -20,10 +39,11 @@ route.post('/users/guilds/characters', async (req, res) => {
   return res.status(204).send();
 });
 
-route.get('/users/:userID/guilds/:guildID/series', async (req, res) => {
+route.get('/users/:userID/guilds/:guildID/series/search', async (req, res) => {
   const { userID, guildID } = req.params;
+  const { name } = req.query;
 
-  const query = await getWishlistSeriesUserGuild(userID, guildID);
+  const query = await getAllSeriesByNameWishlist(userID, guildID, name);
 
   return res.status(200).send(query || []);
 });
@@ -35,5 +55,30 @@ route.post('/users/guilds/series', async (req, res) => {
 
   return res.status(204).send();
 });
+
+route.get('/users/:userID/guilds/:guildID/series', async (req, res) => {
+  const { userID, guildID } = req.params;
+
+  const query = await getWishlistSeriesUserGuild(userID, guildID);
+
+  return res.status(200).send(query || []);
+});
+
+route.delete('/users/:userID/guilds/:guildID/series/:seriesID', async (req, res) => {
+  const { userID, guildID, seriesID } = req.params;
+
+  await removeWishlistSeriesUserGuild(userID, guildID, seriesID);
+
+  return res.status(204).send();
+});
+
+route.delete('/users/:userID/guilds/:guildID/characters/:charactersID', async (req, res) => {
+  const { userID, guildID, charactersID } = req.params;
+
+  await removeWishlistWaifuUserGuild(userID, guildID, charactersID);
+
+  return res.status(204).send();
+});
+
 
 module.exports = route;

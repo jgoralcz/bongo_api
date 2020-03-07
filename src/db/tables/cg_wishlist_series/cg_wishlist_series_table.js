@@ -12,24 +12,24 @@ const getWishlistSeriesUserGuild = async (userID, guildID) => poolQuery(`
   FROM (
     SELECT series_id, user_guild_id
     FROM cg_wishlist_series_table cgt
-    WHERE user_guild_id = $1
+    WHERE user_id = $1 AND guild_id = $2
   ) cgt
   JOIN waifu_schema.series_table st ON cgt.series_id = st.id
   JOIN "clientsGuildsTable" ct ON ct.id = cgt.user_guild_id
   LIMIT 5;
-`, [`${guildID}-${userID}`]);
+`, [userID, guildID]);
 
 const getAllSeriesByNameWishlist = async (userID, guildID, name) => poolQuery(`
   SELECT name, url, series_id, public_wish_list, image_url
   FROM (
     SELECT series_id, user_guild_id
     FROM cg_wishlist_series_table cgt
-    WHERE user_guild_id = $1
+    WHERE user_id = $1 AND guild_id = $2
   ) cgt
    JOIN waifu_schema.series_table st ON cgt.series_id = st.id
    JOIN "clientsGuildsTable" ct ON ct.id = cgt.user_guild_id
-   WHERE name ILIKE '%' || $2 || '%';
-`, [`${guildID}-${userID}`, name]);
+   WHERE name ILIKE '%' || $3 || '%';
+`, [userID, guildID, name]);
 
 const removeWishlistSeriesUserGuild = async (userID, guildID, seriesID) => poolQuery(`
   DELETE 
