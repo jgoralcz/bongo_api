@@ -13,6 +13,7 @@ const {
   updateClientRollClaimed,
   updateUniversalCustomCommandsUsage,
   updateGuildCustomCommandUsage,
+  addGameAndBankPoints,
 } = require('../db/tables/clients/clients_table');
 
 const { checkWaifuOwner, claimClientWaifuID } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
@@ -42,9 +43,24 @@ const { invalidBoolSetting } = require('../util/functions/validators');
 const rollRequest = async (req, res, rollFunction) => {
   const { userID, guildID } = req.params;
   if (!userID || !guildID) return res.status(400).send({ error: 'Missing userID or guildID' });
-  const { nsfw, limitMultiplier, rollWestern, rollGame, croppedDiscordImage = true } = req.query;
 
-  const rows = await rollFunction(userID, guildID, invalidBoolSetting(nsfw) || false, invalidBoolSetting(rollWestern) || true, invalidBoolSetting(rollGame) || true, invalidBoolSetting(croppedDiscordImage), limitMultiplier || 1);
+  const {
+    nsfw,
+    limitMultiplier,
+    rollWestern,
+    rollGame,
+    croppedDiscordImage = true,
+  } = req.query;
+
+  const rows = await rollFunction(
+    userID,
+    guildID,
+    invalidBoolSetting(nsfw) || false,
+    invalidBoolSetting(rollWestern) || true,
+    invalidBoolSetting(rollGame) || true,
+    invalidBoolSetting(croppedDiscordImage),
+    limitMultiplier || 1,
+  );
   return res.status(200).send(rows || []);
 };
 
@@ -69,7 +85,7 @@ route.get('/:id', async (req, res) => {
   const userQuery = await getClientInfo(id);
   if (!userQuery || userQuery.length <= 0 || !userQuery[0]) return res.status(404).send({ error: `User not found with id ${id}.` });
 
-  return res.status(204).send(userQuery[0]);
+  return res.status(200).send(userQuery[0]);
 });
 
 route.patch('/:id/points', async (req, res) => {
@@ -223,6 +239,18 @@ route.post('/', async (req, res) => {
 
   const { status, send } = await initializeGetNewUser(id);
   return res.status(status).send(send);
+});
+
+route.patch('/:userID/games/points', async (req, res) => {
+  const { userID } = req.params;
+  const { points } = req.body;
+
+  if (!points) return res.status(400).send({ error: `Points given not a valid number for changing: ${points}` });
+
+  const queryPoints = await addGameAndBankPoints(userID, points);
+  if (!queryPoints || !queryPoints[0] || !queryPoints[0].points) return res.status(500).send({ error: 'A problem occurred when updating the bank points.' });
+
+  return res.status(200).send({ points: queryPoints[0].points });
 });
 
 module.exports = route;

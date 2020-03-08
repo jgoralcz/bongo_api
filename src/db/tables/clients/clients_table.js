@@ -59,7 +59,7 @@ const updateUniversalCustomCommandsUsage = async (userID, boolValue) => poolQuer
 const addGameAndBankPoints = async (userId, points) => poolQuery(`
   UPDATE "clientsTable"
   SET "bankPoints" = 
-    CASE WHEN game_points < 2500
+    CASE WHEN game_points < 2000
         THEN "bankPoints" + $2
         ELSE "bankPoints"
     END,
@@ -71,7 +71,6 @@ const addGameAndBankPoints = async (userId, points) => poolQuery(`
   WHERE "userId" = $1
   RETURNING game_points AS points;
 `, [userId, points]);
-
 
 const getTopPizzas = async () => poolQuery(`
   SELECT "userId", pizza AS top
