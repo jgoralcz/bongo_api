@@ -6,12 +6,17 @@ const {
   removeWishlistWaifuUserGuild,
   getAllWaifusByNameWishlist,
 } = require('../db/tables/cg_wishlist_waifu/cg_wishlist_waifu_table');
+
 const {
   addWishlistSeriesUserGuild,
   getWishlistSeriesUserGuild,
   removeWishlistSeriesUserGuild,
   getAllSeriesByNameWishlist,
 } = require('../db/tables/cg_wishlist_series/cg_wishlist_series_table');
+
+const {
+  updateWishListVisibility
+} = require('../db/tables/clients_guilds/clients_guilds_table');
 
 
 route.get('/users/:userID/guilds/:guildID/characters', async (req, res) => {
@@ -80,11 +85,11 @@ route.delete('/users/:userID/guilds/:guildID/characters/:characterID', async (re
   return res.status(204).send();
 });
 
-route.patch('/users/:user/guilds/:guildID/visibility', async (req, res) => {
+route.patch('/users/:userID/guilds/:guildID/visibility', async (req, res) => {
   const { userID, guildID } = req.params;
   const { isPublic } = req.body;
 
-  await removeWishlistWaifuUserGuild(userID, guildID, isPublic);
+  await updateWishListVisibility(userID, guildID, isPublic);
 
   return res.status(204).send();
 });

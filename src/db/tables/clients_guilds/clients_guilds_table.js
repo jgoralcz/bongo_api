@@ -12,13 +12,6 @@ const updateClientAnimeRolls = async (guildID, userID) => poolQuery(`
   WHERE "guildId" = $1 AND "userId" = $2;
 `, [guildID, userID]);
 
-/**
-* updates the visiblity on a wish list for a specific user in a specific guild.
-* @param userID the user's id
-* @param guildID the guild's id
-* @param visibility the visibility, public (true), private (false; default)
-* @returns {Promise<*>}
-*/
 const updateWishListVisibility = async (userID, guildID, visibility) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET public_wish_list = $3
