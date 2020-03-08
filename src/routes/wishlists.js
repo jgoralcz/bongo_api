@@ -72,13 +72,21 @@ route.delete('/users/:userID/guilds/:guildID/series/:seriesID', async (req, res)
   return res.status(204).send();
 });
 
-route.delete('/users/:userID/guilds/:guildID/characters/:charactersID', async (req, res) => {
-  const { userID, guildID, charactersID } = req.params;
+route.delete('/users/:userID/guilds/:guildID/characters/:characterID', async (req, res) => {
+  const { userID, guildID, characterID } = req.params;
 
-  await removeWishlistWaifuUserGuild(userID, guildID, charactersID);
+  await removeWishlistWaifuUserGuild(userID, guildID, characterID);
 
   return res.status(204).send();
 });
 
+route.patch('/users/:user/guilds/:guildID/visibility', async (req, res) => {
+  const { userID, guildID } = req.params;
+  const { isPublic } = req.body;
+
+  await removeWishlistWaifuUserGuild(userID, guildID, isPublic);
+
+  return res.status(204).send();
+});
 
 module.exports = route;

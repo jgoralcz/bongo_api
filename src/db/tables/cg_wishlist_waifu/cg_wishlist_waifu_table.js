@@ -10,7 +10,7 @@ const addWishlistWaifuUserGuild = async (userID, guildID, waifuID) => poolQuery(
 const removeWishlistWaifuUserGuild = async (userID, guildID, waifuID) => poolQuery(`
   DELETE
   FROM cg_wishlist_waifu_table
-  WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $2;
+  WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
 `, [userID, guildID, waifuID]);
 
 const getWishlistWaifuUserGuild = async (userID, guildID) => poolQuery(`
