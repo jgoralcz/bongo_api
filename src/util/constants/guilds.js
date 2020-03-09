@@ -1,6 +1,6 @@
 module.exports = Object.freeze({
   MAX_CLAIM_HOUR: 23,
-  MIN_CLAIM_HOUR: 1,
+  MIN_CLAIM_HOUR: 0,
   MAX_CLAIM_MINUTE: 59,
   MIN_CLAIM_MINUTE: 0,
   MIN_RARITY_PERCENTAGE: 0,

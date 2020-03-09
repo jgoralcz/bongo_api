@@ -38,24 +38,12 @@ const maxClaimWaifuRoll = async (userID, guildID, amount) => poolQuery(`
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userID, guildID, amount]);
 
-/**
-* adds the claim
-* @param userId the user's id
-* @param guildId the guild's id
-* @returns {Promise<*>}
-*/
 const addClaimWaifuTrue = async (userId, guildId) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET claim_waifu = TRUE
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userId, guildId]);
 
-/**
-* resets the rolls based off the user's id and guild id
-* @param userId the user's id
-* @param guildId the guild's id
-* @returns {Promise<void>}
-*/
 const resetRollsByUserId = async (userId, guildId) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET rolls_waifu = 0
