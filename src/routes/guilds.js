@@ -168,18 +168,18 @@ route.get('/:id/wishlists/characters/:characterID', async (req, res) => {
   const { id, characterID } = req.params;
 
   const query = await getUsersWishWaifu(id, characterID);
-  if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any wishlists or character ID ${characterID} does not exist.` });
+  // if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any wishlists or character ID ${characterID} does not exist.` });
 
-  return res.status(200).send(query);
+  return res.status(200).send(query || []);
 });
 
 route.get('/:id/wishlists/series/:seriesID', async (req, res) => {
   const { id, seriesID } = req.params;
 
   const query = await getUsersWishSeries(id, seriesID);
-  if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any wishlists or series ID ${seriesID} does not exist.` });
+  // if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any wishlists or series ID ${seriesID} does not exist.` });
 
-  return res.status(200).send(query);
+  return res.status(200).send(query || []);
 });
 
 route.delete('/:id/emojis/:emojiID/claim', async (req, res) => {
