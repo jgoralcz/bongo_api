@@ -15,7 +15,7 @@ const {
 } = require('../db/tables/cg_wishlist_series/cg_wishlist_series_table');
 
 const {
-  updateWishListVisibility
+  updateWishListVisibility,
 } = require('../db/tables/clients_guilds/clients_guilds_table');
 
 
