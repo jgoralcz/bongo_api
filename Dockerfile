@@ -9,8 +9,6 @@ ENV NODE_ENV=PROD
 
 WORKDIR /usr/src/node
 
-COPY package*.json ./
-
 COPY --chown=node:node config.json /usr/src/node/
 COPY --chown=node:node package*.json /usr/src/node/
 COPY --chown=node:node src/ /usr/src/node/src/
@@ -20,5 +18,6 @@ EXPOSE 8443
 RUN npm install
 
 WORKDIR /usr/src/node/src
+USER node
 
 CMD ["node", "server.js"]

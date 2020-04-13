@@ -294,21 +294,15 @@ FROM (
 JOIN "clientsTable" ct ON cgt."userId" = ct."userId";
 `, [id]);
 
-/**
-* gets the clients guilds info and
-* joins it on the client info to get whether they are patron or not.
-* @param userId the user's id.
-* @param guildId the guild's id
-* @returns {Promise<*>}
-*/
 const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
   SELECT cgt."userId", cgt."guildId", daily, daily_gather, streak, rolls_waifu, claim_waifu, public_wish_list,
     patron, patron_one, patron_two, unlimited_claims, claim_seconds, wishlist_multiplier, rarity, "maxVolume", auto_now_play,
     autoplay, show_skips, "voteSkip", max_songs_per_user, anime_reactions, "bankPoints", streak_vote, vote_date,
-    vote_enabled, auto_timeout, user_roll_claimed, play_first, roll_claim_minute, sniped, achievement_aki,
-    achievement_reddit, achievement_search_anime, owoify, buy_rolls, buy_claims, gauntlet, anime_rolls
+    vote_enabled, auto_timeout, user_roll_claimed, play_first, roll_claim_minute, roll_claim_hour, sniped, achievement_aki, show_gender,
+    achievement_reddit, achievement_search_anime, owoify, buy_rolls, buy_claims, gauntlet, show_waifu_rank, cropped_images,
+    roll_game, roll_western
   FROM (
-    SELECT "userId", "guildId", daily, streak, rolls_waifu, claim_waifu, public_wish_list, anime_rolls
+    SELECT "userId", "guildId", daily, streak, rolls_waifu, claim_waifu, public_wish_list
     FROM "clientsGuildsTable"
     WHERE "userId" = $1 AND "guildId" = $2
   ) cgt
