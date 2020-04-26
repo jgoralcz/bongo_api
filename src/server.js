@@ -30,7 +30,7 @@ server.use(basicAuth({
 server.use(hsts({ maxAge: 31536000 }));
 server.use(bodyparser.urlencoded({ extended: true }));
 server.use(bodyparser.json());
-server.use(httpLogger({ ignorePaths: [/^\/prefixes/] }));
+server.use(httpLogger({ ignorePaths: [/^\/prefixes/, /users\/.*\/guilds\/.*/] }));
 
 server.use('/', router, errorHandler);
 
