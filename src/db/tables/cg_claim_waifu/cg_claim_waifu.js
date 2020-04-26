@@ -42,7 +42,7 @@ const getTopClaimWaifus = async (offset, limit, guildID) => poolQuery(`
 `, [offset, limit, guildID]);
 
 const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier) => poolQuery(`
-  SELECT name, husbando, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, url, t1.id, t1.date, is_game, is_western, (
+  SELECT name, nsfw, husbando, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, url, t1.id, t1.date, is_game, is_western, (
     SELECT COALESCE (
       (
         SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw)
@@ -81,11 +81,11 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
     ) ct
   ) AS image_url
   FROM (
-    SELECT name, husbando, unknown_gender, cgw.id, user_id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, date, series_id, is_game, is_western
+    SELECT name, nsfw, husbando, unknown_gender, cgw.id, user_id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, date, series_id, is_game, is_western
     FROM (
-      SELECT name, husbando, unknown_gender, id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, series_id, is_game, is_western
+      SELECT name, nsfw, husbando, unknown_gender, id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, series_id, is_game, is_western
       FROM (
-        SELECT ws.name, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
+        SELECT ws.name, COALESCE(ws.nsfw, wsst.nsfw) AS nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
         FROM waifu_schema.waifu_table ws
         JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
         WHERE ws.id NOT IN (
@@ -188,7 +188,7 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
   FROM (
     SELECT name, husbando, nsfw, unknown_gender, cgw.id, user_id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, series_id, date, is_game, is_western
     FROM (
-      SELECT ws.name, ws.nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
+      SELECT ws.name, COALESCE(ws.nsfw, wsst.nsfw) AS nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
       FROM waifu_schema.waifu_table ws
       JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
       WHERE ws.id NOT IN (
@@ -260,7 +260,7 @@ const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWes
   FROM (
     SELECT name, nsfw, husbando, unknown_gender, cgw.id, user_id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, series_id, date, is_game, is_western
     FROM (
-      SELECT ws.name, ws.nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
+      SELECT ws.name, COALESCE(ws.nsfw, wsst.nsfw) AS nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
       FROM waifu_schema.waifu_table ws
       JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
       WHERE ws.series_id NOT IN (
@@ -332,7 +332,7 @@ const getRandomWaifuOwnerClaimed = async (userID, guildID, nsfw, rollWestern, ro
   FROM (
     SELECT name, nsfw, husbando, unknown_gender, user_id, cgw.id, original_name, origin, series, image_url, image_url_clean_discord, image_url_clean, url, series_id, date, is_game, is_western
     FROM (
-      SELECT ws.name, ws.nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, image_url_clean_discord, image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
+      SELECT ws.name, COALESCE(ws.nsfw, wsst.nsfw) AS nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, image_url_clean_discord, image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
       FROM waifu_schema.waifu_table ws
       JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
       WHERE ws.series_id NOT IN (

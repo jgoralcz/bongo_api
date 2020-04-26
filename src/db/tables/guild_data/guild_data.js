@@ -775,7 +775,7 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
 `, [guildID, waifuRankBool]);
 
 const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false) => poolQuery(`
-  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, wt.id, original_name, origin, (
+  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, wt.id, original_name, origin (
     SELECT
       CASE
       WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
@@ -849,9 +849,11 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
     ) ct
   ) AS image_url
   FROM (
-    SELECT name, nsfw, series, husbando, unknown_gender, user_id, image_url, image_url_clean_discord, image_url_clean, url, description, ws.id, original_name, origin
+    SELECT ws.name, COALESCE(ws.nsfw, wsst.nsfw) AS nsfw, ws.series, ws.husbando, ws.unknown_gender,
+      ws.user_id, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description, ws.id, ws.original_name, ws.origin
     FROM waifu_schema.waifu_table ws
     LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
+    LEFT JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
     WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 1
       OR name ILIKE ANY (
         SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
@@ -906,8 +908,9 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
     ) ct
   ) AS image_url
   FROM (
-    SELECT wswt.name, wsst.nsfw, wsst.name AS series, wswt.image_url, wswt.image_url_clean,
-      wswt.image_url_clean_discord, wswt.url, wswt.description, wswt.id, wswt.original_name, wswt.origin, wswt.husbando, wswt.unknown_gender
+    SELECT wswt.name, COALESCE(wsst.nsfw, wswt.nsfw) AS nsfw, wsst.name AS series, wswt.image_url, wswt.image_url_clean,
+      wswt.image_url_clean_discord, wswt.url, wswt.description, wswt.id, wswt.original_name,
+      wswt.origin, wswt.husbando, wswt.unknown_gender
     FROM (
       SELECT id, name, nsfw
       FROM waifu_schema.series_table
