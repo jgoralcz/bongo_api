@@ -16,4 +16,4 @@ CREATE TABLE IF NOT EXISTS amiibo.amiibo_table (
 
   UNIQUE (image_url),
   UNIQUE (name, amiibo_series, game_series, head, tail, release_au, release_eu, release_jp, type)
-)`);
+)

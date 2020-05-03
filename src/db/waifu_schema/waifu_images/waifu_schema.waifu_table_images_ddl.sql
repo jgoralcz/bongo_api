@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table_images (
   height REAL,
   image_url_cdn_extra TEXT,
   image_url_cdn_extra_backup TEXT,
-  image_url_path_extra_mwl_backup TEXT,
   buffer_length BIGINT,
   file_type TEXT,
   date_added TIMESTAMP now(),
