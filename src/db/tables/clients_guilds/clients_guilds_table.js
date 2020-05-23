@@ -300,7 +300,7 @@ const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
     autoplay, show_skips, "voteSkip", max_songs_per_user, anime_reactions, "bankPoints", streak_vote, vote_date,
     vote_enabled, auto_timeout, user_roll_claimed, play_first, roll_claim_minute, roll_claim_hour, sniped, achievement_aki, show_gender,
     achievement_reddit, achievement_search_anime, owoify, buy_rolls, buy_claims, gauntlet, show_waifu_rank, cropped_images,
-    donut, pizza, cookie, fuel, stones, ramen, roll_game, roll_western
+    donut, pizza, cookie, fuel, stones, ramen, roll_game, roll_western, steal_character
   FROM (
     SELECT "userId", "guildId", daily, streak, rolls_waifu, claim_waifu, public_wish_list
     FROM "clientsGuildsTable"

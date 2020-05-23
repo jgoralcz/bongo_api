@@ -26,6 +26,13 @@ const updateGuildShowGender = async (guildID, showGender) => poolQuery(`
   RETURNING show_gender AS "updatedBool";
 `, [guildID, showGender]);
 
+const updateGuildStealCharacter = async (guildID, stealCharacter) => poolQuery(`
+  UPDATE "guildsTable"
+  SET steal_character = $2
+  WHERE "guildId" = $1
+  RETURNING steal_character AS "updatedBool";
+`, [guildID, stealCharacter]);
+
 /**
  * gets the server queue info.
  * @param guildID the guild's id.
@@ -1017,4 +1024,5 @@ module.exports = {
   getWaifusByTagGuildOwners,
   getAllWaifusBySeries,
   getGuildsClaimsCharacter,
+  updateGuildStealCharacter,
 };

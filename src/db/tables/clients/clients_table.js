@@ -471,6 +471,30 @@ const clearVoteStreaks = async () => poolQuery(`
   WHERE streak_vote_date <= NOW();
 `, []);
 
+const removeRandomStone = async (userID) => poolQuery(`
+  UPDATE "clientsTable"
+  SET stones = array_remove(
+    (
+      SELECT stones
+      FROM "clientsTable"
+      WHERE "userId" = $1
+    ), 
+    
+    (
+      SELECT *
+      FROM (      
+        SELECT unnest(stones)
+        FROM "clientsTable"
+        WHERE "userId" = $1
+      ) t
+      ORDER BY random()
+      LIMIT 1
+    )
+  )
+  WHERE "userId" = $1
+  RETURNING stones;
+`, [userID]);
+
 module.exports = {
   updateClientAnimeReactions,
   updateClientPlayFirst,
@@ -531,4 +555,5 @@ module.exports = {
   updateUserBankPointsVote,
   resetAllClientDaily,
   clearVoteStreaks,
+  removeRandomStone,
 };

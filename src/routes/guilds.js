@@ -20,6 +20,7 @@ const {
   getWaifusByTagGuildOwners,
   getAllWaifusBySeries,
   getGuildsClaimsCharacter,
+  updateGuildStealCharacter,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -159,6 +160,7 @@ route.patch('/:id/settings/claim-seconds', async (req, res) => {
   return res.status(204).send();
 });
 
+route.patch('/:id/settings/steal_character', async (req, res) => updateSettings(req, res, updateGuildStealCharacter));
 route.patch('/:id/settings/show-gender', async (req, res) => updateSettings(req, res, updateGuildShowGender));
 route.patch('/:id/settings/buy-rolls', async (req, res) => updateSettings(req, res, updateGuildBuyRolls));
 route.patch('/:id/settings/buy-claims', async (req, res) => updateSettings(req, res, updateGuildBuyClaims));
@@ -245,6 +247,7 @@ route.get('/:guildID/characters/claims', async (req, res) => {
 
   return res.status(200).send(query || []);
 });
+
 
 route.get('/:id/characters/custom/count', async (req, res) => {
   const { id } = req.params;

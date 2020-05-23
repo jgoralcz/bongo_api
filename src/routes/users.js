@@ -14,6 +14,7 @@ const {
   updateUniversalCustomCommandsUsage,
   updateGuildCustomCommandUsage,
   addGameAndBankPoints,
+  removeRandomStone,
 } = require('../db/tables/clients/clients_table');
 
 const { checkWaifuOwner, claimClientWaifuID } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
@@ -185,6 +186,15 @@ route.get('/:userID:/guilds/:guildID/characters/:characterID', async (req, res) 
   if (!query || query.length <= 0 || !query[0]) return res.status(404).send({ error: `User ${userID} with guild ${guildID} does not have character ${characterID}.` });
 
   return res.status(200).send(query[0]);
+});
+
+route.delete('/:userID/stones/random', async (req, res) => {
+  const { userID } = req.params;
+
+  const rows = await removeRandomStone(userID);
+  if (!rows || !rows.stones || rows.stones.length <= 0) return res.status(400).send();
+
+  return res.status(204).send();
 });
 
 route.get('/:userID/guilds/:guildID/claims/favorites', async (req, res) => {
