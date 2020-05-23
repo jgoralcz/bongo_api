@@ -19,6 +19,7 @@ const {
   getAllWaifusByName,
   getWaifusByTagGuildOwners,
   getAllWaifusBySeries,
+  getGuildsClaimsCharacter,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -169,6 +170,14 @@ route.get('/:id/wishlists/characters/:characterID', async (req, res) => {
 
   const query = await getUsersWishWaifu(id, characterID);
   // if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any wishlists or character ID ${characterID} does not exist.` });
+
+  return res.status(200).send(query || []);
+});
+
+route.get('/:id/characters/:characterID/claims', async (req, res) => {
+  const { id, characterID } = req.params;
+
+  const query = await getGuildsClaimsCharacter(id, characterID);
 
   return res.status(200).send(query || []);
 });

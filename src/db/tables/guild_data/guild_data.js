@@ -1,5 +1,11 @@
 const { poolQuery } = require('../../index');
 
+const getGuildsClaimsCharacter = async (guildID, characterID) => poolQuery(`
+  SELECT COUNT(*)
+  FROM cg_claim_waifu_table
+  WHERE guild_id = $1 AND waifu_id = $2
+`, [guildID, characterID]);
+
 const getGuild = async (guildId) => poolQuery(`
   SELECT *
   FROM "guildsTable" 
@@ -1010,4 +1016,5 @@ module.exports = {
   getAllWaifusByName,
   getWaifusByTagGuildOwners,
   getAllWaifusBySeries,
+  getGuildsClaimsCharacter,
 };
