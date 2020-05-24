@@ -905,6 +905,13 @@ const removeDuplicateWaifuClaims = async (dupeID, mergeID) => poolQuery(`
   ) AND waifu_id = $2;
 `, [dupeID, mergeID]);
 
+const removeAllGuildClaimCharactersByID = async (guildID, characterID) => poolQuery(`
+  DELETE
+  FROM cg_claim_waifu_table
+  WHERE guild_id = $1 AND waifu_id = $2
+  RETURNING *;
+`, [guildID, characterID]);
+
 module.exports = {
   getWaifuRankById,
   getTopClaimWaifus,
@@ -936,4 +943,5 @@ module.exports = {
   removeClaimWaifusAll,
   getUniqueGuildMembersClaimLessThanDays,
   removeDuplicateWaifuClaims,
+  removeAllGuildClaimCharactersByID,
 };

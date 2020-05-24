@@ -322,6 +322,13 @@ const getCustomWaifuServerCount = async (guildID) => {
   return 0;
 };
 
+const removeAllGuildCustomsCharactersByID = async (guildID, characterID) => poolQuery(`
+  DELETE
+  FROM cg_custom_waifu_table
+  WHERE guild_id = $1 AND waifu_id = $2
+  RETURNING *;
+`, [guildID, characterID]);
+
 module.exports = {
   getRandomCustomWaifuOwnerNotClaimed,
   getRandomCustomWaifuOwnerClaimed,
@@ -342,4 +349,5 @@ module.exports = {
   removeCustomWaifusRandomHalf,
   getCustomWaifuServerCount,
   removeCustomWaifusAll,
+  removeAllGuildCustomsCharactersByID,
 };

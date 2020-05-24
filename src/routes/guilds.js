@@ -36,7 +36,15 @@ const { getCustomWaifuCount } = require('../db/tables/guild_custom_waifus/guild_
 const { getUsersWishWaifu } = require('../db/tables/cg_wishlist_waifu/cg_wishlist_waifu_table');
 const { getUsersWishSeries } = require('../db/tables/cg_wishlist_series/cg_wishlist_series_table');
 
-const { getRemainingClaimWaifusServer, findClaimWaifuByNameJoinURL } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
+const {
+  getRemainingClaimWaifusServer,
+  findClaimWaifuByNameJoinURL,
+  removeAllGuildClaimCharactersByID,
+} = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
+
+const {
+  removeAllGuildCustomsCharactersByID,
+} = require('../db/tables/cg_custom_waifu/cg_custom_waifu');
 
 const { invalidBoolSetting } = require('../util/functions/validators');
 const {
@@ -81,6 +89,25 @@ route.delete('/lastplayed', async (_, res) => {
 
 route.delete('/queue', async (_, res) => {
   await clearStaleQueue();
+  return res.status(204).send();
+});
+
+
+route.delete('/:id/characters/:characterID/claims', async (req, res) => {
+  const { id, characterID } = req.params;
+
+  const rows = await removeAllGuildClaimCharactersByID(id, characterID);
+  if (!rows || rows.length <= 0) return res.status(404).send(`Guild ${id} does not have claimed character ${characterID}`);
+
+  return res.status(204).send();
+});
+
+route.delete('/:id/characters/:characterID/customs', async (req, res) => {
+  const { id, characterID } = req.params;
+
+  const rows = await removeAllGuildCustomsCharactersByID(id, characterID);
+  if (!rows || rows.length <= 0) return res.status(404).send(`Guild ${id} does not have custom claimed character ${characterID}`);
+
   return res.status(204).send();
 });
 
@@ -247,7 +274,6 @@ route.get('/:guildID/characters/claims', async (req, res) => {
 
   return res.status(200).send(query || []);
 });
-
 
 route.get('/:id/characters/custom/count', async (req, res) => {
   const { id } = req.params;

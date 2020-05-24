@@ -194,8 +194,9 @@ route.delete('/:userID/stones/random', async (req, res) => {
   const rows = await removeRandomStone(userID);
   if (!rows || !rows.stones || rows.stones.length <= 0) return res.status(400).send();
 
-  return res.status(204).send();
+  return res.status(204).send({ stones: rows.stones });
 });
+
 
 route.get('/:userID/guilds/:guildID/claims/favorites', async (req, res) => {
   const { userID, guildID } = req.params;
