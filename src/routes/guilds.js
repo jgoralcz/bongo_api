@@ -21,6 +21,7 @@ const {
   getAllWaifusBySeries,
   getGuildsClaimsCharacter,
   updateGuildStealCharacter,
+  updateRollCustomOnly,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -193,6 +194,7 @@ route.patch('/:id/settings/buy-rolls', async (req, res) => updateSettings(req, r
 route.patch('/:id/settings/buy-claims', async (req, res) => updateSettings(req, res, updateGuildBuyClaims));
 route.patch('/:id/settings/show-rank', async (req, res) => updateSettings(req, res, updateGuildShowRankRollingWaifus));
 route.patch('/:id/settings/unlimited-claims', async (req, res) => updateSettings(req, res, updateUnlimitedClaims));
+route.patch('/:id/settings/roll-custom-only', async (req, res) => updateSettings(req, res, updateRollCustomOnly));
 
 route.get('/:id/wishlists/characters/:characterID', async (req, res) => {
   const { id, characterID } = req.params;

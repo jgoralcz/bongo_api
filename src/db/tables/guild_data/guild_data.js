@@ -748,6 +748,13 @@ const updateGuildBuyRolls = async (guildID, buyRolls) => poolQuery(`
   RETURNING buy_rolls AS "updatedBool";
 `, [guildID, buyRolls]);
 
+const updateRollCustomOnly = async (guildID, rollCustomOnly) => poolQuery(`
+  UPDATE "guildsTable"
+  SET roll_custom_only = $2
+  WHERE "guildId" = $1
+  RETURNING roll_custom_only AS "updatedBool";
+`, [guildID, rollCustomOnly]);
+
 const updateGuildBuyClaims = async (guildID, buyClaims) => poolQuery(`
   UPDATE "guildsTable"
   SET buy_claims = $2
@@ -1025,4 +1032,5 @@ module.exports = {
   getAllWaifusBySeries,
   getGuildsClaimsCharacter,
   updateGuildStealCharacter,
+  updateRollCustomOnly,
 };
