@@ -9,6 +9,8 @@ WORKDIR /usr/src/node
 COPY --chown=node:node package*.json /usr/src/node/
 COPY --chown=node:node src/ /usr/src/node/src/
 
+RUN mkdir logs && chown -R node:node logs
+
 EXPOSE 8443
 
 RUN npm install
