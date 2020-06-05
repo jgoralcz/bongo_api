@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: josh-apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${SERVICE_NAME}
+  template:
+    metadata:
+      labels:
+        app: ${SERVICE_NAME}
+    spec:
+      nodeSelector:
+        location: na
+      containers:
+        - name: ${SERVICE_NAME}
+          image: ${IMAGE_LOCATION}
+          imagePullPolicy: Always
+          env:
+            - name: PORT
+              value: "${PORT}"
+            - name: NODE_ENV
+              value: "${ENV}"
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 1024Mi
+            requests:
+              cpu: 1000m
+              memory: 512Mi
+          ports:
+            - containerPort: 8443
+          volumeMounts:
+            - name: api
+              readOnly: true
+              mountPath: /node/config/bongo_bot_api.json
+              subPath: bongo_bot_api.json
+            - name: auth
+              readOnly: true
+              mountPath: /node/config/auth.json
+              subPath: auth.json
+            - name: config
+              readOnly: true
+              mountPath: /node/config/config.json
+              subPath: config.json
+      imagePullSecrets:
+        - name: github-registry
+      volumes:
+        - name: api
+          secret:
+            secretName: ${PREFIX}bongo_bot_api.json
+        - name: auth
+          secret:
+            secretName: bongo-bot-api-auth.json
+        - name: config
+          configMap: bongo-bot-config.json

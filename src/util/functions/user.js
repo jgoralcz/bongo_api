@@ -1,5 +1,4 @@
 const { getClientInfo, setClientInfo, updateClientPrefix } = require('../../db/tables/clients/clients_table');
-const { setRedisUserPrefix } = require('../../db/redis/prefix');
 
 const initializeGetNewUser = async (id) => {
   const userQuery = await getClientInfo(id);
@@ -11,20 +10,15 @@ const initializeGetNewUser = async (id) => {
   return { status: 201, send: setUserQuery[0] };
 };
 
-const setPrefix = async (userID, prefix) => {
-  await setRedisUserPrefix(userID, prefix);
-  await updateClientPrefix(userID, prefix);
-};
-
-const updateRedisUserPrefix = async (id, prefix) => {
+const updateUserPrefix = async (id, prefix) => {
   if (!id) return { status: 400, send: { error: 'id not found.' } };
   if (!prefix) return { status: 400, send: { error: 'prefix not found.' } };
 
-  await setPrefix(id, prefix);
+  await updateClientPrefix(id, prefix);
   return { status: 201, send: { id, prefix } };
 };
 
 module.exports = {
   initializeGetNewUser,
-  updateRedisUserPrefix,
+  updateUserPrefix,
 };

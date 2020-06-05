@@ -18,7 +18,10 @@ const { getRankClaimedWaifuByID } = require('../../db/tables/cg_claim_waifu_rank
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
-const { botID } = require('../../../config.json');
+
+const { config } = require('../../util/constants/paths');
+const nconfConfig = require('nconf').file('config', config);
+const botID = nconfConfig.get('botID');
 
 const { mimsAPI } = require('../../services/axios');
 

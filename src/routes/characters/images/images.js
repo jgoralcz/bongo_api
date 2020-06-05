@@ -10,7 +10,10 @@ const {
   markSFWImageByURL,
 } = require('../../../db/waifu_schema/waifu_images/waifu_table_images');
 
-const { botID } = require('../../../../config.json');
+const { config } = require('../../../util/constants/paths');
+const nconfConfig = require('nconf').file('config', config);
+const botID = nconfConfig.get('botID');
+
 const { getBufferHeightWidth } = require('../../../util/functions/buffer');
 const { storeImageBufferToURL } = require('../../../util/functions/bufferToURL');
 const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../../util/constants/dimensions');
