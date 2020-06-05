@@ -1,7 +1,7 @@
 const axios = require('axios');
 
-const { config, auth } = require('../util/constants/paths');
-const nconf = require('nconf').file('auth', auth);
+const { config, basicAuth } = require('../util/constants/paths');
+const nconf = require('nconf').file('auth', basicAuth);
 
 const username = nconf.get('username');
 const password = nconf.get('password');

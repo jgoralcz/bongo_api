@@ -1,5 +1,5 @@
 const basicAuth = require('express-basic-auth');
-const { auth } = require('../util/constants/paths');
+const { basicAuth: auth } = require('../util/constants/paths');
 const nconf = require('nconf').file('auth', auth);
 
 const username = nconf.get('username');

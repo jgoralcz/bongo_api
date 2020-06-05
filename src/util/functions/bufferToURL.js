@@ -4,8 +4,8 @@ const logger = require('log4js').getLogger();
 
 const { imageIdentifier } = require('../constants/magicNumbers');
 
-const { auth } = require('../constants/paths');
-const nconf = require('nconf').file('auth', auth);
+const { basicAuth } = require('../constants/paths');
+const nconf = require('nconf').file('auth', basicAuth);
 
 const apiKey = nconf.get('apiKey');
 

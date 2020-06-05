@@ -1,4 +1,5 @@
 config.json
+api.json
 auth.json
 configmap.json
 node_modules
