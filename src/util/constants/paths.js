@@ -1,6 +1,7 @@
-const basePath = '/node/config/';
+const basePath = '/node/config';
 
 module.exports = Object.freeze({
-  serverCert: `${basePath}/cert.pem`,
-  serverKey: `${basePath}/cert.key`,
+  api: `${basePath}/api.json`,
+  basicAuth: `${basePath}/auth.json`,
+  config: `${basePath}/config.json`,
 });

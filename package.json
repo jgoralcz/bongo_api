@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js"
   },
-  "author": "Joshua Goralczyk <joshgor01@gmail.com> (https://github.com/jgoralcz/aki-api)",
+  "author": "Joshua Goralczyk <joshgor01@gmail.com> (https://github.com/jgoralcz/bongo_api)",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.19.0",
@@ -15,11 +15,10 @@
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
     "express-promise-router": "^3.0.3",
-    "hsts": "^2.2.0",
     "image-size": "^0.8.3",
-    "ioredis": "^4.14.1",
     "log4js": "^5.3.0",
-    "pg": "^7.12.1",
+    "nconf": "^0.10.0",
+    "pg": "^8.2.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
     "uuid": "^3.3.3"

@@ -3,7 +3,11 @@ const uuid = require('uuid/v4');
 const logger = require('log4js').getLogger();
 
 const { imageIdentifier } = require('../constants/magicNumbers');
-const { apiKey } = require('../../../config.json');
+
+const { basicAuth } = require('../constants/paths');
+const nconf = require('nconf').file('auth', basicAuth);
+
+const apiKey = nconf.get('apiKey');
 
 const { cdnURL, imageURL } = require('../constants/cdn');
 
