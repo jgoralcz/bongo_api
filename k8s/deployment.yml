@@ -36,8 +36,8 @@ spec:
           volumeMounts:
             - name: api
               readOnly: true
-              mountPath: /node/config/bongo_bot_api.json
-              subPath: bongo_bot_api.json
+              mountPath: /node/config/api.json
+              subPath: api.json
             - name: auth
               readOnly: true
               mountPath: /node/config/auth.json
