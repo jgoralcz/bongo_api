@@ -51,7 +51,7 @@ spec:
       volumes:
         - name: api
           secret:
-            secretName: ${PREFIX}bongo_bot_api.json
+            secretName: ${PREFIX}bongo-bot-api.json
         - name: auth
           secret:
             secretName: bongo-bot-api-auth.json
