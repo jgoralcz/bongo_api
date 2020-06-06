@@ -56,4 +56,5 @@ spec:
           secret:
             secretName: bongo-bot-api-auth.json
         - name: config
-          configMap: bongo-bot-config.json
+          configMap:
+            name: bongo-bot-config.json
