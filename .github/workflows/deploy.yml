@@ -14,7 +14,7 @@ jobs:
 
       - name: Extract Repo Name
         shell: bash
-        run: echo "##[set-output name=repo;]$(echo ${GITHUB_REPOSITORY##*/})"
+        run: echo "##[set-output name=repo;]$(echo ${GITHUB_REPOSITORY##*/} | tr '_' '-')"
         id: extract_repo
 
       - name: Build Environment Prefix
