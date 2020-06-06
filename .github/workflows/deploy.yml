@@ -27,6 +27,26 @@ jobs:
         run: echo "##[set-output name=prefix;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "" || echo "beta-")"
         id: extract_prefix
 
+      - name: Build CPU Limit
+        shell: bash
+        run: echo "##[set-output name=limit;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "2000m" || echo "200m")"
+        id: cpu_limit
+
+      - name: Build CPU Request
+        shell: bash
+        run: echo "##[set-output name=request;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "1000m" || echo "100m")"
+        id: cpu_request
+
+      - name: Build Memory Limit
+        shell: bash
+        run: echo "##[set-output name=limit;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "1024Mi" || echo "128Mi")"
+        id: memory_limit
+
+      - name: Build Memory Request
+        shell: bash
+        run: echo "##[set-output name=request;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "512Mi" || echo "64Mi")"
+        id: memory_request
+
       - name: Push to GitHub Packages
         uses: docker/build-push-action@v1
         with:
@@ -59,6 +79,10 @@ jobs:
           PORT: 8443
           PREFIX: ${{ steps.extract_prefix.outputs.prefix }}
           HOST_URL: ${{ steps.extract_prefix.outputs.prefix }}${{ secrets.HOST_URL }}
+          CPU_LIMIT: ${{ steps.cpu_limit.outputs.limit }}
+          CPU_REQUEST: ${{ steps.cpu_request.outputs.request }}
+          MEMORY_LIMIT: ${{ steps.memory_limit.outputs.limit }}
+          MEMORY_REQUEST: ${{ steps.memory_request.outputs.request }}
 
       - name: Deploy HOST_URL to Cloudflare
         shell: bash

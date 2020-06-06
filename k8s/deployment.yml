@@ -26,11 +26,11 @@ spec:
               value: "${ENV}"
           resources:
             limits:
-              cpu: 2000m
-              memory: 1024Mi
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}
             requests:
-              cpu: 1000m
-              memory: 512Mi
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_REQUEST}
           ports:
             - containerPort: 8443
           volumeMounts:
