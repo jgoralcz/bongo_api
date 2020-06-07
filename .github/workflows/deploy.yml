@@ -29,17 +29,17 @@ jobs:
 
       - name: Build CPU Limit
         shell: bash
-        run: echo "##[set-output name=limit;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "2000m" || echo "200m")"
+        run: echo "##[set-output name=limit;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "1500m" || echo "200m")"
         id: cpu_limit
 
       - name: Build CPU Request
         shell: bash
-        run: echo "##[set-output name=request;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "1000m" || echo "100m")"
+        run: echo "##[set-output name=request;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "750m" || echo "100m")"
         id: cpu_request
 
       - name: Build Memory Limit
         shell: bash
-        run: echo "##[set-output name=limit;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "1024Mi" || echo "128Mi")"
+        run: echo "##[set-output name=limit;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "512Mi" || echo "128Mi")"
         id: memory_limit
 
       - name: Build Memory Request
