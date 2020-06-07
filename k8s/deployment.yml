@@ -29,7 +29,7 @@ spec:
               cpu: ${CPU_LIMIT}
               memory: ${MEMORY_LIMIT}
             requests:
-              cpu: ${CPU_LIMIT}
+              cpu: ${CPU_REQUEST}
               memory: ${MEMORY_REQUEST}
           ports:
             - containerPort: 8443
