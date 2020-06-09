@@ -44,7 +44,7 @@ route.get('/guilds/:id', async (req, res) => {
 
   const { guildId, guildPrefix, prefixForAllEnable } = foundGuild[0];
 
-  return res.status(status).send({ id: guildId, prefix: guildPrefix, prefixForAllEnable });
+  return res.status(200).send({ id: guildId, prefix: guildPrefix, prefixForAllEnable });
 });
 
 route.patch('/guilds/:id', async (req, res) => {
