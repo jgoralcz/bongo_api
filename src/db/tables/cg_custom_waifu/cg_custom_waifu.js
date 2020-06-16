@@ -310,17 +310,11 @@ const removeCustomWaifusAll = async guildID => poolQuery(`
   WHERE guild_id = $1;
   `, [guildID]);
 
-const getCustomWaifuServerCount = async (guildID) => {
-  const query = await poolQuery(`
-    SELECT count(*)
-    FROM cg_custom_waifu_table
-    WHERE guild_id = $1;
-  `, [guildID]);
-  if (query && query.rows && query.rowCount > 0 && query.rows[0] && query.rows[0].count) {
-    return query.rows[0].count;
-  }
-  return 0;
-};
+const getRemainingCustomWaifusServer = async (guildID) => poolQuery(`
+  SELECT count(DISTINCT(waifu_id)) AS claimed_waifus
+  FROM cg_custom_waifu_table
+  WHERE guild_id = $1;
+`, [guildID]);
 
 const removeAllGuildCustomsCharactersByID = async (guildID, characterID) => poolQuery(`
   DELETE
@@ -347,7 +341,7 @@ module.exports = {
   getUniqueGuildMembersCustom,
   removeCustomWaifusLeavers,
   removeCustomWaifusRandomHalf,
-  getCustomWaifuServerCount,
+  getRemainingCustomWaifusServer,
   removeCustomWaifusAll,
   removeAllGuildCustomsCharactersByID,
 };

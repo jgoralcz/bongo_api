@@ -45,6 +45,7 @@ const {
 
 const {
   removeAllGuildCustomsCharactersByID,
+  getRemainingCustomWaifusServer,
 } = require('../db/tables/cg_custom_waifu/cg_custom_waifu');
 
 const { invalidBoolSetting } = require('../util/functions/validators');
@@ -258,11 +259,20 @@ route.get('/:id/emojis/claim/random', async (req, res) => {
   return res.status(200).send(query[0]);
 });
 
-route.get('/:id/remaining-claimed', async (req, res) => {
+route.get('/:id/characters/claim/remaining', async (req, res) => {
   const { id } = req.params;
 
   const query = await getRemainingClaimWaifusServer(id);
-  if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any claimed characters and may not exist.` });
+  if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any claimed characters or may not exist.` });
+
+  return res.status(200).send(query[0]);
+});
+
+route.get('/:id/characters/custom/remaining', async (req, res) => {
+  const { id } = req.params;
+
+  const query = await getRemainingCustomWaifusServer(id);
+  if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any custom characters or may not exist.` });
 
   return res.status(200).send(query[0]);
 });
