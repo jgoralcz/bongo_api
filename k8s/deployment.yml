@@ -53,6 +53,7 @@ spec:
             - name: key
               readOnly: true
               mountPath: /node/config/ssl-bongo.key
+              subPath: ssl-bongo.key
       imagePullSecrets:
         - name: github-registry
       volumes:
