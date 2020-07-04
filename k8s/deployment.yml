@@ -46,6 +46,12 @@ spec:
               readOnly: true
               mountPath: /node/config/config.json
               subPath: config.json
+            - name: cert
+              readOnly: true
+              mountPath: /node/config
+            - name: key
+              readOnly: true
+              mountPath: /node/config
       imagePullSecrets:
         - name: github-registry
       volumes:
@@ -58,3 +64,15 @@ spec:
         - name: config
           configMap:
             name: bongo-bot-config.json
+        - name: cert
+          secret:
+            secretName: cert
+            items:
+              - key: tls.crt
+                path: ssl-bongo.crt
+        - name: key
+          secret:
+            secretName: key
+            items:
+              - key: tls.key
+                path: ssl-bongo.key
