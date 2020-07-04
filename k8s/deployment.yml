@@ -66,13 +66,13 @@ spec:
             name: bongo-bot-config.json
         - name: cert
           secret:
-            secretName: cert
+            secretName: ssl-bongo
             items:
               - key: tls.crt
                 path: ssl-bongo.crt
         - name: key
           secret:
-            secretName: key
+            secretName: ssl-bongo
             items:
               - key: tls.key
                 path: ssl-bongo.key
