@@ -49,9 +49,11 @@ spec:
             - name: cert
               readOnly: true
               mountPath: /node/config
+              subPath: ssl-bongo.crt
             - name: key
               readOnly: true
               mountPath: /node/config
+              subPath: ssl-bongo.key
       imagePullSecrets:
         - name: github-registry
       volumes:
