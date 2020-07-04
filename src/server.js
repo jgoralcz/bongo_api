@@ -11,7 +11,7 @@ const { basicAuth, authorizer, unauthResponse } = require('./middleware/basicAut
 const { errorHandler } = require('./middleware/errorhandler');
 const { httpLogger } = require('./middleware/logger');
 
-const { LOCAL, PROD, TEST } = require('./util/constants/environments');
+const { LOCAL, PROD, TEST, BETA } = require('./util/constants/environments');
 const { serverCert, serverKey } = require('./util/constants/paths');
 
 logger.level = 'info';
@@ -21,7 +21,6 @@ const env = process.env.NODE_ENV || LOCAL;
 const server = express();
 
 server.use(forceSsl);
-
 server.use(basicAuth({
   authorizer,
   authorizeAsync: true,
@@ -36,8 +35,9 @@ server.use('/', router, errorHandler);
 
 const upperCaseEnv = env.toUpperCase();
 
-if (upperCaseEnv === PROD || upperCaseEnv === TEST) {
+if (upperCaseEnv === PROD || upperCaseEnv === TEST || upperCaseEnv === BETA) {
   const cert = { key: fs.readFileSync(serverKey), cert: fs.readFileSync(serverCert) };
-  https.CreateServer(cert, server).listen(port, () => logger.info(`${upperCaseEnv} server started on ${port}`));
+  https.createServer(cert, server).listen(port, () => logger.info(`${upperCaseEnv} server started on ${port}`));
+} else {
+  server.listen(port, () => logger.info(`${upperCaseEnv} server started on ${port}.`));
 }
-server.listen(port, () => logger.info(`${upperCaseEnv} server started on ${port}.`));
