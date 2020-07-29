@@ -44,7 +44,7 @@ jobs:
 
       - name: Build Memory Request
         shell: bash
-        run: echo "##[set-output name=request;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "512Mi" || echo "64Mi")"
+        run: echo "##[set-output name=request;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "256Mi" || echo "64Mi")"
         id: memory_request
 
       - name: Push to GitHub Packages

@@ -2,8 +2,10 @@ const route = require('express-promise-router')();
 
 const { resetClaims } = require('../db/tables/clients_guilds/clients_guilds_table');
 const {
-  MAX_CLAIM_HOUR, MIN_CLAIM_HOUR,
-  MAX_CLAIM_MINUTE, MIN_CLAIM_MINUTE,
+  MAX_CLAIM_HOUR,
+  MIN_CLAIM_HOUR,
+  MAX_CLAIM_MINUTE,
+  MIN_CLAIM_MINUTE,
 } = require('../util/constants/guilds');
 
 route.patch('/reset', async (req, res) => {

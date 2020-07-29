@@ -22,5 +22,5 @@ CREATE UNIQUE INDEX IF NOT EXISTS client_guild ON "clientsGuildsTable"("userId",
 CREATE INDEX IF NOT EXISTS idx_claim_waifu ON "clientsGuildsTable"(claim_waifu);
 CREATE INDEX IF NOT EXISTS idx_rolls_waifu ON "clientsGuildsTable"(rolls_waifu);
 CREATE INDEX IF NOT EXISTS idx_total_friends ON "clientsGuildsTable"("totalFriends");
-CREATE INDEX IF NOT EXISTS idx_total_f ON "clientsGuildsTable"("totalMarriages");
+CREATE INDEX IF NOT EXISTS idx_total_marriages ON "clientsGuildsTable"("totalMarriages");
 CREATE INDEX IF NOT EXISTS idx_cg_date ON "clientsGuildsTable"(latest_roll_date);

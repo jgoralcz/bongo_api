@@ -4,3 +4,5 @@ auth.json
 configmap.json
 node_modules
 logs
+ssl-bongo.crt
+ssl-bongo.key
