@@ -2,7 +2,7 @@ const bodyparser = require('body-parser');
 const express = require('express');
 const logger = require('log4js').getLogger();
 
-const router = require('./routes/Routes.js');
+const router = require('./routes/Routes');
 
 const { basicAuth, authorizer, unauthResponse } = require('./middleware/basicAuth');
 const { errorHandler } = require('./middleware/errorhandler');
