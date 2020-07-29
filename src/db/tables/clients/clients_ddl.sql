@@ -47,12 +47,10 @@ CREATE TABLE IF NOT EXISTS "clientsTable" (
   cropped_images BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE INDEX IF NOT EXISTS idx_cookie ON "clientsTable"(cookie);
-CREATE INDEX IF NOT EXISTS idx_donut ON "clientsTable"(donut);
-CREATE INDEX IF NOT EXISTS idx_fuel ON "clientsTable"(fuel);
-CREATE INDEX IF NOT EXISTS idx_gauntlet ON "clientsTable"(gauntlet);
+CREATE INDEX IF NOT EXISTS idx_cookie ON "clientsTable"(cookie) WHERE cookie > 0;
+CREATE INDEX IF NOT EXISTS idx_donut ON "clientsTable"(donut) WHERE donut > 0;
+CREATE INDEX IF NOT EXISTS idx_fuel ON "clientsTable"(fuel) WHERE fuel > 0;
 CREATE INDEX IF NOT EXISTS idx_patron ON "clientsTable"(patron);
 CREATE INDEX IF NOT EXISTS idx_patron_user_id ON "clientsTable"(patron, "userId");
-CREATE INDEX IF NOT EXISTS idx_pizza ON "clientsTable"(pizza);
-CREATE INDEX IF NOT EXISTS idx_ramen ON "clientsTable"(ramen);
-CREATE INDEX IF NOT EXISTS idx_vegetable ON "clientsTable"(vegetable);
+CREATE INDEX IF NOT EXISTS idx_pizza ON "clientsTable"(pizza) WHERE pizza > 0;
+CREATE INDEX IF NOT EXISTS idx_ramen ON "clientsTable"(ramen) WHERE ramen > 0;
