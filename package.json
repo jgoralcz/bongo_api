@@ -20,7 +20,6 @@
     "nconf": "^0.10.0",
     "pg": "^8.2.1",
     "request": "^2.88.0",
-    "request-promise": "^4.2.5",
     "uuid": "^3.3.3"
   },
   "devDependencies": {

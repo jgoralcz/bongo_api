@@ -11,6 +11,7 @@ const {
   updateWaifu,
   updateWaifuCleanImage,
   getWaifuCount,
+  updateCharacterMainImage,
 } = require('../../db/waifu_schema/waifu/waifu');
 
 const { getRankClaimedWaifuByID } = require('../../db/tables/cg_claim_waifu_rank/cg_claim_waifu_rank');
@@ -62,11 +63,8 @@ route.post('/', async (req, res) => {
   const characterExistsQuery = await searchCharacterExactly(name, series, seriesID);
   if (characterExistsQuery && characterExistsQuery.length > 0 && !uri) return res.status(409).send({ error: 'Character already exists.', message: 'Required body: imageURL, name, series, husbando, nsfw, description.', body });
 
-  const getImageInfo = await getBuffer(imageURL);
-  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
-
-  const { buffer: tempBuffer } = getImageInfo;
-  const buffer = Buffer.from(tempBuffer);
+  const buffer = await getBuffer(imageURL);
+  if (!buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
 
   const { height, width, error } = await validateBuffer(req, res, buffer, { overrideDefaultHW: true });
   if (!height || !width) return res.status(400).send(error);
@@ -203,11 +201,8 @@ route.post('/:id/images', async (req, res) => {
 
   const [waifu] = waifuRow;
 
-  const getImageInfo = await getBuffer(uri);
-  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${uri}.` });
-
-  const { buffer: tempBuffer } = getImageInfo;
-  const buffer = Buffer.from(tempBuffer);
+  const buffer = await getBuffer(uri);
+  if (!buffer) return res.status(400).send({ error: `No buffer found for url ${uri}.` });
 
   const { height, width, error } = await validateBuffer(req, res, buffer, { overrideDefaultHW: true });
   if (!height || !width || error) return res.status(400).send(error);
@@ -329,6 +324,18 @@ route.get('/', async (req, res) => {
 
   const waifuRows = await searchWaifuByName(name, limit);
   return res.status(200).send(waifuRows);
+});
+
+route.patch('/:characterID/image', async (req, res) => {
+  const { characterID } = req.params;
+  const { discordCropURL, cropURL, imageURL } = req.body;
+
+  if (!discordCropURL || !cropURL || !imageURL) return res.status(400).send({ error: `need discordCropURL, cropURL, imageURL. Received: ${JSON.stringify(req.body)}` });
+
+  const updatedRows = await updateCharacterMainImage(characterID, discordCropURL, cropURL, imageURL);
+  if (!updatedRows || updatedRows.length <= 0) return res.status(404).send({ error: `could not find a matching character with id ${characterID}` });
+
+  return res.status(201).send();
 });
 
 module.exports = route;

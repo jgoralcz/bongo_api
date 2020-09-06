@@ -25,7 +25,16 @@ const updateClientWesternRolls = async (userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET roll_western = $2
   WHERE "userId" = $1
+    AND ($2 != FALSE OR roll_anime != FALSE)
   RETURNING roll_western AS "updatedBool";
+`, [userID, boolValue]);
+
+const updateClientAnimeRolls = async (userID, boolValue) => poolQuery(`
+  UPDATE "clientsTable"
+  SET roll_anime = $2
+  WHERE "userId" = $1
+    AND ($2 != FALSE OR roll_western != FALSE)
+  RETURNING roll_anime AS "updatedBool";
 `, [userID, boolValue]);
 
 const updateClientGameRolls = async (userID, boolValue) => poolQuery(`
@@ -556,4 +565,5 @@ module.exports = {
   resetAllClientDaily,
   clearVoteStreaks,
   removeRandomStone,
+  updateClientAnimeRolls,
 };

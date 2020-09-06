@@ -285,6 +285,15 @@ const getWaifuByNoCleanImageRandom = async () => poolQuery(`
   LIMIT 1;
 `, []);
 
+const updateCharacterMainImage = async (characterID, discordCropURL, cropURL, imageURL) => poolQuery(`
+  UPDATE waifu_schema.waifu_table
+  SET image_url_clean_discord = $2,
+    image_url_clean = $3,
+    image_url = $4
+  WHERE id = $1
+  RETURNING *;
+`, [characterID, discordCropURL, cropURL, imageURL]);
+
 const updateWaifuCleanImage = async (id, uri) => poolQuery(`
   UPDATE waifu_schema.waifu_table
   SET image_url_clean_discord = $2
@@ -315,4 +324,5 @@ module.exports = {
   updateWaifu,
   updateWaifuCleanImage,
   getWaifuByImageURL,
+  updateCharacterMainImage,
 };

@@ -15,8 +15,7 @@ const getWishlistSeriesUserGuild = async (userID, guildID) => poolQuery(`
     WHERE user_id = $1 AND guild_id = $2
   ) cgt
   JOIN waifu_schema.series_table st ON cgt.series_id = st.id
-  JOIN "clientsGuildsTable" ct ON ct.id = cgt.user_guild_id
-  LIMIT 5;
+  JOIN "clientsGuildsTable" ct ON ct.id = cgt.user_guild_id;
 `, [userID, guildID]);
 
 const getAllSeriesByNameWishlist = async (userID, guildID, name) => poolQuery(`

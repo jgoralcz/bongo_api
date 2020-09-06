@@ -55,4 +55,3 @@ CREATE INDEX IF NOT EXISTS idx_patron ON "clientsTable"(patron);
 CREATE INDEX IF NOT EXISTS idx_patron_user_id ON "clientsTable"(patron, "userId");
 CREATE INDEX IF NOT EXISTS idx_pizza ON "clientsTable"(pizza);
 CREATE INDEX IF NOT EXISTS idx_ramen ON "clientsTable"(ramen);
-CREATE INDEX IF NOT EXISTS idx_vegetable ON "clientsTable"(vegetable);
