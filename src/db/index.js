@@ -1,9 +1,15 @@
 const { Pool } = require('pg');
+const logger = require('log4js').getLogger();
+
 const { api } = require('../util/constants/paths');
 const nconf = require('nconf').file('api', api);
 const db = nconf.get('db');
 
 const pool = new Pool(db);
+
+pool.on('error', (error) => {
+  logger.error(error);
+});
 
 const poolQuery = async (query, paramsArray) => {
   const client = await pool.connect();
