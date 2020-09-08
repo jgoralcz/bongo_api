@@ -31,7 +31,8 @@ const { validateBuffer } = require('../../handlers/validate');
 
 const {
   storeNewImage,
-  getHashFromBufferID, mergeWaifuImages,
+  getHashFromBufferID,
+  mergeWaifuImages,
 } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { getWaifuImagesAndInfoByID, storeCleanWaifuImage: storeCleanWaifuImageExtra } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
@@ -39,9 +40,13 @@ const { removeDuplicateWaifuClaims } = require('../../db/tables/cg_claim_waifu/c
 const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../util/constants/dimensions');
 
 const {
-  updateWaifuImage, deleteWaifuByID,
-  mergeWaifus, getWaifuByImageURL, storeNewWaifuImage,
-  storeCleanWaifuImage, getWaifuByNoCleanImageRandom,
+  updateWaifuImage,
+  deleteWaifuByID,
+  mergeWaifus,
+  getWaifuByImageURL,
+  storeNewWaifuImage,
+  storeCleanWaifuImage,
+  getWaifuByNoCleanImageRandom,
   getRandomWaifu,
 } = require('../../db/waifu_schema/waifu/waifu');
 
@@ -278,7 +283,14 @@ route.put('/:id', async (req, res) => {
   const oldWaifuRow = await getWaifuById(updatedWaifu.id);
   if (!oldWaifuRow || !oldWaifuRow[0] || !oldWaifuRow[0].id) return res.status(404).send({ error: 'Waifu not found.', message: `${updatedWaifu.id} does not exist`, body: req.body });
 
-  const updatedWaifuObject = Object.assign(oldWaifuRow[0], updatedWaifu);
+  const [oldWaifu] = oldWaifuRow;
+  const oldWaifuTemp = JSON.parse(JSON.stringify(oldWaifuRow[0]));
+
+  const updatedWaifuObject = Object.assign(oldWaifu, updatedWaifu);
+  if (updatedWaifuObject.husbando !== oldWaifuTemp.husbando) {
+    updatedWaifuObject.unknown_gender = false;
+  }
+
   await updateWaifu(updatedWaifuObject);
 
   return res.status(204).send();
