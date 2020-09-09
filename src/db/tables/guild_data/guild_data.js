@@ -795,7 +795,7 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
 `, [guildID, waifuRankBool]);
 
 const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false) => poolQuery(`
-  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, wt.id, original_name, origin, (
+  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, wt.id, original_name, origin, count, position, (
     SELECT
       CASE
       WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
@@ -894,6 +894,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
       ELSE 8 END, ws.name, ws.romaji_name, ws.original_name
     LIMIT $3
   ) wt
+  JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id
   ORDER BY
     CASE
     WHEN name ILIKE $1 THEN 0
@@ -911,7 +912,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
 `, [waifuName, guildID, limit, userID, useDiscordImage]);
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
-  SELECT name, nsfw, series, user_id, url, description, ws.id, original_name, origin, husbando, unknown_gender,
+  SELECT name, nsfw, series, user_id, url, description, ws.id, original_name, origin, husbando, unknown_gender, count, position,
   (
     SELECT
       CASE
@@ -941,6 +942,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
     JOIN waifu_schema.waifu_table wswt ON wsst.id = wswt.series_id
   ) ws
   LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
+  JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
   ORDER BY series ASC, name ASC
   LIMIT 500;
 `, [waifuSeries, guildID, userID, useDiscordImage]);

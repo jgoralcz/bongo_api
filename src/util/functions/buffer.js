@@ -1,9 +1,17 @@
-const request = require('request-promise');
+const axios = require('axios');
+const logger = require('log4js').getLogger();
 const imageSize = require('image-size');
 
 const { MBLIMIT } = require('../../util/constants/bytes');
 
-const getBuffer = async (uri) => request({ uri, encoding: null });
+const getBuffer = async (uri) => {
+  const { status, data } = await axios.get(uri, { responseType: 'arraybuffer', validateStatus: () => true });
+  if (status !== 200 || !data) {
+    logger.error(`url ${uri} did not return status code 200 when seeking buffer.`);
+    return undefined;
+  }
+  return Buffer.from(data);
+};
 
 const getBufferLength = (buffer) => buffer && buffer.length;
 
