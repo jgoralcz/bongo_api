@@ -206,19 +206,19 @@ route.get('/:id/wishlists/characters/:characterID', async (req, res) => {
   return res.status(200).send(query || []);
 });
 
-route.get('/:id/characters/:characterID/claims', async (req, res) => {
-  const { id, characterID } = req.params;
-
-  const query = await getGuildsClaimsCharacter(id, characterID);
-
-  return res.status(200).send(query || []);
-});
-
 route.get('/:id/wishlists/series/:seriesID', async (req, res) => {
   const { id, seriesID } = req.params;
 
   const query = await getUsersWishSeries(id, seriesID);
   // if (!query || !query[0]) return res.status(404).send({ error: `Guild ${id} does not have any wishlists or series ID ${seriesID} does not exist.` });
+
+  return res.status(200).send(query || []);
+});
+
+route.get('/:id/characters/:characterID/claims', async (req, res) => {
+  const { id, characterID } = req.params;
+
+  const query = await getGuildsClaimsCharacter(id, characterID);
 
   return res.status(200).send(query || []);
 });
