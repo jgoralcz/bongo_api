@@ -894,7 +894,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
       ELSE 8 END, ws.name, ws.romaji_name, ws.original_name
     LIMIT $3
   ) wt
-  JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id
+  LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id
   ORDER BY
     CASE
     WHEN name ILIKE $1 THEN 0
@@ -942,7 +942,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
     JOIN waifu_schema.waifu_table wswt ON wsst.id = wswt.series_id
   ) ws
   LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-  JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
+  LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
   ORDER BY series ASC, name ASC
   LIMIT 500;
 `, [waifuSeries, guildID, userID, useDiscordImage]);
