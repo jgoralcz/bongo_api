@@ -23,7 +23,7 @@ spec:
             - name: PORT
               value: "${PORT}"
             - name: NODE_ENV
-              value: "${ENV^^}"
+              value: "${ENV}"
           resources:
             limits:
               cpu: ${CPU_LIMIT}
