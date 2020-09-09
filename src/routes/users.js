@@ -15,7 +15,10 @@ const {
   updateGuildCustomCommandUsage,
   addGameAndBankPoints,
   removeRandomStone,
+  updateClientAnimeRolls,
 } = require('../db/tables/clients/clients_table');
+
+const { banSubmissionUser, unbanSubmissionUser } = require('../db/tables/bans_submissions/bans_submissions.js');
 
 const { checkWaifuOwner, claimClientWaifuID } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
 const { claimClientCustomWaifuID } = require('../db/tables/cg_custom_waifu/cg_custom_waifu');
@@ -51,16 +54,18 @@ const rollRequest = async (req, res, rollFunction) => {
     rollWestern,
     rollGame,
     croppedDiscordImage = true,
+    rollAnime,
   } = req.query;
 
   const rows = await rollFunction(
     userID,
     guildID,
-    invalidBoolSetting(nsfw) || false,
-    invalidBoolSetting(rollWestern) || true,
-    invalidBoolSetting(rollGame) || true,
-    invalidBoolSetting(croppedDiscordImage),
+    invalidBoolSetting(nsfw, false),
+    invalidBoolSetting(rollWestern, true),
+    invalidBoolSetting(rollGame, true),
+    invalidBoolSetting(croppedDiscordImage, false),
     limitMultiplier || 1,
+    !invalidBoolSetting(rollAnime, true),
   );
   return res.status(200).send(rows || []);
 };
@@ -74,7 +79,7 @@ const updateSettings = async (req, res, updateFunction) => {
   if (updatedBool == null) return res.status(400).send({ error: `updatedBool value needed as a boolean (true or false), received: ${req.body.updatedBool}` });
 
   const updated = await updateFunction(id, updatedBool);
-  if (!updated || updated.length <= 0 || !updated[0] || updated[0].updatedBool == null) return res.status(404).send({ error: `User ${id} not found.` });
+  if (!updated || updated.length <= 0 || !updated[0] || updated[0].updatedBool == null) return res.status(404).send({ error: `User ${id} not found or unsuccesfully updated.` });
 
   return res.status(200).send({ id, updatedBool: updated[0].updatedBool });
 };
@@ -118,6 +123,7 @@ route.patch('/dailies/reset', async (_, res) => {
 route.patch('/:id/settings/play-first', async (req, res) => updateSettings(req, res, updateClientPlayFirst));
 route.patch('/:id/settings/anime-reactions', async (req, res) => updateSettings(req, res, updateClientAnimeReactions));
 route.patch('/:id/settings/western-rolls', async (req, res) => updateSettings(req, res, updateClientWesternRolls));
+route.patch('/:id/settings/anime-rolls', async (req, res) => updateSettings(req, res, updateClientAnimeRolls));
 route.patch('/:id/settings/game-rolls', async (req, res) => updateSettings(req, res, updateClientGameRolls));
 route.patch('/:id/settings/cropped-images', async (req, res) => updateSettings(req, res, updateClientCroppedImages));
 route.patch('/:id/settings/roll-claimed', async (req, res) => updateSettings(req, res, updateClientRollClaimed));
@@ -224,7 +230,7 @@ route.post('/:userID/guilds/:guildID/characters/:customID/custom', async (req, r
   const query = await claimClientCustomWaifuID(userID, guildID, customID, new Date());
   if (!query || query.length <= 0 || !query[0]) return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim custom character ${customID}.` });
 
-  return res.status(200).send(query[0]);
+  return res.status(201).send(query[0]);
 });
 
 route.post('/:userID/guilds/:guildID/characters/:characterID/claim', async (req, res) => {
@@ -233,7 +239,7 @@ route.post('/:userID/guilds/:guildID/characters/:characterID/claim', async (req,
   const query = await claimClientWaifuID(userID, guildID, characterID, new Date());
   if (!query || query.length <= 0 || !query[0]) return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim character ${characterID}.` });
 
-  return res.status(200).send(query[0]);
+  return res.status(201).send(query[0]);
 });
 
 route.patch('/:userID/guilds/:guildID/claim', async (req, res) => {
@@ -262,6 +268,23 @@ route.patch('/:userID/games/points', async (req, res) => {
   if (!queryPoints || !queryPoints[0] || !queryPoints[0].points) return res.status(500).send({ error: 'A problem occurred when updating the bank points.' });
 
   return res.status(200).send({ points: queryPoints[0].points });
+});
+
+route.post('/bans/submission', async (req, res) => {
+  const { userID } = req.body;
+  if (!userID) return res.status(400).send({ error: `expected userID in body. Received ${JSON.stringify(req.body)}` });
+
+  await banSubmissionUser(userID);
+
+  return res.status(201).send();
+});
+
+route.delete('/:userID/bans/submission', async (req, res) => {
+  const { userID } = req.params;
+
+  await unbanSubmissionUser(userID);
+
+  return res.status(204).send();
 });
 
 module.exports = route;

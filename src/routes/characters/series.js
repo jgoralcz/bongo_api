@@ -34,11 +34,8 @@ route.patch('/', async (req, res) => {
     uploader, is_western: western, is_game: game,
   } = body;
 
-  const getImageInfo = await getBuffer(imageURL);
-  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
-
-  const { buffer: tempBuffer } = getImageInfo;
-  const buffer = Buffer.from(tempBuffer);
+  const buffer = await getBuffer(imageURL);
+  if (!buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
 
   const { height, width, error } = await validateBuffer(req, res, buffer, { overrideDefaultHW: true });
   if (!height || !width || error) return res.status(400).send(error);
@@ -84,11 +81,8 @@ route.post('/', async (req, res) => {
   const seriesExistsQuery = await getSeries(name);
   if (seriesExistsQuery && seriesExistsQuery.length >= 0) return res.status(400).send({ error: 'Series already exists.', message: `The series ${name} already exists. You can update the series with a PATCH request.`, body });
 
-  const getImageInfo = await getBuffer(imageURL);
-  if (!getImageInfo || !getImageInfo.buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
-
-  const { buffer: tempBuffer } = getImageInfo;
-  const buffer = Buffer.from(tempBuffer);
+  const buffer = await getBuffer(imageURL);
+  if (!buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });
 
   const { height, width, error } = await validateBuffer(req, res, buffer, { overrideDefaultHW: true });
   if (!height || !width || error) return res.status(400).send(error);
@@ -129,6 +123,15 @@ route.get('/', async (req, res) => {
   const series = await getAllSeriesByName(name);
 
   return res.status(200).send(series || []);
+});
+
+route.get('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  const query = await getSeriesById(id);
+  if (!query || !query[0]) return res.status(404).send({ error: `${id} is not a valid id.` });
+
+  return res.status(200).send(query[0]);
 });
 
 module.exports = route;

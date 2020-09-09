@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS cg_buy_waifu_table (
   user_guild_id varchar(65) NOT NULL REFERENCES "clientsGuildsTable" ON DELETE CASCADE ON UPDATE CASCADE,
   user_id varchar(32) NOT NULL REFERENCES "clientsTable" ON DELETE CASCADE ON UPDATE CASCADE,
   guild_id varchar(32) NOT NULL,
-  waifu_id INTEGER NOT NULL REFERENCES "waifu_schema.waifu_table" ON DELETE CASCADE ON UPDATE CASCADE,
+  waifu_id INTEGER NOT NULL REFERENCES waifu_schema.waifu_table ON DELETE CASCADE ON UPDATE CASCADE,
   waifu_name TEXT NOT NULL,
   favorite BOOLEAN DEFAULT FALSE
 );
