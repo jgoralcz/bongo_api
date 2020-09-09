@@ -12,6 +12,11 @@ jobs:
         run: echo "##[set-output name=env;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "prod" || echo "beta")"
         id: extract_environment
 
+      - name: Extract Environment Uppercase
+        shell: bash
+        run: echo "##[set-output name=env_uppercase;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "PROD" || echo "BETA")"
+        id: extract_environment_uppercase
+
       - name: Extract Repo Name
         shell: bash
         run: echo "##[set-output name=repo;]$(echo ${GITHUB_REPOSITORY##*/})"
@@ -73,7 +78,7 @@ jobs:
           && envsubst < k8s/deployment.yml | kubectl apply -f - \
           && kubectl rollout restart deployment/${{ env.SERVICE_NAME}}
         env:
-          ENV: ${{ steps.extract_environment.outputs.env }}
+          ENV: ${{ steps.extract_environment_uppercase.outputs.env_uppercase }}
           IMAGE_LOCATION: docker.pkg.github.com/jgoralcz/${{ steps.extract_repo.outputs.repo }}/${{ steps.extract_repo.outputs.repo }}:${{ steps.extract_environment.outputs.env }}
           SERVICE_NAME: ${{ steps.extract_prefix.outputs.prefix }}${{ steps.extract_service.outputs.service }}
           PORT: 8443
