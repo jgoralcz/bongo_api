@@ -56,9 +56,16 @@ route.post('/', async (req, res) => {
   if (!body.imageURL || !body.uploader || !body.name || (!body.series && !body.url) || body.husbando == null || body.nsfw == null || !body.description) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: imageURL, name, uploader, series, husbando, nsfw, description.', body });
 
   const {
-    imageURL, name, series, nsfw,
-    url: uri, seriesList, uploader,
-    crop, desiredWidth, desiredHeight,
+    imageURL,
+    name,
+    series,
+    nsfw,
+    url: uri,
+    seriesList,
+    uploader,
+    crop,
+    desiredWidth,
+    desiredHeight,
   } = body;
 
   const seriesExistsQuery = await searchSeriesExactly(series);
@@ -149,11 +156,22 @@ route.patch('/clean-images', async (req, res) => {
   }
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
-    width, height, nsfw, type: 'characters', uploader,
+    width,
+    height,
+    nsfw,
+    type: 'characters',
+    uploader,
   });
 
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });
-  const { id: characterID, image_url_clean: imageURLClean, name, series, url } = row[0];
+
+  const {
+    id: characterID,
+    image_url_clean: imageURLClean,
+    name,
+    series,
+    url,
+  } = row[0];
 
   return res.status(201).send({ imageURLClean, characterID, name, imageURL, series, url, buffer: mimsBuffer, id });
 });

@@ -39,6 +39,7 @@ const {
   clearStreaks,
   getClientsGuildsInfo,
   addClaimWaifuTrue,
+  addClaimWaifuFalse,
 } = require('../db/tables/clients_guilds/clients_guilds_table');
 
 const { initializeGetNewUser } = require('../util/functions/user');
@@ -236,8 +237,12 @@ route.post('/:userID/guilds/:guildID/characters/:customID/custom', async (req, r
 route.post('/:userID/guilds/:guildID/characters/:characterID/claim', async (req, res) => {
   const { userID, guildID, characterID } = req.params;
 
+  await addClaimWaifuTrue(userID, guildID);
   const query = await claimClientWaifuID(userID, guildID, characterID, new Date());
-  if (!query || query.length <= 0 || !query[0]) return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim character ${characterID}.` });
+  if (!query || query.length <= 0 || !query[0]) {
+    await addClaimWaifuFalse(userID, guildID);
+    return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim character ${characterID}.` });
+  }
 
   return res.status(201).send(query[0]);
 });
@@ -246,6 +251,14 @@ route.patch('/:userID/guilds/:guildID/claim', async (req, res) => {
   const { userID, guildID } = req.params;
 
   await addClaimWaifuTrue(userID, guildID);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/claim/false', async (req, res) => {
+  const { userID, guildID } = req.params;
+
+  await addClaimWaifuFalse(userID, guildID);
 
   return res.status(204).send();
 });
