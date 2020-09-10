@@ -1,3 +1,4 @@
+const logger = require('log4js').getLogger();
 const route = require('express-promise-router')();
 
 const {
@@ -44,6 +45,7 @@ const {
 
 const { initializeGetNewUser } = require('../util/functions/user');
 const { invalidBoolSetting } = require('../util/functions/validators');
+const { Logger } = require('log4js');
 
 const rollRequest = async (req, res, rollFunction) => {
   const { userID, guildID } = req.params;
@@ -238,7 +240,7 @@ route.post('/:userID/guilds/:guildID/characters/:characterID/claim', async (req,
   const { userID, guildID, characterID } = req.params;
 
   await addClaimWaifuTrue(userID, guildID);
-  const query = await claimClientWaifuID(userID, guildID, characterID, new Date());
+  const query = await claimClientWaifuID(userID, guildID, characterID, new Date()).catch((error) => logger.error(error));
   if (!query || query.length <= 0 || !query[0]) {
     await addClaimWaifuFalse(userID, guildID);
     return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim character ${characterID}.` });
