@@ -701,17 +701,21 @@ const findClaimWaifuByNameAndIDJoinURL = async (userID, guildID, waifuName) => p
   LIMIT 20;
 `, [userID, guildID, waifuName]);
 
-/**
- * claim the waifu
- * @param guildID the guild id
- * @param userID the user'd id
- * @param waifuID the waifu id
- * @param date the date the waifu added.
- * @returns {Promise<void>}
- */
+
 const claimClientWaifuID = async (userID, guildID, waifuID, date) => poolQuery(`
   INSERT INTO cg_claim_waifu_table (guild_user_id, guild_id, user_id, waifu_id, date)
-  VALUES ($1, $2, $3, $4, $5)
+  SELECT $1::varchar, $2::varchar, $3::varchar, $4::integer, $5
+  WHERE NOT EXISTS (
+    SELECT 1 
+    FROM cg_claim_waifu_table
+    WHERE guild_id = $2
+      AND waifu_id = $4
+      AND EXISTS (
+        SELECT 1
+        FROM "guildsTable"
+        WHERE roll_claimed = FALSE
+      )
+  )
   RETURNING *;
 `, [`${guildID}-${userID}`, guildID, userID, waifuID, date]);
 
