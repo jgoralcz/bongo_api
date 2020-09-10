@@ -45,7 +45,6 @@ const {
 
 const { initializeGetNewUser } = require('../util/functions/user');
 const { invalidBoolSetting } = require('../util/functions/validators');
-const { Logger } = require('log4js');
 
 const rollRequest = async (req, res, rollFunction) => {
   const { userID, guildID } = req.params;
