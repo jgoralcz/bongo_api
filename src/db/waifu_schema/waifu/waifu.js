@@ -35,7 +35,7 @@ const upsertWaifu = async (waifu) => poolQuery(`
   )
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
   
-  ON CONFLICT(name, series_id, original_name, romaji_name) DO UPDATE
+  ON CONFLICT(name, series_id) DO UPDATE
     SET name = $1, series = $2, description = $3, image_url = $4, image_file_path = $5, url = $6, origin = $7, original_name = $8,
     romaji_name = $9, age = $10, date_of_birth = $11, hip_cm = $12, waist_cm = $13, bust_cm = $14, weight_kg = $15, height_cm = $16,
     blood_type = $17, likes = $18, dislikes = $19, husbando = $20, nsfw = $21, date_added = $22, website_id = $23, unknown_gender = $24, series_id = $25,
