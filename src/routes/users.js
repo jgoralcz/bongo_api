@@ -229,8 +229,12 @@ route.get('/:userID/guilds/:guildID/claims', async (req, res) => {
 route.post('/:userID/guilds/:guildID/characters/:customID/custom', async (req, res) => {
   const { userID, guildID, customID } = req.params;
 
+  await addClaimWaifuTrue(userID, guildID);
   const query = await claimClientCustomWaifuID(userID, guildID, customID, new Date());
-  if (!query || query.length <= 0 || !query[0]) return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim custom character ${customID}.` });
+  if (!query || query.length <= 0 || !query[0]) {
+    await addClaimWaifuFalse(userID, guildID);
+    return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim custom character ${customID}.` });
+  }
 
   return res.status(201).send(query[0]);
 });
