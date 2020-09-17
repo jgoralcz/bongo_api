@@ -1,3 +1,3 @@
 module.exports = Object.freeze({
-  MBLIMIT: 10,
+  MBLIMIT: 50,
 });
