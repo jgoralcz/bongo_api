@@ -36,6 +36,12 @@ const removeWishlistSeriesUserGuild = async (userID, guildID, seriesID) => poolQ
   WHERE user_id = $1 AND guild_id = $2 AND series_id = $3;
 `, [userID, guildID, seriesID]);
 
+const removeAllSeriesWishlist = async (userID, guildID) => poolQuery(`
+  DELETE
+  FROM cg_wishlist_series_table
+  WHERE user_id = $1 AND guild_id = $2;
+`, [userID, guildID]);
+
 const getUsersWishSeries = async (guildID, seriesID) => poolQuery(`
   SELECT user_id, public_wish_list AS public
     FROM (
@@ -52,4 +58,5 @@ module.exports = {
   removeWishlistSeriesUserGuild,
   getUsersWishSeries,
   getAllSeriesByNameWishlist,
+  removeAllSeriesWishlist,
 };

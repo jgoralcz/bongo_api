@@ -13,6 +13,12 @@ const removeWishlistWaifuUserGuild = async (userID, guildID, waifuID) => poolQue
   WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
 `, [userID, guildID, waifuID]);
 
+const removeAllCharactersWishlist = async (userID, guildID) => poolQuery(`
+  DELETE
+  FROM cg_wishlist_waifu_table
+  WHERE user_id = $1 AND guild_id = $2;
+`, [userID, guildID]);
+
 const getWishlistWaifuUserGuild = async (userID, guildID) => poolQuery(`
   SELECT name, series, url, cgt.waifu_id AS id, cgcwt.user_id AS "ownerID", public_wish_list
   FROM cg_wishlist_waifu_table cgt
@@ -47,4 +53,5 @@ module.exports = {
   getWishlistWaifuUserGuild,
   getAllWaifusByNameWishlist,
   getUsersWishWaifu,
+  removeAllCharactersWishlist,
 };
