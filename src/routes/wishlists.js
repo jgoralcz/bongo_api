@@ -5,6 +5,7 @@ const {
   getWishlistWaifuUserGuild,
   removeWishlistWaifuUserGuild,
   getAllWaifusByNameWishlist,
+  removeAllCharactersWishlist,
 } = require('../db/tables/cg_wishlist_waifu/cg_wishlist_waifu_table');
 
 const {
@@ -12,6 +13,7 @@ const {
   getWishlistSeriesUserGuild,
   removeWishlistSeriesUserGuild,
   getAllSeriesByNameWishlist,
+  removeAllSeriesWishlist,
 } = require('../db/tables/cg_wishlist_series/cg_wishlist_series_table');
 
 const {
@@ -81,6 +83,22 @@ route.delete('/users/:userID/guilds/:guildID/characters/:characterID', async (re
   const { userID, guildID, characterID } = req.params;
 
   await removeWishlistWaifuUserGuild(userID, guildID, characterID);
+
+  return res.status(204).send();
+});
+
+route.delete('/users/:userID/guilds/:guildID/characters', async (req, res) => {
+  const { userID, guildID } = req.params;
+
+  await removeAllCharactersWishlist(userID, guildID);
+
+  return res.status(204).send();
+});
+
+route.delete('/users/:userID/guilds/:guildID/series', async (req, res) => {
+  const { userID, guildID } = req.params;
+
+  await removeAllSeriesWishlist(userID, guildID);
 
   return res.status(204).send();
 });
