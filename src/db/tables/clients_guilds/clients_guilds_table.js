@@ -103,15 +103,6 @@ const getTotalMemberDailies = async (userId) => poolQuery(`
   WHERE "userId" = $1 AND daily IS NOT NULL;
 `, [userId]);
 
-/**
-* updates the user's daily
-* @param userId the user's id
-* @param guildId the guild's id
-* @param used whether it was used or not
-* @param date the date
-* @param additionalPoints additoinal poitns to add
-* @returns {Promise<*>}
-*/
 const updateClientGuildDaily = async (userId, guildId, used, date, additionalPoints) => poolQuery(`
   WITH cte AS (
     UPDATE "clientsGuildsTable"
@@ -121,9 +112,9 @@ const updateClientGuildDaily = async (userId, guildId, used, date, additionalPoi
   )
   UPDATE "clientsTable"
   SET "bankPoints" = 
-    CASE WHEN cte.streak >= 10
-      THEN "clientsTable"."bankPoints" + 1000 + 200 * 10 + $5
-      ELSE "clientsTable"."bankPoints" + 1000 + 200 * cte.streak + $5
+    CASE WHEN cte.streak >= 30
+      THEN "clientsTable"."bankPoints" + 3000 + 200 * 30 + $5
+      ELSE "clientsTable"."bankPoints" + 3000 + 200 * cte.streak + $5
     END
   FROM cte
   WHERE "userId" = $1
