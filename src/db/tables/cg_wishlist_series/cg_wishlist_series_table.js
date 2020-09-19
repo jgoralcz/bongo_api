@@ -52,6 +52,23 @@ const getUsersWishSeries = async (guildID, seriesID) => poolQuery(`
   JOIN "clientsGuildsTable" cgt ON cgt."userId" = cg.user_id AND cgt."guildId" = $1;
 `, [guildID, seriesID]);
 
+const removeSeriesWishlistInArray = async (guildID, usersArray) => poolQuery(`
+  WITH deleted AS (
+    DELETE
+      FROM cg_wishlist_series_table
+      WHERE guild_id = $1 AND user_id IN (
+        SELECT UNNEST($2::varchar[]) AS user_id
+      )
+      RETURNING *
+  ) SELECT count(*) FROM deleted;
+`, [guildID, usersArray]);
+
+const getUniqueUserSeriesWishlist = async (guildID) => poolQuery(`
+  SELECT DISTINCT user_id
+  FROM cg_wishlist_series_table
+  WHERE guild_id = $1;
+`, [guildID]);
+
 module.exports = {
   addWishlistSeriesUserGuild,
   getWishlistSeriesUserGuild,
@@ -59,4 +76,6 @@ module.exports = {
   getUsersWishSeries,
   getAllSeriesByNameWishlist,
   removeAllSeriesWishlist,
+  removeSeriesWishlistInArray,
+  getUniqueUserSeriesWishlist,
 };

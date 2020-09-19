@@ -6,6 +6,8 @@ const {
   removeWishlistWaifuUserGuild,
   getAllWaifusByNameWishlist,
   removeAllCharactersWishlist,
+  removeCharactersWishlistInArray,
+  getUniqueUserCharacterWishlist,
 } = require('../db/tables/cg_wishlist_waifu/cg_wishlist_waifu_table');
 
 const {
@@ -14,6 +16,8 @@ const {
   removeWishlistSeriesUserGuild,
   getAllSeriesByNameWishlist,
   removeAllSeriesWishlist,
+  removeSeriesWishlistInArray,
+  getUniqueUserSeriesWishlist,
 } = require('../db/tables/cg_wishlist_series/cg_wishlist_series_table');
 
 const {
@@ -101,6 +105,42 @@ route.delete('/users/:userID/guilds/:guildID/series', async (req, res) => {
   await removeAllSeriesWishlist(userID, guildID);
 
   return res.status(204).send();
+});
+
+route.delete('/guilds/:guildID/characters', async (req, res) => {
+  const { guildID } = req.params;
+  const { users } = req.query;
+
+  const usersArray = Array.isArray(users) ? users : [users];
+  const query = await removeCharactersWishlistInArray(guildID, usersArray);
+
+  return res.status(200).send(query[0].count);
+});
+
+route.delete('/guilds/:guildID/series', async (req, res) => {
+  const { guildID } = req.params;
+  const { users } = req.query;
+
+  const usersArray = Array.isArray(users) ? users : [users];
+  const query = await removeSeriesWishlistInArray(guildID, usersArray);
+
+  return res.status(200).send(query[0].count);
+});
+
+route.get('/guilds/:guildID/users/unique/characters', async (req, res) => {
+  const { guildID } = req.params;
+
+  const query = await getUniqueUserCharacterWishlist(guildID);
+
+  return res.status(200).send(query);
+});
+
+route.get('/guilds/:guildID/users/unique/series', async (req, res) => {
+  const { guildID } = req.params;
+
+  const query = await getUniqueUserSeriesWishlist(guildID);
+
+  return res.status(200).send(query);
 });
 
 route.patch('/users/:userID/guilds/:guildID/visibility', async (req, res) => {

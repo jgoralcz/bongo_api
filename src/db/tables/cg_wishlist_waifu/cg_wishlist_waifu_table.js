@@ -46,6 +46,23 @@ const getUsersWishWaifu = async (guildID, waifuID) => poolQuery(`
   JOIN "clientsGuildsTable" cgt ON cgt."userId" = cg.user_id AND cgt."guildId" = $1;
 `, [guildID, waifuID]);
 
+const removeCharactersWishlistInArray = async (guildID, usersArray) => poolQuery(`
+  WITH deleted AS (
+    DELETE
+      FROM cg_wishlist_waifu_table
+      WHERE guild_id = $1 AND user_id IN (
+        SELECT UNNEST($2::varchar[]) AS user_id
+      )
+      RETURNING *
+  ) SELECT count(*) FROM deleted;
+`, [guildID, usersArray]);
+
+const getUniqueUserCharacterWishlist = async (guildID) => poolQuery(`
+  SELECT DISTINCT user_id
+  FROM cg_wishlist_waifu_table
+  WHERE guild_id = $1;
+`, [guildID]);
+
 
 module.exports = {
   addWishlistWaifuUserGuild,
@@ -54,4 +71,6 @@ module.exports = {
   getAllWaifusByNameWishlist,
   getUsersWishWaifu,
   removeAllCharactersWishlist,
+  removeCharactersWishlistInArray,
+  getUniqueUserCharacterWishlist,
 };
