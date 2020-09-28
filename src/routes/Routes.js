@@ -18,6 +18,8 @@ const userGuilds = require('./userGuilds');
 const achievements = require('./achievements');
 const wishlists = require('./wishlists');
 const messages = require('./messages');
+const blacklists = require('./blacklists');
+const whitelists = require('./whitelists');
 
 router.use('/series', series);
 router.use('/characters', characters);
@@ -37,5 +39,7 @@ router.use('/user-guilds', userGuilds);
 router.use('/achievements', achievements);
 router.use('/wishlists', wishlists);
 router.use('/messages', messages);
+router.use('/blacklists', blacklists);
+router.use('/whitelists', whitelists);
 
 module.exports = router;
