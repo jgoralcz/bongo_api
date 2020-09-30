@@ -100,7 +100,7 @@ route.patch('/:id/points', async (req, res) => {
   const { id } = req.params;
   const { points } = req.body;
 
-  if (!id || !points) return res.status(404).send({ error: `id or points expected. Received: id=${id}, points=${points}` });
+  if (!id || !points) return res.status(400).send({ error: `id or points expected. Received: id=${id}, points=${points}` });
 
   await updateUserBankPointsVote(id, points);
 
@@ -161,7 +161,7 @@ route.get('/:userID/dailies/count', async (req, res) => {
   const { userID } = req.params;
 
   const totalCount = await getTotalMemberDailies(userID);
-  if (!totalCount || totalCount.length <= 0 || !totalCount[0]);
+  if (!totalCount || totalCount.length <= 0 || !totalCount[0]) return res.status(404).send({ error: `cannot find the daily count for user ${userID}` });
 
   return res.status(200).send(totalCount[0]);
 });
