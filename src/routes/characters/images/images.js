@@ -3,12 +3,24 @@ const logger = require('log4js').getLogger();
 
 const { deleteCDNImage } = require('../../../util/functions/bufferToURL');
 const {
-  deleteImage, deleteCleanImage, selectImage,
-  selectImageByURL, selectAllImage, storeCleanWaifuImage,
-  updateImage, updateImageNSFW, getWaifuImagesByNoCleanImageRandom,
-  getWaifuImagesAndInfoByID, updateWaifuDiscordImageURL, getImageInfoByURL,
+  deleteImage,
+  deleteCleanImage,
+  selectImage,
+  selectImageByURL,
+  selectAllImage,
+  storeCleanWaifuImage,
+  updateImage,
+  updateImageNSFW,
+  getWaifuImagesByNoCleanImageRandom,
+  getWaifuImagesAndInfoByID,
+  updateWaifuDiscordImageURL,
+  getImageInfoByURL,
   markSFWImageByURL,
 } = require('../../../db/waifu_schema/waifu_images/waifu_table_images');
+
+const {
+  selectMainImage,
+} = require('../../../db/waifu_schema/waifu/waifu');
 
 const { config } = require('../../../util/constants/paths');
 const nconfConfig = require('nconf').file('config', config);
@@ -127,11 +139,14 @@ route.delete('/clean-url', async (req, res) => {
   if (!url) return res.status(400).send({ error: 'valid URL needed.' });
 
   const image = await selectImageByURL(url);
+
   if (!image || !image[0] || image.length <= 0) return res.status(404).send({ error: 'Image not found.' });
 
   const { image_url_clean_path_extra: imageURLClean, image_id: imageID, uploader } = image[0];
   if ((!uploader || !requester || uploader !== requester) && !override) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
-  await deleteCDNImage(imageID, imageURLClean, deleteCleanImage);
+  const success = await deleteCDNImage(imageID, imageURLClean, deleteCleanImage);
+
+  if (!success) return res.status(500).send({ error: `failed to delete image ${url}` });
 
   return res.status(204).send();
 });
@@ -141,14 +156,31 @@ route.delete('/url', async (req, res) => {
 
   if (!url) return res.status(400).send({ error: 'valid URL needed.' });
 
-  const image = await selectImageByURL(url);
-  if (!image || !image[0] || image.length <= 0) return res.status(404).send({ error: 'Image not found.' });
+  const offImage = await selectImageByURL(url);
+  let mainImage;
+  if (!offImage || !offImage[0] || offImage.length <= 0) {
+    mainImage = await selectMainImage(undefined, url);
+  }
+
+  const image = offImage || mainImage;
+
+  if (!image) {
+    const success = await deleteCDNImage(undefined, url).catch((error) => logger.error(error));
+    if (success) {
+      return res.status(204).send();
+    }
+    return res.status(404).send({ error: 'Image not found.' });
+  }
+
 
   const { image_url_path_extra: imageURL, image_url_clean_path_extra: imageURLClean, image_id: imageID, uploader } = image[0];
+  const { image_url_clean: imageURLCleanMain, image_url: imageURLMain } = image[0];
   if ((!uploader || !requester || uploader !== requester) && !override) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
 
-  await deleteCDNImage(imageID, imageURLClean, deleteCleanImage).catch((error) => logger.error(error));
-  await deleteCDNImage(imageID, imageURL, deleteImage);
+  const successCrop = await deleteCDNImage(imageID, imageURLClean || imageURLCleanMain, deleteCleanImage).catch((error) => logger.error(error));
+  const successFull = await deleteCDNImage(imageID, imageURL || imageURLMain, deleteImage);
+
+  if (!successCrop && !successFull) return res.status(404).send({ error: 'Image not found.' });
 
   return res.status(204).send();
 });
