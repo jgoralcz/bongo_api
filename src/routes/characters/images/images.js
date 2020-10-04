@@ -139,13 +139,12 @@ route.delete('/clean-url', async (req, res) => {
   if (!url) return res.status(400).send({ error: 'valid URL needed.' });
 
   const image = await selectImageByURL(url);
-
   if (!image || !image[0] || image.length <= 0) return res.status(404).send({ error: 'Image not found.' });
 
   const { image_url_clean_path_extra: imageURLClean, image_id: imageID, uploader } = image[0];
   if ((!uploader || !requester || uploader !== requester) && !override) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
-  const success = await deleteCDNImage(imageID, imageURLClean, deleteCleanImage);
 
+  const success = await deleteCDNImage(imageID, imageURLClean, deleteCleanImage);
   if (!success) return res.status(500).send({ error: `failed to delete image ${url}` });
 
   return res.status(204).send();
