@@ -41,7 +41,7 @@ const getTopClaimWaifus = async (offset, limit, guildID) => poolQuery(`
   LIMIT $2;
 `, [offset, limit, guildID]);
 
-const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime) => poolQuery(`
+const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando) => poolQuery(`
   SELECT name, nsfw, husbando, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, url, t1.id, t1.date, is_game, is_western, (
     SELECT COALESCE (
       (
@@ -112,6 +112,12 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
         AND (((is_western = $8 AND is_western = FALSE))
           OR ((is_western = $8 AND is_western = TRUE) OR is_western = TRUE)
         )
+        AND (
+          ($9 = 'FALSE' AND husbando = FALSE)
+          OR ($9 = 'TRUE' AND husbando = TRUE)
+          OR unknown_gender = TRUE
+          OR $9 = 'NULL'
+        )
         ORDER BY random()
         LIMIT 10 * $7 / 6 + 10
       ) s1
@@ -148,9 +154,9 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
   ) t1;
-`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime]);
+`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, (isHusbando || 'NULL').toString()]);
 
-const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime) => poolQuery(`
+const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando) => poolQuery(`
   SELECT name, husbando, nsfw, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, url, t1.id, t1.date, is_game, is_western, (
     SELECT COALESCE (
       (
@@ -218,14 +224,23 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
       AND (((is_western = $7 AND is_western = FALSE))
         OR ((is_western = $7 AND is_western = TRUE) OR is_western = TRUE)
       )
+      AND (
+        ($8 = 'FALSE' AND husbando = FALSE)
+        OR ($8 = 'TRUE' AND husbando = TRUE)
+        OR unknown_gender = TRUE
+        OR $8 = 'NULL'
+      )
       ORDER BY random()
       LIMIT 1
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
   ) t1;
-`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime]);
+`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime, (isHusbando || 'NULL').toString()]);
 
-const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime) => poolQuery(`
+
+// nsfw, rollwestern, rollgame, rollanime, gender
+
+const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando) => poolQuery(`
   SELECT name, nsfw, husbando, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, image_url, url, t1.id, t1.date, is_game, is_western, (
     SELECT COALESCE (
       (
@@ -293,14 +308,20 @@ const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWes
       AND (((is_western = $7 AND is_western = FALSE))
         OR ((is_western = $7 AND is_western = TRUE) OR is_western = TRUE)
       )
+      AND (
+        ($8 = 'FALSE' AND husbando = FALSE)
+        OR ($8 = 'TRUE' AND husbando = TRUE)
+        OR unknown_gender = TRUE
+        $8 = 'NULL'
+      )
       ORDER BY random()
       LIMIT 1
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
   ) t1;
-`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime]);
+`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime, (isHusbando || 'NULL').toString()]);
 
-const getRandomWaifuOwnerClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime) => poolQuery(`
+const getRandomWaifuOwnerClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando) => poolQuery(`
   SELECT name, nsfw, husbando, unknown_gender, t1.user_id AS "ownerID", original_name, origin, series, series_id, image_url, url, t1.id, t1.date, is_game, is_western, (
     SELECT COALESCE (
       (
@@ -368,12 +389,18 @@ const getRandomWaifuOwnerClaimed = async (userID, guildID, nsfw, rollWestern, ro
       AND (((is_western = $7 AND is_western = FALSE))
         OR ((is_western = $7 AND is_western = TRUE) OR is_western = TRUE)
       )
+      AND (
+        ($8 = 'FALSE' AND husbando = FALSE)
+        OR ($8 = 'TRUE' AND husbando = TRUE)
+        OR unknown_gender = TRUE
+        $8 = 'NULL'
+      )
       ORDER BY random()
       LIMIT 1
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
   ) t1;
-`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime]);
+`, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime, (isHusbando || 'NULL').toString()]);
 
 const getSpecificClaimWaifuOwner = async (waifuID, guildID) => poolQuery(`
   SELECT user_id, date
