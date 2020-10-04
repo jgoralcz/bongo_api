@@ -13,13 +13,20 @@ const { cdnURL, imageURL } = require('../constants/cdn');
 
 const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
   const fileExtension = imageIdentifier(buffer);
-  const { height, width, nsfw, type = 'characters', uploader } = config;
+  const {
+    height,
+    width,
+    nsfw,
+    type = 'characters',
+    uploader,
+  } = config;
+
   if (!fileExtension || !uploader) return undefined;
 
-  const characterUUID = uuid();
-  const { status } = await axios.put(`${cdnURL}/${type}/${id}/${characterUUID}.${fileExtension}`, buffer, { headers: { AccessKey: apiKey } });
+  const characterUUID = uuid().substring(0, 6);
+  const { status } = await axios.put(`${cdnURL}/${type}/${id}/images/${characterUUID}.${fileExtension}`, buffer, { headers: { AccessKey: apiKey } });
 
-  const cdnUpdatedURL = `${imageURL}/${type}/${id}/${characterUUID}.${fileExtension}`;
+  const cdnUpdatedURL = `${imageURL}/${type}/${id}/images/${characterUUID}.${fileExtension}`;
   if (status !== 201) {
     return undefined;
   }
@@ -30,6 +37,17 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
   } else {
     logger.error(`Problem uploading with: ${id}, ${cdnUpdatedURL}`);
   }
+
+  Object.assign(rows[0], {
+    height,
+    width,
+    nsfw,
+    uploader,
+    bufferLength: buffer.length,
+    cdnURL: cdnUpdatedURL,
+    fileType: fileExtension,
+  });
+
   return rows;
 };
 
@@ -41,10 +59,12 @@ const deleteCDNImage = async (id, imageURLDelete, deleteDBFunc) => {
 
   const { status } = await axios.delete(updatedURL, { headers: { AccessKey: apiKey } });
 
-  if (status !== 200 || !deleteDBFunc) {
+  if (status !== 200) {
     logger.error(`Problem deleting with: ${id}, ${imageURLDelete}`);
-    return undefined;
+    return false;
   }
+
+  if (!id) return true;
 
   const rows = await deleteDBFunc(id);
   if (rows && rows.length > 0) {
@@ -52,6 +72,7 @@ const deleteCDNImage = async (id, imageURLDelete, deleteDBFunc) => {
   } else {
     logger.error(`Problem deleting with: ${id}, ${imageURLDelete}`);
   }
+
   return rows;
 };
 

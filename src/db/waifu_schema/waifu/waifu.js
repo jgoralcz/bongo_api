@@ -300,6 +300,15 @@ const updateWaifuCleanImage = async (id, uri) => poolQuery(`
   WHERE id = $1;
 `, [id, uri]);
 
+const selectMainImage = async (id, uri) => poolQuery(`
+  SELECT image_url, image_url_clean, image_url_clean_discord
+  FROM waifu_schema.waifu_table
+  WHERE id = $1
+    OR image_url = $2
+    OR image_url_clean = $2
+    OR image_url_clean_discord = $2;
+`, [id, uri]);
+
 module.exports = {
   upsertWaifu,
   updateWaifuSeriesId,
@@ -325,4 +334,5 @@ module.exports = {
   updateWaifuCleanImage,
   getWaifuByImageURL,
   updateCharacterMainImage,
+  selectMainImage,
 };

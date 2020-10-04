@@ -33,6 +33,7 @@ const {
   storeNewImage,
   getHashFromBufferID,
   mergeWaifuImages,
+  storeCleanWaifuImage: storeNewClaimWaifuImage,
 } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { getWaifuImagesAndInfoByID, storeCleanWaifuImage: storeCleanWaifuImageExtra } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
@@ -108,21 +109,29 @@ route.post('/', async (req, res) => {
     await insertSeries(id, series, uploader);
   }
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewWaifuImage, { width, height, nsfw, type: 'characters', uploader });
+  // store image into the image table AND the main character.
+  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { width, height, nsfw, type: 'characters', uploader });
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
+  await storeNewWaifuImage(id, info.cdnURL, buffer, info.width, info.height, info.nsfw, info.bufferLength, info.fileType);
 
   if (crop) {
     const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
     let urlCropped = '';
     if (mimsBuffer && status === 200) {
       const rowClean = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
-        width, height, nsfw, type: 'characters', uploader,
+        width,
+        height,
+        nsfw,
+        type: 'characters',
+        uploader,
       });
 
       if (rowClean && rowClean.length > 0 && rowClean[0]) {
-        urlCropped = rowClean[0].image_url_clean;
+        const [cropped] = rowClean;
+        urlCropped = cropped.image_url_clean;
+        await storeNewClaimWaifuImage(info.image_id, cropped.cdnURL, mimsBuffer, cropped.width, cropped.height, cropped.nsfw, cropped.bufferLength, cropped.fileType);
       }
     }
     return res.status(201).send({ url: info.image_url, image_id: info.id, id, urlCropped });

@@ -113,8 +113,8 @@ const updateClientGuildDaily = async (userId, guildId, used, date, additionalPoi
   UPDATE "clientsTable"
   SET "bankPoints" = 
     CASE WHEN cte.streak >= 30
-      THEN "clientsTable"."bankPoints" + 3000 + 200 * 30 + $5
-      ELSE "clientsTable"."bankPoints" + 3000 + 200 * cte.streak + $5
+      THEN "clientsTable"."bankPoints" + 3000 + 125 * 30 + $5
+      ELSE "clientsTable"."bankPoints" + 3000 + 125 * cte.streak + $5
     END
   FROM cte
   WHERE "userId" = $1
