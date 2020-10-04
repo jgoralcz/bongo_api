@@ -134,10 +134,10 @@ route.post('/', async (req, res) => {
         await storeNewClaimWaifuImage(info.image_id, cropped.cdnURL, mimsBuffer, cropped.width, cropped.height, cropped.nsfw, cropped.bufferLength, cropped.fileType);
       }
     }
-    return res.status(201).send({ url: info.image_url, image_id: info.id, id, urlCropped });
+    return res.status(201).send({ url: info.cdnURL, image_id: info.id, id, urlCropped });
   }
 
-  return res.status(201).send({ url: info.image_url, image_id: info.id, id });
+  return res.status(201).send({ url: info.cdnURL, image_id: info.id, id });
 });
 
 route.patch('/clean-images', async (req, res) => {
