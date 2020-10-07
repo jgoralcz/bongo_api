@@ -1,82 +1,42 @@
 const { poolQuery } = require('../../index.js');
 
-const getRandomCustomWaifuOwnerNotClaimed = async (userID, guildId, nsfw) => {
-  if (nsfw) {
-    return poolQuery(`
-      SELECT name, series, t2.user_id AS "ownerID", url, image_url, t1.id, date_added AS date
-      FROM (
-        SELECT *
-        FROM guild_custom_waifus
-        WHERE guild_id = $1 AND id NOT IN (
-          SELECT waifu_id as id
-          FROM cg_custom_waifu_table
-          WHERE guild_id = $1 AND waifu_id IS NOT NULL
-        )
-      ORDER BY random()
-      LIMIT 1
-      ) t1
-      LEFT JOIN cg_custom_waifu_table t2 on t2.waifu_id = t1.id AND t2.guild_id = $1;
-    `, [guildId]);
-  }
-  return poolQuery(`
-    SELECT name, series, t2.user_id AS "ownerID", url, image_url, t1.id, date_added AS date
-    FROM (
-      SELECT *
-      FROM guild_custom_waifus
-      WHERE guild_id = $1 AND is_nsfw = false AND id NOT IN (
-        SELECT waifu_id as id
-        FROM cg_custom_waifu_table
-        WHERE guild_id = $1 AND waifu_id IS NOT NULL
-      )
-      ORDER BY random()
-      LIMIT 1
-    ) t1
-    LEFT JOIN cg_custom_waifu_table t2 on t2.waifu_id = t1.id AND t2.guild_id = $1;
-  `, [guildId]);
-};
+const getRandomCustomWaifuOwnerNotClaimed = async (guildID, nsfw) => poolQuery(`
+  SELECT name, series, t2.user_id AS "ownerID", url, image_url, t1.id, date_added AS date, 'custom' AS custom
+  FROM (
+    SELECT *
+    FROM guild_custom_waifus
+    WHERE guild_id = $1 AND id NOT IN (
+      SELECT waifu_id as id
+      FROM cg_custom_waifu_table
+      WHERE guild_id = $1 AND waifu_id IS NOT NULL
+    )
+    AND (((is_nsfw = $2 AND is_nsfw = FALSE))
+      OR ((is_nsfw = $2 AND is_nsfw = TRUE) OR is_nsfw = FALSE) OR is_nsfw IS NULL
+    )
+    ORDER BY random()
+    LIMIT 1
+  ) t1
+  LEFT JOIN cg_custom_waifu_table t2 on t2.waifu_id = t1.id AND t2.guild_id = $1;
+`, [guildID, nsfw]);
 
-/**
- * get random, and join the data, even if someone hasn't claimed.
- * @param userID the user's id.
- * @param guildId the guild's id.
- * @param nsfw whether the channel is nsfw or not
- * @returns {Promise<*>}
- */
-const getRandomCustomWaifuOwnerClaimed = async (userID, guildId, nsfw) => {
-  if (nsfw) {
-    return poolQuery(`
-      SELECT name, series, t2.user_id AS "ownerID", url, image_url, t1.id, date_added AS date
-      FROM (
-        SELECT *
-        FROM guild_custom_waifus
-        WHERE guild_id = $1 AND id IN (
-          SELECT waifu_id as id
-          FROM cg_custom_waifu_table
-          WHERE guild_id = $1 AND waifu_id IS NOT NULL
-        )
-        ORDER BY random()
-        LIMIT 1
-      ) t1
-      LEFT JOIN cg_custom_waifu_table t2 on t2.waifu_id = t1.id AND t2.guild_id = $1;
-    `, [guildId]);
-  }
-
-  return poolQuery(`
-    SELECT name, series, image_url, t1.id, url, date_added AS date, t2.user_id AS "ownerID"
-    FROM (
-      SELECT *
-      FROM guild_custom_waifus
-      WHERE guild_id = $1 AND is_nsfw = FALSE AND id IN (
-        SELECT waifu_id as id
-        FROM cg_custom_waifu_table
-        WHERE guild_id = $1 AND waifu_id IS NOT NULL
-      )
-      ORDER BY random()
-      LIMIT 1
-    ) t1
-    LEFT JOIN cg_custom_waifu_table t2 on t2.waifu_id = t1.id AND t2.guild_id = $1;
-  `, [guildId]);
-};
+const getRandomCustomWaifuOwnerClaimed = async (guildID, nsfw) => poolQuery(`
+  SELECT name, series, image_url, t1.id, url, date_added AS date, t2.user_id AS "ownerID", 'custom' AS custom
+  FROM (
+    SELECT *
+    FROM guild_custom_waifus
+    WHERE guild_id = $1 AND id IN (
+      SELECT waifu_id as id
+      FROM cg_custom_waifu_table
+      WHERE guild_id = $1 AND waifu_id IS NOT NULL
+    ) 
+    AND (((is_nsfw = $2 AND is_nsfw = FALSE))
+      OR ((is_nsfw = $2 AND is_nsfw = TRUE) OR is_nsfw = FALSE)
+      OR is_nsfw IS NULL)
+    ORDER BY random()
+    LIMIT 1
+  ) t1
+  LEFT JOIN cg_custom_waifu_table t2 on t2.waifu_id = t1.id AND t2.guild_id = $1;
+`, [guildID, nsfw]);
 
 /**
  * gets the unique members from the guild who have claimed a custom.
