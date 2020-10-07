@@ -195,7 +195,7 @@ route.get('/:userID/guilds/:guildID/rolls/random', async (req, res) => {
 
   // guild can't roll this character again for 10 min
   if (characters && characters[0] && characters[0].id) {
-    insertGuildRolled(guildID, characters[0].id).catch((error) => logger.error(error));
+    await insertGuildRolled(guildID, characters[0].id).catch((error) => logger.error(error));
   }
   console.log('rolled', afterGetWaifu, 'after everything', Date.now() - before);
 
