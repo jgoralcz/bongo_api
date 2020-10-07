@@ -13,7 +13,7 @@ const {
 
 
 const getServerCharacterAll = async (guildID) => {
-  const query = getCountForServer(guildID);
+  const query = await getCountForServer(guildID);
 
   if (!query || query.length <= 0 || !query[0]) {
     return {
