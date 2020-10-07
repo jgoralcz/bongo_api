@@ -20,6 +20,7 @@ const wishlists = require('./wishlists');
 const messages = require('./messages');
 const blacklists = require('./blacklists');
 const whitelists = require('./whitelists');
+const refresh = require('./refresh');
 
 router.use('/series', series);
 router.use('/characters', characters);
@@ -41,5 +42,6 @@ router.use('/wishlists', wishlists);
 router.use('/messages', messages);
 router.use('/blacklists', blacklists);
 router.use('/whitelists', whitelists);
+router.use('/refresh', refresh);
 
 module.exports = router;

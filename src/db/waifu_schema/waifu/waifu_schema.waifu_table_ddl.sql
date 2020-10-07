@@ -39,3 +39,9 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table (
   UNIQUE (name, series),
   UNIQUE (url)
 );
+
+
+-- refresh every minute
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_character_count AS
+  SELECT count(*) AS count
+  FROM waifu_schema.waifu_table;

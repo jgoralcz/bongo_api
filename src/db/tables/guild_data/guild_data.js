@@ -963,6 +963,36 @@ const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`
   LIMIT 500;
 `, [guildID, tag]);
 
+/**
+ * gets the count needed for the algorithm that handles rolling.
+ * @param {string} guildID the guild ID (discord server ID)
+ */
+const getCountForServer = async (guildID) => poolQuery(`
+  SELECT (
+    SELECT count(DISTINCT(waifu_id)) AS claimed_characters
+    FROM cg_claim_waifu_table
+    WHERE guild_id = $1
+  ), (
+    SELECT count(*) AS custom_characters_count
+    FROM guild_custom_waifus
+    WHERE guild_id = $1
+  ), (
+    SELECT count AS character_count
+    FROM mv_character_count
+  ), (
+    SELECT count(DISTINCT(waifu_id)) AS custom_characters_count
+    FROM cg_custom_waifu_table
+    WHERE guild_id = $1
+  );
+`, [guildID]);
+
+const refreshCount = async () => poolQuery(`
+  BEGIN;
+  REFRESH MATERIALIZED VIEW mv_character_count;
+  REFRESH MATERIALIZED VIEW mv_random_waifu_series;
+  COMMIT;
+`, []);
+
 module.exports = {
   getGuild,
   setupGuild,
@@ -1035,4 +1065,6 @@ module.exports = {
   getGuildsClaimsCharacter,
   updateGuildStealCharacter,
   updateRollCustomOnly,
+  getCountForServer,
+  refreshCount,
 };
