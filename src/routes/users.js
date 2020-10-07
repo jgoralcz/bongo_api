@@ -43,8 +43,12 @@ const {
   addClaimWaifuFalse,
 } = require('../db/tables/clients_guilds/clients_guilds_table');
 
+const { insertGuildRolled } = require('../db/tables/guild_rolled/guild_rolled');
+
 const { initializeGetNewUser } = require('../util/functions/user');
 const { invalidBoolSetting } = require('../util/functions/validators');
+
+const { rollCharacter } = require('../handlers/rolls');
 
 const rollRequest = async (req, res, rollFunction) => {
   const { userID, guildID } = req.params;
@@ -57,6 +61,7 @@ const rollRequest = async (req, res, rollFunction) => {
     rollGame,
     croppedDiscordImage = true,
     rollAnime,
+    isHusbando,
   } = req.query;
 
   const rows = await rollFunction(
@@ -68,6 +73,7 @@ const rollRequest = async (req, res, rollFunction) => {
     invalidBoolSetting(croppedDiscordImage, false),
     limitMultiplier || 1,
     !invalidBoolSetting(rollAnime, true),
+    isHusbando,
   );
   return res.status(200).send(rows || []);
 };
@@ -148,6 +154,49 @@ route.get('/:userID/guilds/:guildID/rolls/random-owner-not-claimed', async (req,
 route.get('/:userID/guilds/:guildID/rolls/random-owner-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerClaimed));
 route.get('/:userID/guilds/:guildID/rolls/random-owner-wishlist-not-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerWishlistNotClaimed));
 route.get('/:userID/guilds/:guildID/rolls/random-owner-wishlist-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerWishlistClaimed));
+
+// all in one to reduce latency and clean it up; this route is used very, very often
+route.get('/:userID/guilds/:guildID/rolls/random', async (req, res) => {
+  const { userID, guildID } = req.params;
+  if (!userID || !guildID) return res.status(400).send({ error: 'Missing userID or guildID' });
+
+  const {
+    nsfw,
+    limitMultiplier,
+    rollWestern,
+    rollGame,
+    croppedDiscordImage = true,
+    rollAnime,
+    isHusbando,
+    userRollClaimed,
+    rarityPercentage,
+    rollCustomCharacterOnly,
+    unlimitedClaims,
+  } = req.query;
+
+  const characters = await rollCharacter(
+    userID,
+    guildID,
+    invalidBoolSetting(nsfw, false),
+    invalidBoolSetting(userRollClaimed, false),
+    invalidBoolSetting(rollWestern, true),
+    !invalidBoolSetting(rollAnime, true),
+    invalidBoolSetting(rollGame, true),
+    rarityPercentage,
+    limitMultiplier || 1,
+    rollCustomCharacterOnly,
+    invalidBoolSetting(unlimitedClaims, false),
+    invalidBoolSetting(croppedDiscordImage, false),
+    isHusbando,
+  );
+
+  // guild can't roll this character again for 10 min
+  if (characters && characters[0] && characters[0].id) {
+    await insertGuildRolled(guildID, characters[0].id).catch((error) => logger.error(error));
+  }
+
+  return res.status(200).send(characters);
+});
 
 route.patch('/:userID/guilds/:guildID/rolls/increment', async (req, res) => {
   const { userID, guildID } = req.params;

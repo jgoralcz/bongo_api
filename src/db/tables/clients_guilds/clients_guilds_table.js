@@ -310,6 +310,12 @@ const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
 `, [userId, guildId]);
 
 const initializeGuildClient = async (userId, guildId) => poolQuery(`
+  -- verify we insert into the "guildsTable"
+  WITH cte AS (
+    INSERT INTO "guildsTable" ("guildId")
+    VALUES ($3)
+    ON CONFLICT ("guildId") DO NOTHING
+  )
   INSERT INTO "clientsGuildsTable" (id, "userId", "guildId")
   VALUES ($1, $2, $3)
   ON CONFLICT (id) DO NOTHING

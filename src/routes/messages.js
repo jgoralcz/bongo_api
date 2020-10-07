@@ -37,7 +37,7 @@ route.get('/:messageID/images/pending', async (req, res) => {
   const { messageID } = req.params;
 
   const query = await getMessageIDPendingImage(messageID);
-  if (!query || !query[0] || query.length <= 0) return res.status(404).send({ error: `Could not find a pending image with message ID: ${messageID}` });
+  if (!query || !query[0] || query.length <= 0) return res.status(404).send({ error: `Could not find a pending image with messageID: ${messageID}` });
 
   return res.status(200).send(query[0]);
 });
