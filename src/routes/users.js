@@ -174,6 +174,7 @@ route.get('/:userID/guilds/:guildID/rolls/random', async (req, res) => {
     unlimitedClaims,
   } = req.query;
 
+  const before = Date.now();
   const characters = await rollCharacter(
     userID,
     guildID,
@@ -190,10 +191,13 @@ route.get('/:userID/guilds/:guildID/rolls/random', async (req, res) => {
     isHusbando,
   );
 
+  const afterGetWaifu = Date.now() - before;
+
   // guild can't roll this character again for 10 min
   if (characters && characters[0] && characters[0].id) {
-    await insertGuildRolled(guildID, characters[0].id).catch((error) => logger.error(error));
+    insertGuildRolled(guildID, characters[0].id).catch((error) => logger.error(error));
   }
+  console.log('rolled', afterGetWaifu, 'after everything', Date.now() - before);
 
   return res.status(200).send(characters);
 });
