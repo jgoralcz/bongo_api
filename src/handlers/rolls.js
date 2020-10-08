@@ -34,10 +34,10 @@ const getServerCharacterAll = async (guildID) => {
   } = data;
 
   return {
-    characterCount: characterCount || 30000,
-    characterClaimed: characterClaimed || 0,
-    customCount: customCount || 0,
-    customCharacterClaimed: customCharacterClaimed || 0,
+    characterCount: parseInt(characterCount || 30000, 10),
+    characterClaimed: parseInt(characterClaimed || 0, 10),
+    customCount: parseInt(customCount || 0, 10),
+    customCharacterClaimed: parseInt(customCharacterClaimed || 0, 10),
   };
 };
 
