@@ -184,7 +184,7 @@ route.get('/:userID/guilds/:guildID/rolls/random', async (req, res) => {
     invalidBoolSetting(rollGame, true),
     rarityPercentage,
     limitMultiplier || 1,
-    rollCustomCharacterOnly,
+    invalidBoolSetting(rollCustomCharacterOnly, false),
     invalidBoolSetting(unlimitedClaims, false),
     invalidBoolSetting(croppedDiscordImage, false),
     isHusbando,
