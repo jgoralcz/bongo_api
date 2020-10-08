@@ -72,19 +72,19 @@ const rollCharacter = async (
   if (rollCustomWaifuOnly && customCount > 0) {
     if (!userRollClaimed && (randomRarity <= ((customCharacterClaimed / customCount / 100) * rarityPercentage))) {
       const claimedCustomQuery = await getRandomCustomWaifuOwnerClaimed(guildID, nsfw);
-      if (claimedCustomQuery && claimedCustomQuery.length > 0 && claimedCustomQuery[0]) {
+      if (claimedCustomQuery && claimedCustomQuery[0]) {
         return { customWaifu: true, waifu: claimedCustomQuery[0] };
       }
     }
 
     const notClaimedCustomQuery = await getRandomCustomWaifuOwnerNotClaimed(guildID, nsfw);
-    if (notClaimedCustomQuery && notClaimedCustomQuery.length > 0 && notClaimedCustomQuery[0]) {
+    if (notClaimedCustomQuery && notClaimedCustomQuery[0]) {
       return { customWaifu: true, waifu: notClaimedCustomQuery[0] };
     }
 
     if (unlimitedClaims) {
       const randomClaimed = await getRandomCustomWaifuOwnerClaimed(guildID, nsfw);
-      if (randomClaimed && randomClaimed.length > 0 && randomClaimed[0]) {
+      if (randomClaimed && randomClaimed[0]) {
         return { customWaifu: true, waifu: randomClaimed[0] };
       }
     }
@@ -96,18 +96,18 @@ const rollCharacter = async (
   if (!userRollClaimed && (randomRarity <= ((characterClaimed / total / 100) * rarityPercentage))) {
     if ((randomDecision > characterCount || randomWeight <= 0.005) && customCount > 0) {
       const claimedCustomQuery = await getRandomCustomWaifuOwnerClaimed(guildID, nsfw);
-      if (claimedCustomQuery && claimedCustomQuery.length > 0 && claimedCustomQuery[0]) {
+      if (claimedCustomQuery && claimedCustomQuery[0]) {
         return { customWaifu: true, waifu: claimedCustomQuery[0] };
       }
     }
 
     const randomOwnerClaimed = await getRandomWaifuOwnerClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando);
-    if (randomOwnerClaimed) return randomOwnerClaimed;
+    if (randomOwnerClaimed && randomOwnerClaimed[0]) return randomOwnerClaimed;
   }
 
   if ((randomDecision > characterCount || randomWeight <= 0.005) && customCount > 0) {
     const randomWaifuQuery = await getRandomCustomWaifuOwnerNotClaimed(guildID, nsfw);
-    if (randomWaifuQuery && randomWaifuQuery.length > 0 && randomWaifuQuery[0]) {
+    if (randomWaifuQuery && randomWaifuQuery[0]) {
       return { customWaifu: true, waifu: randomWaifuQuery[0] };
     }
   }
@@ -115,7 +115,7 @@ const rollCharacter = async (
   const limitMultiplierRandom = (Math.random() * 200) - 1;
   if (limitMultiplierRandom <= limitMultiplier) {
     const randomOwnerWishlistNotClaimed = await getRandomWaifuOwnerWishlistNotClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando);
-    if (randomOwnerWishlistNotClaimed) return randomOwnerWishlistNotClaimed;
+    if (randomOwnerWishlistNotClaimed && randomOwnerWishlistNotClaimed[0]) return randomOwnerWishlistNotClaimed;
   }
 
   const randomOwnerNotClaimed = await getRandomWaifuOwnerNotClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando);
