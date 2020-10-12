@@ -121,7 +121,7 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
           OR unknown_gender = TRUE
           OR ($9 != 'TRUE' AND $9 != 'FALSE')
         )
-        LIMIT 10 * $7 / 6 + 10
+        LIMIT $7 + 15
       ) s1
       WHERE s1.id IN (
         SELECT DISTINCT(waifu_id) AS id
@@ -143,19 +143,18 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
         FROM cg_wishlist_series_table cgt
         WHERE cgt.guild_id = $2
       )
-      OR ($7 > 20
+      OR ($7 > 25
         AND s1.id IN (
           SELECT waifu_id AS id
           FROM mat_view_top_thousand_waifus
           ORDER BY random()
-          LIMIT 1
         )
       )
       LIMIT 3000
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
     ORDER BY random()
-    LIMIT 1
+    LIMIT 3
   ) t1;
 `, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando]);
 
@@ -241,7 +240,7 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
     ORDER BY random()
-    LIMIT 1
+    LIMIT 3
   ) t1;
 `, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime, isHusbando]);
 
@@ -330,7 +329,7 @@ const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWes
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
     ORDER BY random()
-    LIMIT 1
+    LIMIT 3
   ) t1;
 `, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime, isHusbando]);
 
@@ -416,7 +415,7 @@ const getRandomWaifuOwnerClaimed = async (userID, guildID, nsfw, rollWestern, ro
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
     ORDER BY random()
-    LIMIT 1
+    LIMIT 3
   ) t1;
 `, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime, isHusbando]);
 
