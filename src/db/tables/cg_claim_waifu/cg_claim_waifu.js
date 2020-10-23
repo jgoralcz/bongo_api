@@ -97,6 +97,24 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
           FROM clients_disable_series
           WHERE user_id = $1 AND series_id IS NOT NULL
         )
+      -- AND ws.id NOT IN (
+        -- SELECT wswt.id
+        -- FROM (
+          -- SELECT series_id
+          -- FROM clients_disable_series
+          -- WHERE user_id = $1 AND series_id IS NOT NULL AND series_id NOT IN (
+            -- SELECT series_id
+            -- FROM cg_wishlist_series_table
+            -- WHERE user_id = $1 AND guild_id = $2
+          -- )
+        -- ) cs
+        -- JOIN waifu_schema.waifu_table wswt ON ws.series_id = cs.series_id
+        -- WHERE wswt.id NOT IN (
+          -- SELECT waifu_id AS id
+          -- FROM cg_wishlist_waifu_table
+          -- WHERE user_id = $1 AND guild_id = $2
+        -- )
+      -- )
         AND ws.id NOT IN (
           SELECT character_id as id
           FROM guild_rolled
@@ -217,6 +235,24 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
         FROM clients_disable_series
         WHERE user_id = $1 AND series_id IS NOT NULL
       )
+      -- AND ws.id NOT IN (
+        -- SELECT wswt.id
+        -- FROM (
+          -- SELECT series_id
+          -- FROM clients_disable_series
+          -- WHERE user_id = $1 AND series_id IS NOT NULL AND series_id NOT IN (
+            -- SELECT series_id
+            -- FROM cg_wishlist_series_table
+            -- WHERE user_id = $1 AND guild_id = $2
+          -- )
+        -- ) cs
+        -- JOIN waifu_schema.waifu_table wswt ON ws.series_id = cs.series_id
+        -- WHERE wswt.id NOT IN (
+          -- SELECT waifu_id AS id
+          -- FROM cg_wishlist_waifu_table
+          -- WHERE user_id = $1 AND guild_id = $2
+        -- )
+      -- )
       AND (((ws.nsfw = $3 AND ws.nsfw = FALSE))
         OR ((ws.nsfw = $3 AND ws.nsfw = TRUE) OR ws.nsfw = FALSE)
         OR ws.nsfw IS NULL
@@ -294,8 +330,26 @@ const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWes
       WHERE ws.series_id NOT IN (
         SELECT series_id
         FROM clients_disable_series
-        WHERE user_id = $1 AND series_id is NOT NULL
+        WHERE user_id = $1 AND series_id IS NOT NULL
       )
+      -- WHERE ws.id NOT IN (
+        -- SELECT wswt.id
+        -- FROM (
+          -- SELECT series_id
+          -- FROM clients_disable_series
+          -- WHERE user_id = $1 AND series_id IS NOT NULL AND series_id NOT IN (
+            -- SELECT series_id
+            -- FROM cg_wishlist_series_table
+            -- WHERE user_id = $1 AND guild_id = $2
+          -- )
+        -- ) cs
+        -- JOIN waifu_schema.waifu_table wswt ON ws.series_id = cs.series_id
+        -- WHERE wswt.id NOT IN (
+          -- SELECT waifu_id AS id
+          -- FROM cg_wishlist_waifu_table
+          -- WHERE user_id = $1 AND guild_id = $2
+        -- )
+      -- )
       AND ws.id IN (
         SELECT waifu_id as id
         FROM cg_claim_waifu_table
@@ -426,7 +480,7 @@ const getSpecificClaimWaifuOwner = async (waifuID, guildID) => poolQuery(`
   ORDER BY date ASC;
 `, [waifuID, guildID]);
 
-const getClaimWaifuList = async (id, offset, limit, guildID) => poolQuery(`
+const getClaimWaifuList = async (userID, guildID, offset, limit) => poolQuery(`
   SELECT name, favorite, note, t2.id AS waifu_id, series, image_url, 
     count(*) OVER (PARTITION BY series) AS num, url,
     (
@@ -445,7 +499,7 @@ const getClaimWaifuList = async (id, offset, limit, guildID) => poolQuery(`
   WHERE t1.user_id = $1 AND t1.guild_id = $4
   ORDER BY favorite DESC, series ASC, name ASC
   LIMIT $3 OFFSET $2;
-`, [id, offset, limit, guildID]);
+`, [userID, offset, limit, guildID]);
 
 const findClaimWaifuByIdJoinURL = async (userID, guildID, waifuName) => poolQuery(`
   SELECT waifu_id, wt2.name, wt2.url, wt2.series, wt2.favorite, wt2.image_url, wt2.original_name, wt2.romaji_name, (
