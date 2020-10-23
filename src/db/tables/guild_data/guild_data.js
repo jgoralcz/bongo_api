@@ -937,7 +937,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
   FROM (
     SELECT wswt.name, (
       SELECT
-        CASE ws.nsfw WHEN TRUE then TRUE
+        CASE wswt.nsfw WHEN TRUE then TRUE
           ELSE wsst.nsfw
         END
     ) AS nsfw, wsst.name AS series, wswt.image_url, wswt.image_url_clean,
