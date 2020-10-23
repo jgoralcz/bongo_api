@@ -115,8 +115,8 @@ route.post('/', async (req, res) => {
   await storeNewWaifuImage(id, info.cdnURL, buffer, info.width, info.height, info.nsfw, info.bufferLength, info.fileType);
 
   if (crop) {
-    const mimsSettings = await getMimsSettings(uri);
-    if (!mimsSettings) return res.status(400).send({ error: `no buffer found for ${uri}; could not generate MIMS settings` });
+    const mimsSettings = await getMimsSettings(imageURL);
+    if (!mimsSettings) return res.status(400).send({ error: `no buffer found for ${imageURL}; could not generate MIMS settings` });
 
     const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', mimsSettings);
     let urlCropped = '';
