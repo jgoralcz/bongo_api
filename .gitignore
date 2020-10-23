@@ -6,3 +6,4 @@ node_modules
 logs
 ssl-bongo.crt
 ssl-bongo.key
+service-ignore.yml
