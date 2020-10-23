@@ -121,7 +121,7 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
           OR unknown_gender = TRUE
           OR ($9 != 'TRUE' AND $9 != 'FALSE')
         )
-        LIMIT $7 + 15
+        LIMIT $7 + 20
       ) s1
       WHERE s1.id IN (
         SELECT DISTINCT(waifu_id) AS id

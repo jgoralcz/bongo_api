@@ -30,8 +30,14 @@ route.patch('/', async (req, res) => {
   if (!body.imageURL || !body.name || body.nsfw == null || !body.description) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: imageURL, name, nsfw, description.', body });
 
   const {
-    imageURL, name, nsfw, description, url,
-    uploader, is_western: western, is_game: game,
+    imageURL,
+    name,
+    nsfw,
+    description,
+    url,
+    uploader,
+    is_western: western,
+    is_game: game,
   } = body;
 
   const buffer = await getBuffer(imageURL);
