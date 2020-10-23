@@ -1,5 +1,13 @@
-const { getBufferLength, testBufferLimit, getBufferHeightWidth, testHeightWidth } = require('../util/functions/buffer');
-const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../util/constants/dimensions');
+const {
+  getBufferLength,
+  testBufferLimit,
+  getBufferHeightWidth,
+  testHeightWidth,
+} = require('../util/functions/buffer');
+const {
+  DEFAULT_HEIGHT_MIN, DEFAULT_WIDTH_MIN,
+  DEFAULT_HEIGHT_MAX, DEFAULT_WIDTH_MAX,
+} = require('../util/constants/dimensions');
 const { MBLIMIT } = require('../util/constants/bytes');
 
 const { getHashFromBufferID } = require('../db/waifu_schema/waifu_images/waifu_table_images');
@@ -17,7 +25,7 @@ const validateBuffer = async (req, res, buffer, config) => {
 
   const { height, width } = getBufferHeightWidth(buffer);
   if (!height || !width) return { error: `No width or height found for url ${uri}; height=${height}, width=${width}` };
-  if (!testHeightWidth(height, width, DEFAULT_HEIGHT, DEFAULT_WIDTH) && !overrideDefaultHW) return { error: 'Image ratio is not between 0.64 or 0.72.' };
+  if (!testHeightWidth(height, width, DEFAULT_HEIGHT_MIN, DEFAULT_WIDTH_MIN) && !testHeightWidth(height, width, DEFAULT_HEIGHT_MAX, DEFAULT_WIDTH_MAX) && !overrideDefaultHW) return { error: 'Image ratio is not between 0.64 or 0.72.' };
 
   if (waifuID) {
     const checkImageExists = await getHashFromBufferID(waifuID, buffer);

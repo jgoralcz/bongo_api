@@ -869,7 +869,12 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
     ) ct
   ) AS image_url
   FROM (
-    SELECT ws.name, COALESCE(ws.nsfw, wsst.nsfw) AS nsfw, ws.series, ws.husbando, ws.unknown_gender,
+    SELECT ws.name, (
+      SELECT
+        CASE ws.nsfw WHEN TRUE then TRUE
+          ELSE wsst.nsfw
+        END
+    ) AS nsfw, ws.series, ws.husbando, ws.unknown_gender,
       cg.user_id, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
       ws.id, ws.original_name, ws.origin
     FROM waifu_schema.waifu_table ws
@@ -930,7 +935,12 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
     ) ct
   ) AS image_url
   FROM (
-    SELECT wswt.name, COALESCE(wsst.nsfw, wswt.nsfw) AS nsfw, wsst.name AS series, wswt.image_url, wswt.image_url_clean,
+    SELECT wswt.name, (
+      SELECT
+        CASE ws.nsfw WHEN TRUE then TRUE
+          ELSE wsst.nsfw
+        END
+    ) AS nsfw, wsst.name AS series, wswt.image_url, wswt.image_url_clean,
       wswt.image_url_clean_discord, wswt.url, wswt.description, wswt.id, wswt.original_name,
       wswt.origin, wswt.husbando, wswt.unknown_gender
     FROM (
@@ -992,6 +1002,42 @@ const refreshCount = async () => poolQuery(`
   REFRESH MATERIALIZED VIEW mv_random_waifu_series;
   COMMIT;
 `, []);
+
+const updateGuildAnimeReactions = async (guildID, animeReactionsOnly) => poolQuery(`
+  UPDATE "guildsTable"
+  SET anime_reactions_server = $2
+  WHERE "guildId" = $1
+  RETURNING anime_reactions_server AS "updatedBool";
+`, [guildID, animeReactionsOnly]);
+
+const updateGuildWesternRolls = async (guildID, rollWestern) => poolQuery(`
+  UPDATE "guildsTable"
+  SET roll_western_server = $2
+  WHERE "guildId" = $1
+  RETURNING roll_western_server AS "updatedBool";
+`, [guildID, rollWestern]);
+
+// TODO: show this working in other places
+const updateGuildCroppedImages = async (guildID, croppedImagesOnly) => poolQuery(`
+  UPDATE "guildsTable"
+  SET cropped_images_server = $2
+  WHERE "guildId" = $1
+  RETURNING cropped_images_server AS "updatedBool";
+`, [guildID, croppedImagesOnly]);
+
+const updateGuildAnimeRolls = async (guildID, rollAnimeOnly) => poolQuery(`
+  UPDATE "guildsTable"
+  SET roll_anime_server = $2
+  WHERE "guildId" = $1
+  RETURNING roll_anime_server AS "updatedBool";
+`, [guildID, rollAnimeOnly]);
+
+const updateGuildUserClaimSeconds = async (guildID, claimTimerDisappearInSeconds) => poolQuery(`
+  UPDATE "guildsTable"
+  SET claim_time_disappear = $2
+  WHERE "guildId" = $1
+  RETURNING claim_time_disappear AS "updatedBool";
+`, [guildID, claimTimerDisappearInSeconds]);
 
 module.exports = {
   getGuild,
@@ -1067,4 +1113,9 @@ module.exports = {
   updateRollCustomOnly,
   getCountForServer,
   refreshCount,
+  updateGuildAnimeReactions,
+  updateGuildWesternRolls,
+  updateGuildCroppedImages,
+  updateGuildAnimeRolls,
+  updateGuildUserClaimSeconds,
 };

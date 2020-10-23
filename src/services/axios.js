@@ -1,18 +1,15 @@
 const axios = require('axios');
 
-const { config, basicAuth } = require('../util/constants/paths');
-const nconf = require('nconf').file('auth', basicAuth);
+const { api } = require('../util/constants/paths');
+const nconf = require('nconf').file('api', api);
 
-const username = nconf.get('username');
-const password = nconf.get('password');
+const mims = nconf.get('mims');
 
-const nconfConfig = require('nconf').file('config', config);
-
-const mims = nconfConfig.get('mims');
+const { api: mimsURL, username: mimsUsername, password: mimsPassword } = mims;
 
 const mimsAPI = axios.create({
-  baseURL: `${mims}/api`,
-  auth: { username, password },
+  baseURL: mimsURL,
+  auth: { username: mimsUsername, password: mimsPassword },
   headers: { 'Content-type': 'application/json' },
   responseType: 'arraybuffer',
 });

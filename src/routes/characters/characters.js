@@ -28,6 +28,7 @@ const { mimsAPI } = require('../../services/axios');
 
 const { getBuffer } = require('../../util/functions/buffer');
 const { validateBuffer } = require('../../handlers/validate');
+const { getMimsSettings } = require('../../handlers/mims');
 
 const {
   storeNewImage,
@@ -38,7 +39,6 @@ const {
 
 const { getWaifuImagesAndInfoByID, storeCleanWaifuImage: storeCleanWaifuImageExtra } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 const { removeDuplicateWaifuClaims } = require('../../db/tables/cg_claim_waifu/cg_claim_waifu');
-const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../util/constants/dimensions');
 
 const {
   updateWaifuImage,
@@ -65,8 +65,6 @@ route.post('/', async (req, res) => {
     seriesList,
     uploader,
     crop,
-    desiredWidth,
-    desiredHeight,
   } = body;
 
   const seriesExistsQuery = await searchSeriesExactly(series);
@@ -117,7 +115,10 @@ route.post('/', async (req, res) => {
   await storeNewWaifuImage(id, info.cdnURL, buffer, info.width, info.height, info.nsfw, info.bufferLength, info.fileType);
 
   if (crop) {
-    const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
+    const mimsSettings = await getMimsSettings(uri);
+    if (!mimsSettings) return res.status(400).send({ error: `no buffer found for ${uri}; could not generate MIMS settings` });
+
+    const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', mimsSettings);
     let urlCropped = '';
     if (mimsBuffer && status === 200) {
       const rowClean = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
@@ -140,12 +141,9 @@ route.post('/', async (req, res) => {
   return res.status(201).send({ url: info.cdnURL, image_id: info.id, id });
 });
 
-route.patch('/clean-images', async (req, res) => {
+route.patch('/clean-images', async (_, res) => {
   const waifuRow = await getWaifuByNoCleanImageRandom();
   if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].id) return res.status(400).send({ error: 'No character found.' });
-
-  const { desiredWidth, desiredHeight } = req.body;
-  if (!desiredWidth || !desiredHeight) return res.status(400).send({ error: 'desired width and height required', body: req.body });
 
   const [waifu] = waifuRow;
   const { image_url: imageURL, id, nsfw } = waifu;
@@ -155,12 +153,14 @@ route.patch('/clean-images', async (req, res) => {
 
   if (!imageURL) return res.status(400).send({ error: `No url found for ${imageURL}.` });
 
-  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
+  const mimsSettings = await getMimsSettings(imageURL);
+  if (!mimsSettings) return res.status(400).send({ error: `no buffer found for ${imageURL}; could not generate MIMS settings` });
+
+  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', mimsSettings);
   if (!mimsBuffer || status !== 200) return res.status(400).send({ error: `No buffer found for ${imageURL}.` });
 
   const { height, width } = getBufferHeightWidth(mimsBuffer);
-  if (!width || (width !== desiredWidth && width !== DEFAULT_WIDTH)
-    || !height || (height !== desiredHeight && height !== DEFAULT_HEIGHT)) {
+  if (!width || !height) {
     return res.status(500).send({ error: `No width or height found for buffer; height=${height}, width=${width}` });
   }
 
@@ -224,8 +224,6 @@ route.post('/:id/images', async (req, res) => {
     nsfw = false,
     uploader,
     crop,
-    desiredWidth = 300,
-    desiredHeight = 467,
   } = body;
 
   const waifuRow = await getWaifuById(id);
@@ -256,11 +254,18 @@ route.post('/:id/images', async (req, res) => {
     return res.status(201).send({ url: imageURLExtra, id: imageID });
   }
 
-  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: uri, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
+  const mimsSettings = await getMimsSettings(uri);
+  if (!mimsSettings) return res.status(400).send({ error: `no buffer found for ${uri}; could not generate MIMS settings` });
+
+  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', mimsSettings);
   let urlCropped = '';
   if (mimsBuffer && status === 200) {
     const rowClean = await storeImageBufferToURL(imageID, mimsBuffer, storeCleanWaifuImageExtra, {
-      width, height, nsfw, type: 'characters', uploader,
+      width,
+      height,
+      nsfw,
+      type: 'characters',
+      uploader,
     });
 
     if (rowClean && rowClean.length > 0 && rowClean[0]) {

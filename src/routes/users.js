@@ -21,8 +21,16 @@ const {
 
 const { banSubmissionUser, unbanSubmissionUser } = require('../db/tables/bans_submissions/bans_submissions.js');
 
-const { checkWaifuOwner, claimClientWaifuID } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
+const {
+  checkWaifuOwner,
+  claimClientWaifuID,
+  getClaimWaifuList,
+} = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
 const { claimClientCustomWaifuID } = require('../db/tables/cg_custom_waifu/cg_custom_waifu');
+
+const {
+  getBuyWaifuList,
+} = require('../db/tables/cg_buy_waifu/cg_buy_waifu_table');
 
 const {
   getRandomWaifuOwnerNotClaimed,
@@ -352,6 +360,30 @@ route.delete('/:userID/bans/submission', async (req, res) => {
   await unbanSubmissionUser(userID);
 
   return res.status(204).send();
+});
+
+route.get('/:userID/guilds/:guildID/characters/claims', async (req, res) => {
+  const { userID, guildID } = req.params;
+  const { offset, limit } = req.query;
+
+  const query = await getClaimWaifuList(userID, guildID, offset || 0, limit || 1000000);
+  if (!query || query.length <= 0 || !query[0]) {
+    return res.status(404).send({ error: `User ${userID} with guild ${guildID} does not have a character list` });
+  }
+
+  return res.status(200).send(query);
+});
+
+route.get('/:userID/characters/bought', async (req, res) => {
+  const { userID } = req.params;
+  const { offset, limit } = req.query;
+
+  const query = await getBuyWaifuList(userID, offset || 0, limit || 100000);
+  if (!query || query.length <= 0 || !query[0]) {
+    return res.status(404).send({ error: `User ${userID} does not have a bought character list` });
+  }
+
+  return res.status(200).send(query);
 });
 
 module.exports = route;
