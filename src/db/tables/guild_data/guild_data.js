@@ -954,7 +954,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
   LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
   LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
   ORDER BY series ASC, name ASC
-  LIMIT 500;
+  LIMIT 1000;
 `, [waifuSeries, guildID, userID, useDiscordImage]);
 
 const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`
@@ -970,7 +970,7 @@ const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`
   LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = wswt.id AND cgcwt.guild_id = $1
 
   ORDER BY series DESC, name ASC
-  LIMIT 500;
+  LIMIT 1000;
 `, [guildID, tag]);
 
 /**

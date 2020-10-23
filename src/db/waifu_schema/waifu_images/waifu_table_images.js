@@ -146,7 +146,11 @@ const updateWaifusCDNurl = async (id, CDNurl) => poolQuery(`
 const mergeWaifuImages = async (mergeID, dupeID) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
   SET waifu_id = $1
-  WHERE waifu_id = $2;
+  WHERE waifu_id = $2 AND buffer_hash NOT IN (
+    SELECT buffer_hash
+    FROM waifu_schema.waifu_table_images
+    WHERE waifu_id = $1
+  );
 `, [mergeID, dupeID]);
 
 const updateImage = async (updatedImage) => poolQuery(`
