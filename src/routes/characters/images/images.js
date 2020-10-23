@@ -28,7 +28,7 @@ const botID = nconfConfig.get('botID');
 
 const { getBufferHeightWidth } = require('../../../util/functions/buffer');
 const { storeImageBufferToURL } = require('../../../util/functions/bufferToURL');
-const { DEFAULT_HEIGHT, DEFAULT_WIDTH } = require('../../../util/constants/dimensions');
+const { getMimsSettings } = require('../../../handlers/mims');
 
 const { mimsAPI } = require('../../../services/axios');
 
@@ -49,9 +49,6 @@ route.patch('/clean-images', async (req, res) => {
   const waifuRow = await getWaifuImagesByNoCleanImageRandom();
   if (!waifuRow || waifuRow.length <= 0 || !waifuRow[0] || !waifuRow[0].image_id) return res.status(400).send({ error: 'No character found.' });
 
-  const { desiredWidth, desiredHeight } = req.body;
-  if (!desiredWidth || !desiredHeight) return res.status(400).send({ error: 'desired width and height required', body: req.body });
-
   const [waifu] = waifuRow;
   const { image_url_path_extra: imageURL, image_id: id, nsfw } = waifu;
 
@@ -60,17 +57,20 @@ route.patch('/clean-images', async (req, res) => {
 
   if (!imageURL) return res.status(400).send({ error: `No url found for ${imageURL}.` });
 
-  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', { image_url: imageURL, width: desiredWidth, height: desiredHeight, options: { animeFace: true } });
+  const mimsSettings = await getMimsSettings(imageURL);
+  if (!mimsSettings) return res.status(400).send({ error: `no buffer found for ${imageURL}; could not generate MIMS settings` });
+
+  const { status, data: mimsBuffer } = await mimsAPI.post('/smartcrop', mimsSettings);
   if (!mimsBuffer || status !== 200) return res.status(400).send({ error: `No buffer found for ${imageURL}.` });
 
   const { height, width } = getBufferHeightWidth(mimsBuffer);
-  if (!width || (width !== desiredWidth && width !== DEFAULT_WIDTH)
-    || !height || (height !== desiredHeight && height !== DEFAULT_HEIGHT)) {
-    return res.status(500).send({ error: `No width or height found for buffer; height=${height}, width=${width}` });
-  }
 
   const row = await storeImageBufferToURL(id, mimsBuffer, storeCleanWaifuImage, {
-    width, height, nsfw, type: 'characters', uploader,
+    width,
+    height,
+    nsfw,
+    type: 'characters',
+    uploader,
   });
 
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading buffer for cleaned ${imageURL}.` });

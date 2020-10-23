@@ -22,6 +22,11 @@ const {
   getGuildsClaimsCharacter,
   updateGuildStealCharacter,
   updateRollCustomOnly,
+  updateGuildAnimeReactions,
+  updateGuildWesternRolls,
+  updateGuildCroppedImages,
+  updateGuildAnimeRolls,
+  updateGuildUserClaimSeconds,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -50,11 +55,18 @@ const {
 
 const { invalidBoolSetting } = require('../util/functions/validators');
 const {
-  MAX_CLAIM_HOUR, MIN_CLAIM_HOUR,
-  MAX_CLAIM_MINUTE, MIN_CLAIM_MINUTE,
-  MAX_RARITY_PERCENTAGE, MIN_RARITY_PERCENTAGE,
-  MAX_WISHLIST_MULTIPLIER, MIN_WISHLIST_MULTIPLIER,
-  MAX_SECONDS_CLAIM_WAIFU, MIN_SECONDS_CLAIM_WAIFU,
+  MAX_CLAIM_HOUR,
+  MIN_CLAIM_HOUR,
+  MAX_CLAIM_MINUTE,
+  MIN_CLAIM_MINUTE,
+  MAX_RARITY_PERCENTAGE,
+  MIN_RARITY_PERCENTAGE,
+  MAX_WISHLIST_MULTIPLIER,
+  MIN_WISHLIST_MULTIPLIER,
+  MAX_SECONDS_CLAIM_WAIFU,
+  MIN_SECONDS_CLAIM_WAIFU,
+  MIN_SECONDS_USER_CLAIM_CHARACTER,
+  MAX_SECONDS_USER_CLAIM_CHARACTER,
 } = require('../util/constants/guilds');
 
 const updateSettings = async (req, res, updateFunction) => {
@@ -189,6 +201,26 @@ route.patch('/:id/settings/claim-seconds', async (req, res) => {
   return res.status(204).send();
 });
 
+route.patch('/:id/settings/users-claim-seconds', async (req, res) => {
+  const { id } = req.params;
+  const { seconds } = req.body;
+
+  const guilds = await getGuild(id);
+  if (!guilds || guilds.length <= 0 || !guilds[0]) return res.status(404).send({ error: `Guild not found with id ${id}.` });
+
+  const max = guilds[0].claim_seconds;
+
+  if (seconds == null || isNaN(seconds)) return res.status(400).send({ error: `The seconds is not a number: seconds=${seconds}.` });
+  if (seconds > MAX_SECONDS_USER_CLAIM_CHARACTER || seconds > max || seconds < MIN_SECONDS_USER_CLAIM_CHARACTER) return res.status(400).send({ error: `The seconds is not valid. Seconds must be between ${MIN_SECONDS_USER_CLAIM_CHARACTER}-${max} where the absolute max is ${MAX_SECONDS_USER_CLAIM_CHARACTER}: seconds=${seconds}.` });
+
+  await updateGuildUserClaimSeconds(id, seconds);
+  return res.status(204).send();
+});
+
+route.patch('/:id/settings/anime-reactions', async (req, res) => updateSettings(req, res, updateGuildAnimeReactions));
+route.patch('/:id/settings/western-rolls', async (req, res) => updateSettings(req, res, updateGuildWesternRolls));
+route.patch('/:id/settings/cropped-images', async (req, res) => updateSettings(req, res, updateGuildCroppedImages));
+route.patch('/:id/settings/anime-rolls', async (req, res) => updateSettings(req, res, updateGuildAnimeRolls));
 route.patch('/:id/settings/steal_character', async (req, res) => updateSettings(req, res, updateGuildStealCharacter));
 route.patch('/:id/settings/show-gender', async (req, res) => updateSettings(req, res, updateGuildShowGender));
 route.patch('/:id/settings/buy-rolls', async (req, res) => updateSettings(req, res, updateGuildBuyRolls));
