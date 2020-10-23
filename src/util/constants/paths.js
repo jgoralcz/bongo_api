@@ -1,4 +1,4 @@
-const basePath = '/node/config';
+const basePath = '/Users/Josh/Documents/GitHub/bongo_bot_api';
 
 module.exports = Object.freeze({
   api: `${basePath}/api.json`,

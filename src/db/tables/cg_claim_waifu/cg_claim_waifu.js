@@ -327,12 +327,12 @@ const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWes
     FROM (
       SELECT *
       FROM mv_random_waifu_series ws
-      AND ws.series_id NOT IN (
+      WHERE ws.series_id NOT IN (
         SELECT series_id
         FROM clients_disable_series
         WHERE user_id = $1 AND series_id IS NOT NULL
       )
-      -- AND ws.id NOT IN (
+      -- WHERE ws.id NOT IN (
         -- SELECT wswt.id
         -- FROM (
           -- SELECT series_id
