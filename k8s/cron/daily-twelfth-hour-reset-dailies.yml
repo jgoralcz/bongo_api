@@ -1,0 +1,24 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ${ENV}reset-dailies
+  namespace: josh-apps
+spec:
+  schedule: "0 */12 * * *"
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: ${ENV}reset-dailies
+              image: curlimages/curl:7.72.0
+              envFrom:
+                - secretRef:
+                    name: ${ENV}cron-basic-auth
+              args:
+                - /bin/sh
+                - -ec
+                - "curl -u $USERNAME:$PASSWORD -X PATCH $API_URL/users/dailies/reset"
+          restartPolicy: OnFailure
