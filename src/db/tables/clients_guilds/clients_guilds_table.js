@@ -118,7 +118,7 @@ const updateClientGuildDaily = async (userId, guildId, used, date, additionalPoi
     END
   FROM cte
   WHERE "userId" = $1
-  RETURNING "bankPoints", streak;
+  RETURNING "bankPoints", cte.streak;
 `, [userId, guildId, used, date, additionalPoints]);
 
 
@@ -293,7 +293,7 @@ JOIN "clientsTable" ct ON cgt."userId" = ct."userId";
 `, [id]);
 
 const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
-  SELECT cgt."userId", cgt."guildId", "guildPrefix", prefix, "prefixForAllEnable", daily, daily_gather, streak, rolls_waifu, claim_waifu, public_wish_list,
+  SELECT cgt."userId", cgt."guildId", "guildPrefix", prefix, "prefixForAllEnable", daily, daily_gather, cgt.streak, rolls_waifu, claim_waifu, public_wish_list,
     patron, patron_one, patron_two, unlimited_claims, claim_seconds, wishlist_multiplier, rarity, "maxVolume", auto_now_play,
     autoplay, show_skips, "voteSkip", max_songs_per_user, anime_reactions, "bankPoints", streak_vote, vote_date,
     vote_enabled, auto_timeout, user_roll_claimed, play_first, roll_claim_minute, roll_claim_hour, sniped, achievement_aki, show_gender,

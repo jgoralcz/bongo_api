@@ -1,0 +1,24 @@
+# vote no longer used
+# apiVersion: batch/v1beta1
+# kind: CronJob
+# metadata:
+#   name: beta-reset-vote-streak
+# spec:
+#   schedule: "0 * * * *"
+#   failedJobsHistoryLimit: 1
+#   successfulJobsHistoryLimit: 1
+#   jobTemplate:
+#     spec:
+#       template:
+#         spec:
+#           containers:
+#             - name: beta-reset-vote-streak
+#               image: curlimages/curl:7.72.0
+#               envFrom:
+#                 - secretRef:
+#                     name: beta-cron-basic-auth
+#               args:
+#                 - /bin/sh
+#                 - -ec
+#                 - "curl -u $USERNAME:$PASSWORD -X PATCH $API_URL/users/streaks/votes/reset"
+#           restartPolicy: OnFailure
