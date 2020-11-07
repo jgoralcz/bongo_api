@@ -1,0 +1,24 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: ${ENV}refresh-leaderboards
+  namespace: josh-apps
+spec:
+  schedule: "*/10 * * * *"
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: ${ENV}refresh-leaderboards
+              image: curlimages/curl:7.72.0
+              envFrom:
+                - secretRef:
+                    name: ${ENV}cron-basic-auth
+              args:
+                - /bin/sh
+                - -ec
+                - "curl -u $USERNAME:$PASSWORD -X PUT $API_URL/leaderboards/refresh"
+          restartPolicy: OnFailure
