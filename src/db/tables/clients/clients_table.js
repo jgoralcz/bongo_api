@@ -461,10 +461,6 @@ const resetAllClientDaily = async () => poolQuery(`
   WHERE game_points > 0;
   
   UPDATE "clientsTable"
-  SET daily_gather = NULL
-  WHERE daily_gather IS NOT NULL;
-  
-  UPDATE "clientsGuildsTable"
   SET daily = NULL
   WHERE daily IS NOT NULL;
   
@@ -473,6 +469,18 @@ const resetAllClientDaily = async () => poolQuery(`
   
   COMMIT;
 `, []);
+
+const updateClientDaily = async (userId, used, date, additionalPoints) => poolQuery(`
+  UPDATE "clientsTable"
+  SET daily = $2, streak = streak + 1, streak_date = $3,
+  "bankPoints" = 
+    CASE WHEN (streak + 1) >= 30
+      THEN "bankPoints" + 3000 + 125 * 30 + $4
+      ELSE "bankPoints" + 3000 + 125 * (streak + 1) + $4
+    END
+  WHERE "userId" = $1
+  RETURNING "bankPoints", streak;
+`, [userId, used, date, additionalPoints]);
 
 const clearVoteStreaks = async () => poolQuery(`
   UPDATE "clientsTable"
@@ -505,6 +513,7 @@ const removeRandomStone = async (userID) => poolQuery(`
 `, [userID]);
 
 module.exports = {
+  updateClientDaily,
   updateClientAnimeReactions,
   updateClientPlayFirst,
   updateClientRollClaimed,

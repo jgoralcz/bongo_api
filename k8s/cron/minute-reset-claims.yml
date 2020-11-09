@@ -1,23 +1,23 @@
-apiVersion: batch/v1beta1
-kind: CronJob
-metadata:
-  name: ${ENV}minute-reset-claims
-spec:
-  schedule: "* * * * *"
-  failedJobsHistoryLimit: 1
-  successfulJobsHistoryLimit: 1
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          containers:
-            - name: ${ENV}minute-reset-claims
-              image: curlimages/curl:7.72.0
-              envFrom:
-                - secretRef:
-                    name: ${ENV}cron-basic-auth
-              args:
-                - /bin/sh
-                - -ec
-                - 'curl -u $USERNAME:$PASSWORD -H "Content-Type: application/json" -d "{ \"hour\": `date +\"%H\"` \"minute\": `date +\"%M\"` }" -X PATCH $API_URL/claims/reset'
-          restartPolicy: OnFailure
+# apiVersion: batch/v1beta1
+# kind: CronJob
+# metadata:
+#   name: ${ENV}minute-reset-claims
+# spec:
+#   schedule: "* * * * *"
+#   failedJobsHistoryLimit: 1
+#   successfulJobsHistoryLimit: 1
+#   jobTemplate:
+#     spec:
+#       template:
+#         spec:
+#           containers:
+#             - name: ${ENV}minute-reset-claims
+#               image: curlimages/curl:7.72.0
+#               envFrom:
+#                 - secretRef:
+#                     name: ${ENV}cron-basic-auth
+#               args:
+#                 - /bin/sh
+#                 - -ec
+#                 - 'curl -u $USERNAME:$PASSWORD -H "Content-Type: application/json" -d "{ \"hour\": `date +\"%H\"`, \"minute\": `date +\"%M\"` }" -X PATCH $API_URL/claims/reset'
+#           restartPolicy: OnFailure

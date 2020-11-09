@@ -15,7 +15,6 @@ const poolQuery = async (query, paramsArray) => {
   const client = await pool.connect();
   try {
     const result = await client.query(query, paramsArray);
-
     if (!result || !result.rows || !result.rowCount) return undefined;
 
     return result.rows;

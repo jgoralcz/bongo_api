@@ -2,6 +2,7 @@ const logger = require('log4js').getLogger();
 const route = require('express-promise-router')();
 
 const {
+  updateClientDaily,
   updateUserBankPointsVote,
   getClientInfo,
   resetAllClientDaily,
@@ -42,8 +43,6 @@ const {
 } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
 
 const {
-  getTotalMemberDailies,
-  updateClientGuildDaily,
   incrementClaimWaifuRoll,
   clearStreaks,
   getClientsGuildsInfo,
@@ -110,11 +109,13 @@ route.get('/:id', async (req, res) => {
   return res.status(200).send(userQuery[0]);
 });
 
-route.patch('/:id/points', async (req, res) => {
+route.patch('/:id/vote/points', async (req, res) => {
   const { id } = req.params;
-  const { points } = req.body;
+  const { points: tempPoints } = req.body;
 
-  if (!id || !points) return res.status(400).send({ error: `id or points expected. Received: id=${id}, points=${points}` });
+  const points = !tempPoints || tempPoints < 0 || isNaN(tempPoints) ? 0 : tempPoints;
+
+  if (!id) return res.status(400).send({ error: `id expected. Received: id=${id}` });
 
   await updateUserBankPointsVote(id, points);
 
@@ -214,23 +215,14 @@ route.patch('/:userID/guilds/:guildID/rolls/increment', async (req, res) => {
   res.status(204).send();
 });
 
-route.get('/:userID/dailies/count', async (req, res) => {
+route.patch('/:userID/daily', async (req, res) => {
   const { userID } = req.params;
-
-  const totalCount = await getTotalMemberDailies(userID);
-  if (!totalCount || totalCount.length <= 0 || !totalCount[0]) return res.status(404).send({ error: `cannot find the daily count for user ${userID}` });
-
-  return res.status(200).send(totalCount[0]);
-});
-
-route.patch('/:userID/guilds/:guildID/daily', async (req, res) => {
-  const { userID, guildID } = req.params;
 
   const { used, updatedTime, extraPoints } = req.body;
   if (!used || updatedTime == null || extraPoints == null) return res.status(400).send({ error: `Expected used, updatedTime, and extraPoints. Received used=${used}, updatedTime=${updatedTime}, extraPoints=${extraPoints}` });
 
-  const query = await updateClientGuildDaily(userID, guildID, used, updatedTime, extraPoints);
-  if (!query || query.length <= 0 || !query[0]) return res.status(404).send({ error: `User ${userID} could not update their daily.` });
+  const query = await updateClientDaily(userID, used, updatedTime, extraPoints);
+  if (!query || query.length <= 0 || !query[0]) return res.status(404).send({ error: `User ${userID} could not update their daily.`, query: JSON.stringify(query) });
 
   return res.status(200).send(query[0]);
 });

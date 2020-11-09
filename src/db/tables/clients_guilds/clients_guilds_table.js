@@ -97,31 +97,6 @@ const resetRollsByIdVote = async (userId, guildId) => poolQuery(`
 // `, [userId, guildId]);
 
 
-const getTotalMemberDailies = async (userId) => poolQuery(`
-  SELECT count(*) AS "totalDailies"
-  FROM "clientsGuildsTable"
-  WHERE "userId" = $1 AND daily IS NOT NULL;
-`, [userId]);
-
-const updateClientGuildDaily = async (userId, guildId, used, date, additionalPoints) => poolQuery(`
-  WITH cte AS (
-    UPDATE "clientsGuildsTable"
-    SET daily = $3, streak = streak + 1, streak_date = $4
-    WHERE "userId" = $1 AND "guildId" = $2
-    RETURNING streak
-  )
-  UPDATE "clientsTable"
-  SET "bankPoints" = 
-    CASE WHEN cte.streak >= 30
-      THEN "clientsTable"."bankPoints" + 3000 + 125 * 30 + $5
-      ELSE "clientsTable"."bankPoints" + 3000 + 125 * cte.streak + $5
-    END
-  FROM cte
-  WHERE "userId" = $1
-  RETURNING "bankPoints", cte.streak;
-`, [userId, guildId, used, date, additionalPoints]);
-
-
 /**
  * adds a friend to their friends list.
  * @param friendId the friend's id.
@@ -293,7 +268,7 @@ JOIN "clientsTable" ct ON cgt."userId" = ct."userId";
 `, [id]);
 
 const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
-  SELECT cgt."userId", cgt."guildId", "guildPrefix", prefix, "prefixForAllEnable", daily, daily_gather, cgt.streak, rolls_waifu, claim_waifu, public_wish_list,
+  SELECT cgt."userId", cgt."guildId", "guildPrefix", prefix, "prefixForAllEnable", daily, daily_gather, streak, rolls_waifu, claim_waifu, public_wish_list,
     patron, patron_one, patron_two, unlimited_claims, claim_seconds, wishlist_multiplier, rarity, "maxVolume", auto_now_play,
     autoplay, show_skips, "voteSkip", max_songs_per_user, anime_reactions, "bankPoints", streak_vote, vote_date,
     vote_enabled, auto_timeout, user_roll_claimed, play_first, roll_claim_minute, roll_claim_hour, sniped, achievement_aki, show_gender,
@@ -301,7 +276,7 @@ const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
     donut, pizza, cookie, fuel, stones, ramen, roll_game, roll_western, roll_anime, steal_character, roll_custom_only, banned_submission_date,
     anime_reactions_server, roll_western_server, cropped_images_server, roll_anime_server, claim_time_disappear
   FROM (
-    SELECT "userId", "guildId", daily, streak, rolls_waifu, claim_waifu, public_wish_list
+    SELECT "userId", "guildId", rolls_waifu, claim_waifu, public_wish_list
     FROM "clientsGuildsTable"
     WHERE "userId" = $1 AND "guildId" = $2
   ) cgt
@@ -368,8 +343,6 @@ module.exports = {
   resetClaimByUserId,
   resetRollsByIdVote,
   // getClientGuildPoints,
-  getTotalMemberDailies,
-  updateClientGuildDaily,
   addFriend,
   removeFriend,
   getAllFriends,
