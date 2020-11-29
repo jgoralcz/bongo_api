@@ -990,7 +990,7 @@ const getCountForServer = async (guildID) => poolQuery(`
     SELECT count AS character_count
     FROM mv_character_count
   ), (
-    SELECT count(DISTINCT(waifu_id)) AS custom_characters_count
+    SELECT count(DISTINCT(waifu_id)) AS claimed_custom_characters
     FROM cg_custom_waifu_table
     WHERE guild_id = $1
   );
