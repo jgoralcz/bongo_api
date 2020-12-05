@@ -21,6 +21,7 @@ const messages = require('./messages');
 const blacklists = require('./blacklists');
 const whitelists = require('./whitelists');
 const refresh = require('./refresh');
+const bots = require('./bots');
 
 router.use('/series', series);
 router.use('/characters', characters);
@@ -43,5 +44,6 @@ router.use('/messages', messages);
 router.use('/blacklists', blacklists);
 router.use('/whitelists', whitelists);
 router.use('/refresh', refresh);
+router.use('/bots', bots);
 
 module.exports = router;
