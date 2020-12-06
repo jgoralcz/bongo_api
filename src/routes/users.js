@@ -47,7 +47,7 @@ const {
   clearStreaks,
   getClientsGuildsInfo,
   addClaimWaifuTrue,
-  addClaimWaifuFalse,
+  addClaimWaifuFail,
 } = require('../db/tables/clients_guilds/clients_guilds_table');
 
 const { insertGuildRolled } = require('../db/tables/guild_rolled/guild_rolled');
@@ -236,7 +236,7 @@ route.get('/:userID/guilds/:guildID', async (req, res) => {
   return res.status(200).send(query[0]);
 });
 
-route.get('/:userID:/guilds/:guildID/characters/:characterID', async (req, res) => {
+route.get('/:userID/guilds/:guildID/characters/:characterID', async (req, res) => {
   const { userID, guildID, characterID } = req.params;
 
   const query = await checkWaifuOwner(userID, guildID, characterID);
@@ -281,7 +281,7 @@ route.post('/:userID/guilds/:guildID/characters/:customID/custom', async (req, r
   await addClaimWaifuTrue(userID, guildID);
   const query = await claimClientCustomWaifuID(userID, guildID, customID, new Date());
   if (!query || query.length <= 0 || !query[0]) {
-    await addClaimWaifuFalse(userID, guildID);
+    await addClaimWaifuFail(userID, guildID);
     return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim custom character ${customID}.` });
   }
 
@@ -294,7 +294,7 @@ route.post('/:userID/guilds/:guildID/characters/:characterID/claim', async (req,
   await addClaimWaifuTrue(userID, guildID);
   const query = await claimClientWaifuID(userID, guildID, characterID, new Date()).catch((error) => logger.error(error));
   if (!query || query.length <= 0 || !query[0]) {
-    await addClaimWaifuFalse(userID, guildID);
+    await addClaimWaifuFail(userID, guildID);
     return res.status(500).send({ error: `User ${userID} with guild ${guildID} cannot claim character ${characterID}.` });
   }
 
@@ -305,14 +305,6 @@ route.patch('/:userID/guilds/:guildID/claim', async (req, res) => {
   const { userID, guildID } = req.params;
 
   await addClaimWaifuTrue(userID, guildID);
-
-  return res.status(204).send();
-});
-
-route.patch('/:userID/guilds/:guildID/claim/false', async (req, res) => {
-  const { userID, guildID } = req.params;
-
-  await addClaimWaifuFalse(userID, guildID);
 
   return res.status(204).send();
 });

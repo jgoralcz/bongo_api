@@ -44,9 +44,9 @@ const addClaimWaifuTrue = async (userId, guildId) => poolQuery(`
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userId, guildId]);
 
-const addClaimWaifuFalse = async (userId, guildId) => poolQuery(`
+const addClaimWaifuFail = async (userId, guildId) => poolQuery(`
   UPDATE "clientsGuildsTable"
-  SET claim_waifu = FALSE
+  SET claim_waifu = NULL
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userId, guildId]);
 
@@ -338,7 +338,7 @@ module.exports = {
   incrementClaimWaifuRoll,
   maxClaimWaifuRoll,
   addClaimWaifuTrue,
-  addClaimWaifuFalse,
+  addClaimWaifuFail,
   resetRollsByUserId,
   resetClaimByUserId,
   resetRollsByIdVote,
