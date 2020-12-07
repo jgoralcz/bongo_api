@@ -496,10 +496,10 @@ const getClaimWaifuList = async (userID, guildID, offset, limit) => poolQuery(`
   LEFT JOIN user_waifu_notes t3
   ON t2.id = t3.waifu_id AND t1.user_id = t3.user_id
   
-  WHERE t1.user_id = $1 AND t1.guild_id = $4
+  WHERE t1.user_id = $1 AND t1.guild_id = $2
   ORDER BY favorite DESC, series ASC, name ASC
-  LIMIT $3 OFFSET $2;
-`, [userID, offset, limit, guildID]);
+  LIMIT $4 OFFSET $3;
+`, [userID, guildID, offset, limit]);
 
 const findClaimWaifuByIdJoinURL = async (userID, guildID, waifuName) => poolQuery(`
   SELECT waifu_id, wt2.name, wt2.url, wt2.series, wt2.favorite, wt2.image_url, wt2.original_name, wt2.romaji_name, (
