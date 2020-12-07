@@ -84,19 +84,6 @@ const resetRollsByIdVote = async (userId, guildId) => poolQuery(`
 `, [userId, guildId]);
 
 
-// /**
-// * get client guild points.
-// * @param userId the user's id
-// * @param guildId the guild's id
-// * @returns {Promise<*>}
-// */
-// const getClientGuildPoints = async (userId, guildId) => poolQuery(`
-//   SELECT points
-//   FROM "clientsGuildsTable"
-//   WHERE "userId" = $1 AND "guildId" = $2;
-// `, [userId, guildId]);
-
-
 /**
  * adds a friend to their friends list.
  * @param friendId the friend's id.
@@ -282,7 +269,7 @@ const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
   ) cgt
   JOIN "clientsTable" ct ON cgt."userId" = ct."userId"
   JOIN "guildsTable" gt on cgt."guildId" = gt."guildId"
-  LEFT JOIN bans_submissions bs on cgt."userId" = bs.user_id;
+  LEFT JOIN bans_submissions bs on ct."userId" = bs.user_id;
 `, [userId, guildId]);
 
 const initializeGuildClient = async (userId, guildId) => poolQuery(`
@@ -342,7 +329,6 @@ module.exports = {
   resetRollsByUserId,
   resetClaimByUserId,
   resetRollsByIdVote,
-  // getClientGuildPoints,
   addFriend,
   removeFriend,
   getAllFriends,
