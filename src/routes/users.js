@@ -236,6 +236,18 @@ route.get('/:userID/guilds/:guildID', async (req, res) => {
   return res.status(200).send(query[0]);
 });
 
+route.get('/:userID/guilds/:guildID/characters/claims', async (req, res) => {
+  const { userID, guildID } = req.params;
+  const { offset, limit } = req.query;
+
+  const query = await getClaimWaifuList(userID, guildID, offset || 0, limit || 1000000);
+  if (!query || query.length <= 0 || !query[0]) {
+    return res.status(404).send({ error: `User ${userID} with guild ${guildID} does not have a character list` });
+  }
+
+  return res.status(200).send(query);
+});
+
 route.get('/:userID/guilds/:guildID/characters/:characterID', async (req, res) => {
   const { userID, guildID, characterID } = req.params;
 
@@ -344,18 +356,6 @@ route.delete('/:userID/bans/submission', async (req, res) => {
   await unbanSubmissionUser(userID);
 
   return res.status(204).send();
-});
-
-route.get('/:userID/guilds/:guildID/characters/claims', async (req, res) => {
-  const { userID, guildID } = req.params;
-  const { offset, limit } = req.query;
-
-  const query = await getClaimWaifuList(userID, guildID, offset || 0, limit || 1000000);
-  if (!query || query.length <= 0 || !query[0]) {
-    return res.status(404).send({ error: `User ${userID} with guild ${guildID} does not have a character list` });
-  }
-
-  return res.status(200).send(query);
 });
 
 route.get('/:userID/characters/bought', async (req, res) => {
