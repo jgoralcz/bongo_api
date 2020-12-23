@@ -35,11 +35,40 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table (
   buffer_length_clean INTEGER,
   file_type_clean varchar(16),
   image_url_clean_discord varchar(256),
+  last_edit_by varchar(32) NOT NULL default '339926969548275722', -- my bot id
+  last_edit_date timestamp NOT NULL DEFAULT now()
 
   UNIQUE (name, series),
   UNIQUE (url)
 );
 
+--
+-- Indexes:
+--     "waifu_table_pkey" PRIMARY KEY, btree (id)
+--     "idx_original_name" btree (original_name)
+--     "idx_r" btree (r)
+--     "idx_romaji_name" btree (romaji_name)
+--     "idx_series" btree (series)
+--     "idx_url" btree (url)
+--     "idx_waifu_last_edit_data" btree (last_edit_date)
+--     "idx_waifu_series_id" btree (series_id)
+--     "idx_waifu_table_name_series" btree (name, series)
+--     "name" btree (name)
+--     "unique_name_series" UNIQUE, btree (name, series_id)
+--     "waifu_original_name_trgm_idx" gist (original_name gist_trgm_ops)
+--     "waifu_trgm_gin" gin (name gin_trgm_ops)
+-- Foreign-key constraints:
+--     "fk_series" FOREIGN KEY (series) REFERENCES waifu_schema.series_table(name) ON UPDATE CASCADE
+--     "fk_waifu_series_id" FOREIGN KEY (series_id) REFERENCES waifu_schema.series_table(id)
+-- Referenced by:
+--     TABLE "waifu_schema.appears_in" CONSTRAINT "appears_in_waifu_id_fkey" FOREIGN KEY (waifu_id) REFERENCES waifu_schema.waifu_table(id) ON UPDATE CASCADE ON DELETE CASCADE
+--     TABLE "cg_wishlist_waifu_table" CONSTRAINT "cg_wishlist_waifu_table_waifu_id_fkey" FOREIGN KEY (waifu_id) REFERENCES waifu_schema.waifu_table(id) ON UPDATE CASCADE ON DELETE CASCADE
+--     TABLE "claim_waifu_user_images" CONSTRAINT "claim_waifu_user_images_waifu_id_fkey" FOREIGN KEY (waifu_id) REFERENCES waifu_schema.waifu_table(id) ON UPDATE CASCADE ON DELETE CASCADE
+--     TABLE "guild_rolled" CONSTRAINT "guild_rolled_character_id_fkey" FOREIGN KEY (character_id) REFERENCES waifu_schema.waifu_table(id) ON UPDATE CASCADE ON DELETE CASCADE
+--     TABLE "pending_images" CONSTRAINT "pending_images_waifu_id_fkey" FOREIGN KEY (waifu_id) REFERENCES waifu_schema.waifu_table(id) ON UPDATE CASCADE ON DELETE CASCADE
+--     TABLE "true_love" CONSTRAINT "true_love_waifu_id_fkey" FOREIGN KEY (waifu_id) REFERENCES waifu_schema.waifu_table(id) ON UPDATE CASCADE ON DELETE CASCADE
+--     TABLE "waifu_schema.waifu_table_images" CONSTRAINT "waifu_table_images_waifu_id_fkey" FOREIGN KEY (waifu_id) REFERENCES waifu_schema.waifu_table(id) ON UPDATE CASCADE ON DELETE CASCADE
+--     TABLE "waifu_schema.waifu_table_tags" CONSTRAINT "waifu_table_tags_waifu_id_fkey" FOREIGN KEY (waifu_id) REFERENCES waifu_schema.waifu_table(id) ON UPDATE CASCADE ON DELETE CASCADE
 
 -- refresh every minute
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_character_count AS

@@ -24,7 +24,14 @@ server.use(basicAuth({
 
 server.use(bodyparser.urlencoded({ extended: true }));
 server.use(bodyparser.json());
-server.use(httpLogger({ ignorePaths: [/^\/prefixes/, /users\/.*\/guilds\/.*/, /guilds\/.*\/emojis\/claim\/random/] }));
+server.use(httpLogger({
+  ignorePaths: [
+    /^\/prefixes/,
+    /users\/.*\/guilds\/.*/,
+    /guilds\/.*\/emojis\/claim\/random/,
+    /bots\/patrons\/guilds\/.*/,
+  ],
+}));
 
 server.use('/', router, errorHandler);
 

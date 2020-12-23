@@ -88,6 +88,7 @@ jobs:
           CPU_REQUEST: ${{ steps.cpu_request.outputs.request }}
           MEMORY_LIMIT: ${{ steps.memory_limit.outputs.limit }}
           MEMORY_REQUEST: ${{ steps.memory_request.outputs.request }}
+          HA_PROXY_IP: ${{ secrets.HA_PROXY_IP }}
 
       - name: Deploy HOST_URL to Cloudflare
         shell: bash
