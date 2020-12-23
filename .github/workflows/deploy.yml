@@ -32,6 +32,11 @@ jobs:
         run: echo "##[set-output name=prefix;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "" || echo "beta-")"
         id: extract_prefix
 
+      - name: Build Service Type k8s
+        shell: bash
+        run: echo "##[set-output name=service;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "k8s/service.yml" || echo "k8s/beta-service.yml")"
+        id: extract_service_k8s
+
       - name: Build CPU Limit
         shell: bash
         run: echo "##[set-output name=limit;]$([ "${GITHUB_REF##*/}" == "master" ] && echo "1500m" || echo "200m")"
@@ -74,10 +79,11 @@ jobs:
         run: |
           kubectl set image deployment/${{ env.SERVICE_NAME }} ${{ env.SERVICE_NAME }}=${{ env.IMAGE_LOCATION }} || echo "${{ env.SERVICE_NAME }} deployment not found"\
           && envsubst < k8s/ingress.yml | kubectl apply -f - \
-          && envsubst < k8s/service.yml | kubectl apply -f - \
+          && envsubst < ${{ env.SERVICE }}| kubectl apply -f - \
           && envsubst < k8s/deployment.yml | kubectl apply -f - \
           && kubectl rollout restart deployment/${{ env.SERVICE_NAME}}
         env:
+          SERVICE: ${{ steps.extract_service_k8s.outputs.service }}
           ENV: ${{ steps.extract_environment_uppercase.outputs.env_uppercase }}
           IMAGE_LOCATION: docker.pkg.github.com/jgoralcz/${{ steps.extract_repo.outputs.repo }}/${{ steps.extract_repo.outputs.repo }}:${{ steps.extract_environment.outputs.env }}
           SERVICE_NAME: ${{ steps.extract_prefix.outputs.prefix }}${{ steps.extract_service.outputs.service }}

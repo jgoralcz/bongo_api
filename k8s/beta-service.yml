@@ -4,12 +4,8 @@ metadata:
   name: ${SERVICE_NAME}
   namespace: josh-apps
 spec:
-  type: NodePort
   ports:
     - targetPort: ${PORT}
       port: 8443
-      nodePort: 30047
   selector:
     app: ${SERVICE_NAME}
-  externalIPs:
-    - ${HA_PROXY_IP}
