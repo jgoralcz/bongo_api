@@ -795,8 +795,9 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
 `, [guildID, waifuRankBool]);
 
 const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false) => poolQuery(`
-  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, wt.id, original_name, origin, count, position, (
-    SELECT
+  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, last_edit_by, last_edit_date,
+    wt.id, original_name, origin, count, position, (
+      SELECT
       CASE
       WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
         COALESCE (
@@ -876,7 +877,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         END
     ) AS nsfw, ws.series, ws.husbando, ws.unknown_gender,
       cg.user_id, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
-      ws.id, ws.original_name, ws.origin
+      ws.id, ws.original_name, ws.origin, ws.last_edit_by, ws.last_edit_date
     FROM waifu_schema.waifu_table ws
     LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
     LEFT JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
@@ -917,7 +918,8 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
 `, [waifuName, guildID, limit, userID, useDiscordImage]);
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
-  SELECT name, nsfw, series, user_id, url, description, ws.id, original_name, origin, husbando, unknown_gender, count, position,
+  SELECT name, nsfw, series, user_id, url, description, ws.id, original_name, origin, husbando, 
+    unknown_gender, count, position, last_edit_by, last_edit_date
   (
     SELECT
       CASE
@@ -942,7 +944,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
         END
     ) AS nsfw, wsst.name AS series, wswt.image_url, wswt.image_url_clean,
       wswt.image_url_clean_discord, wswt.url, wswt.description, wswt.id, wswt.original_name,
-      wswt.origin, wswt.husbando, wswt.unknown_gender
+      wswt.origin, wswt.husbando, wswt.unknown_gender, wswt.last_edit_by, wswt.last_edit_date
     FROM (
       SELECT id, name, nsfw
       FROM waifu_schema.series_table

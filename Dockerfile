@@ -6,16 +6,17 @@ LABEL description = "Bongo Bot API"
 
 WORKDIR /usr/node
 
-COPY --chown=node:node package*.json /usr/node/
-COPY --chown=node:node src/ /usr/node/src/
-
 RUN mkdir logs && chown -R node:node logs
 
-EXPOSE 8443
+COPY --chown=node:node package*.json /usr/node/
 
 RUN npm install
 
+COPY --chown=node:node src/ /usr/node/src/
+
 WORKDIR /usr/node/src
+
 USER node
 
+EXPOSE 8443
 CMD ["npm", "start"]
