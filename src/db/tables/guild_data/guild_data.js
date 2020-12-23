@@ -919,7 +919,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
   SELECT name, nsfw, series, user_id, url, description, ws.id, original_name, origin, husbando, 
-    unknown_gender, count, position, last_edit_by, last_edit_date
+    unknown_gender, count, position, last_edit_by, last_edit_date,
   (
     SELECT
       CASE
