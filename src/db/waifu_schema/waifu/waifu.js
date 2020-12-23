@@ -20,7 +20,7 @@ const updateWaifu = async (waifu) => poolQuery(`
   SET name = $1, series = $2, description = $3, image_url = $4, image_file_path = $5, url = $6, origin = $7, original_name = $8,
     romaji_name = $9, age = $10, date_of_birth = $11, hip_cm = $12, waist_cm = $13, bust_cm = $14, weight_kg = $15, height_cm = $16,
     blood_type = $17, likes = $18, dislikes = $19, husbando = $20, nsfw = $21, date_added = $22, website_id = $23, unknown_gender = $24,
-    image_url_clean = $25, image_url_clean_discord = $26, series_id = $27, last_edit_by = $28
+    image_url_clean = $25, image_url_clean_discord = $26, series_id = $27, last_edit_by = $28, last_edit_date = now()
 
     WHERE id = $29;
 `, [waifu.name, waifu.series, waifu.description, waifu.image_url || waifu.imageURL, waifu.filepath, waifu.url, waifu.origin, waifu.originName, waifu.romajiName,
