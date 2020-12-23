@@ -27,6 +27,7 @@ const httpLogger = (setupOptions) => connectLogger(logger, {
   format: (req, res, format) => {
     if (!req || !req.headers) return undefined;
     const path = req.originalUrl;
+
     if (setupOptions.ignorePaths.some((p) => (typeof p === 'string' && p === path) || (p instanceof RegExp && p.test(path)))) return undefined;
     if (res.statusCode < 300 && res.statusCode >= 200 && process.env.NODE_ENV !== LOCAL) return undefined;
 
