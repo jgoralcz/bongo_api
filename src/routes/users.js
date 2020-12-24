@@ -261,9 +261,11 @@ route.delete('/:userID/stones/random', async (req, res) => {
   const { userID } = req.params;
 
   const rows = await removeRandomStone(userID);
-  if (!rows || !rows.stones) return res.status(400).send();
+  if (!rows || !rows[0] || !rows[0].stones) return res.status(400).send();
 
-  return res.status(204).send({ stones: rows.stones });
+  const { stones } = rows[0];
+
+  return res.status(204).send({ stones });
 });
 
 
