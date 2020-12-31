@@ -27,6 +27,7 @@ const {
   updateGuildCroppedImages,
   updateGuildAnimeRolls,
   updateGuildUserClaimSeconds,
+  updateAllowOtherUsersToClaimAfterSeconds,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -136,6 +137,20 @@ route.patch('/:id/settings/claim-hour', async (req, res) => {
   if (hour > MAX_CLAIM_HOUR || hour < MIN_CLAIM_HOUR) return res.status(400).send({ error: `The hour is not valid. Hour must be between ${MIN_CLAIM_HOUR}-${MAX_CLAIM_HOUR}: hour=${hour}.` });
 
   await updateResetClaimsHour(id, hour);
+  return res.status(204).send();
+});
+
+route.patch('/:id/settings/claim-other-rolls', async (req, res) => {
+  const { id } = req.params;
+  const { seconds } = req.body;
+
+  const guilds = await getGuild(id);
+  if (!guilds || guilds.length <= 0 || !guilds[0]) return res.status(404).send({ error: `Guild not found with id ${id}.` });
+
+  if (seconds == null || isNaN(seconds)) return res.status(400).send({ error: `The seconds is not a number: seconds=${seconds}.` });
+  if (seconds > MAX_SECONDS_CLAIM_WAIFU || seconds < MIN_SECONDS_CLAIM_WAIFU) return res.status(400).send({ error: `The seconds is not valid. Seconds must be between ${MIN_SECONDS_CLAIM_WAIFU}-${MAX_SECONDS_CLAIM_WAIFU}: seconds=${seconds}.` });
+
+  await updateAllowOtherUsersToClaimAfterSeconds(id, seconds);
   return res.status(204).send();
 });
 
