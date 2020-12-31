@@ -65,6 +65,13 @@ const updateUniversalCustomCommandsUsage = async (userID, boolValue) => poolQuer
   RETURNING "allowAnyone" AS "updatedBool";
 `, [userID, boolValue]);
 
+const updateUserUnlockEmbedColor = async (userID, bool) => poolQuery(`
+  UPDATE "clientsTable"
+  SET unlock_color = $2
+  WHERE "userId" = $1
+  RETURNING unlock_color AS "updatedBool";
+`, [userID, bool]);
+
 const addGameAndBankPoints = async (userId, points) => poolQuery(`
   UPDATE "clientsTable"
   SET "bankPoints" = 
@@ -277,7 +284,6 @@ const setClientInfo = async (userID) => poolQuery(`
   RETURNING *;
 `, [userID]);
 
-
 const getClientInfo = async (userId) => poolQuery(`
   SELECT *
   FROM "clientsTable"
@@ -425,6 +431,12 @@ const updateRedditAchievement = async (userID) => poolQuery(`
   SET achievement_reddit = TRUE
   WHERE "userId" = $1;
 `, [userID]);
+
+const updateUserEmbedColor = async (userID, color) => poolQuery(`
+  UPDATE "clientsTable"
+  SET embed_color = $2
+  WHERE "userId" = $1;
+`, [userID, color]);
 
 const updateAnimeSearchAchievement = async (userID) => poolQuery(`
   UPDATE "clientsTable"
@@ -575,4 +587,6 @@ module.exports = {
   clearVoteStreaks,
   removeRandomStone,
   updateClientAnimeRolls,
+  updateUserEmbedColor,
+  updateUserUnlockEmbedColor,
 };

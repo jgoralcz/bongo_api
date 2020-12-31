@@ -75,8 +75,15 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
         image_url_clean
       END
     FROM (
-      SELECT cropped_images
-      FROM "clientsTable"
+      SELECT 
+        CASE
+        WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
+          TRUE
+        ELSE
+          FALSE
+        END AS cropped_images
+      FROM "clientsTable" ctt
+      JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $1
     ) ct
   ) AS image_url
@@ -210,8 +217,15 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
         image_url_clean
       END
     FROM (
-      SELECT cropped_images
-      FROM "clientsTable"
+      SELECT 
+        CASE
+        WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
+          TRUE
+        ELSE
+          FALSE
+        END AS cropped_images
+      FROM "clientsTable" ctt
+      JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $1
     ) ct
   ) AS image_url
@@ -317,8 +331,15 @@ const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWes
         image_url_clean
       END
     FROM (
-      SELECT cropped_images
-      FROM "clientsTable"
+      SELECT 
+        CASE
+        WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
+          TRUE
+        ELSE
+          FALSE
+        END AS cropped_images
+      FROM "clientsTable" ctt
+      JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $1
     ) ct
   ) AS image_url
@@ -421,8 +442,15 @@ const getRandomWaifuOwnerClaimed = async (userID, guildID, nsfw, rollWestern, ro
         image_url_clean
       END
     FROM (
-      SELECT cropped_images
-      FROM "clientsTable"
+      SELECT 
+        CASE
+        WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
+          TRUE
+        ELSE
+          FALSE
+        END AS cropped_images
+      FROM "clientsTable" ctt
+      JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $1
     ) ct
   ) AS image_url
@@ -568,8 +596,15 @@ const findClaimWaifuByIdJoinURL = async (userID, guildID, waifuName) => poolQuer
         wt2.image_url_clean
       END
     FROM (
-      SELECT cropped_images
-      FROM "clientsTable"
+      SELECT 
+        CASE
+        WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
+          TRUE
+        ELSE
+          FALSE
+        END AS cropped_images
+      FROM "clientsTable" ctt
+      JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $1
     ) ct
   ) AS image_url
@@ -680,8 +715,15 @@ const findClaimWaifuByIdJoinURLFavorites = async (userID, guildID, waifuName, fa
         image_url_clean
       END
     FROM (
-      SELECT cropped_images
-      FROM "clientsTable"
+      SELECT 
+        CASE
+        WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
+          TRUE
+        ELSE
+          FALSE
+        END AS cropped_images
+      FROM "clientsTable" ctt
+      JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $1
     ) ct
   ) AS image_url
