@@ -11,10 +11,16 @@ route.post('/characters', async (req, res) => {
     characterID,
     isCustomWaifu,
     userID,
+    unlockableEmbedColor,
   } = req.body;
-  if (!messageID || !characterID || !userID || invalidBoolSetting(isCustomWaifu) == null) return res.status(400).send({ error: `Expected messageID, characterID, userID, isCustomWaifu as boolean. Recieved: ${JSON.stringify(req.body)}` });
 
-  await insertMessageIDCharacter(messageID, characterID, isCustomWaifu, userID);
+  const embedColor = invalidBoolSetting(unlockableEmbedColor) == null ? false : unlockableEmbedColor;
+
+  if (!messageID || !characterID || !userID || invalidBoolSetting(isCustomWaifu) == null) {
+    return res.status(400).send({ error: `Expected messageID, characterID, userID, isCustomWaifu as boolean, unlockableEmbedColor as boolean. Recieved: ${JSON.stringify(req.body)}` });
+  }
+
+  await insertMessageIDCharacter(messageID, characterID, isCustomWaifu, userID, embedColor);
   return res.status(204).send();
 });
 

@@ -864,8 +864,15 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         image_url_clean
       END
     FROM (
-      SELECT cropped_images
-      FROM "clientsTable"
+      SELECT 
+        CASE
+        WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
+          TRUE
+        ELSE
+          FALSE
+        END AS cropped_images
+      FROM "clientsTable" ctt
+      JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $4
     ) ct
   ) AS image_url
@@ -931,8 +938,15 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
         image_url_clean
       END
     FROM (
-      SELECT cropped_images
-      FROM "clientsTable"
+      SELECT 
+        CASE
+        WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
+          TRUE
+        ELSE
+          FALSE
+        END AS cropped_images
+      FROM "clientsTable" ctt
+      JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $3
     ) ct
   ) AS image_url
@@ -1019,7 +1033,6 @@ const updateGuildWesternRolls = async (guildID, rollWestern) => poolQuery(`
   RETURNING roll_western_server AS "updatedBool";
 `, [guildID, rollWestern]);
 
-// TODO: show this working in other places
 const updateGuildCroppedImages = async (guildID, croppedImagesOnly) => poolQuery(`
   UPDATE "guildsTable"
   SET cropped_images_server = $2
@@ -1040,6 +1053,13 @@ const updateGuildUserClaimSeconds = async (guildID, claimTimerDisappearInSeconds
   WHERE "guildId" = $1
   RETURNING claim_time_disappear AS "updatedBool";
 `, [guildID, claimTimerDisappearInSeconds]);
+
+const updateAllowOtherUsersToClaimAfterSeconds = async (guildID, seconds) => poolQuery(`
+  UPDATE "guildsTable"
+  SET claim_other_rolls_seconds = $2
+  WHERE "guildId" = $1
+  RETURNING claim_other_rolls_seconds AS "updatedBool";
+`, [guildID, seconds]);
 
 module.exports = {
   getGuild,
@@ -1120,4 +1140,5 @@ module.exports = {
   updateGuildCroppedImages,
   updateGuildAnimeRolls,
   updateGuildUserClaimSeconds,
+  updateAllowOtherUsersToClaimAfterSeconds,
 };
