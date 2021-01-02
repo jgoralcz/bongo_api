@@ -1,5 +1,5 @@
 const axios = require('axios');
-const nanoid = require('nanoid');
+const { nanoid } = require('nanoid');
 const logger = require('log4js').getLogger();
 
 const { imageIdentifier } = require('../constants/magicNumbers');
