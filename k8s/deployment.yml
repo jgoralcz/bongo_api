@@ -36,15 +36,15 @@ spec:
           volumeMounts:
             - name: api
               readOnly: true
-              mountPath: /node/config/api.json
+              mountPath: /node/bongo-api/api.json
               subPath: api.json
             - name: auth
               readOnly: true
-              mountPath: /node/config/auth.json
+              mountPath: /node/bongo-api/auth.json
               subPath: auth.json
             - name: config
               readOnly: true
-              mountPath: /node/config/config.json
+              mountPath: /node/bongo-api/config.json
               subPath: config.json
       imagePullSecrets:
         - name: github-registry

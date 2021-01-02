@@ -1,13 +1,12 @@
 const axios = require('axios');
-const uuid = require('uuid/v4');
+const nanoid = require('nanoid');
 const logger = require('log4js').getLogger();
 
 const { imageIdentifier } = require('../constants/magicNumbers');
 
-const { basicAuth } = require('../constants/paths');
-const nconf = require('nconf').file('auth', basicAuth);
+const { auth } = require('../constants/config');
 
-const apiKey = nconf.get('apiKey');
+const { apiKey } = auth;
 
 const { cdnURL, imageURL } = require('../constants/cdn');
 
@@ -17,16 +16,15 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
     height,
     width,
     nsfw,
-    type = 'characters',
     uploader,
   } = config;
 
   if (!fileExtension || !uploader) return undefined;
 
-  const characterUUID = uuid().substring(0, 6);
-  const { status } = await axios.put(`${cdnURL}/${type}/${id}/images/${characterUUID}.${fileExtension}`, buffer, { headers: { AccessKey: apiKey } });
+  const characterUUID = nanoid(7);
+  const { status } = await axios.put(`${cdnURL}/images/${characterUUID}.${fileExtension}`, buffer, { headers: { AccessKey: apiKey } });
 
-  const cdnUpdatedURL = `${imageURL}/${type}/${id}/images/${characterUUID}.${fileExtension}`;
+  const cdnUpdatedURL = `${imageURL}/images/${characterUUID}.${fileExtension}`;
   if (status !== 201) {
     return undefined;
   }

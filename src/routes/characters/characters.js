@@ -20,9 +20,9 @@ const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series
 const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
 
-const { config } = require('../../util/constants/paths');
-const nconfConfig = require('nconf').file('config', config);
-const botID = nconfConfig.get('botID');
+const { config } = require('../../util/constants/config');
+
+const { botID } = config;
 
 const { mimsAPI } = require('../../services/axios');
 
@@ -108,7 +108,9 @@ route.post('/', async (req, res) => {
   }
 
   // store image into the image table AND the main character.
-  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { width, height, nsfw, type: 'characters', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewImage, {
+    width, height, nsfw, type: 'characters', uploader,
+  });
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
   const [info] = row;
@@ -135,7 +137,9 @@ route.post('/', async (req, res) => {
         await storeNewClaimWaifuImage(info.image_id, cropped.cdnURL, mimsBuffer, cropped.width, cropped.height, cropped.nsfw, cropped.bufferLength, cropped.fileType);
       }
     }
-    return res.status(201).send({ url: info.cdnURL, image_id: info.id, id, urlCropped });
+    return res.status(201).send({
+      url: info.cdnURL, image_id: info.id, id, urlCropped,
+    });
   }
 
   return res.status(201).send({ url: info.cdnURL, image_id: info.id, id });
@@ -182,7 +186,9 @@ route.patch('/clean-images', async (_, res) => {
     url,
   } = row[0];
 
-  return res.status(201).send({ imageURLClean, characterID, name, imageURL, series, url, buffer: mimsBuffer, id });
+  return res.status(201).send({
+    imageURLClean, characterID, name, imageURL, series, url, buffer: mimsBuffer, id,
+  });
 });
 
 route.patch('/:id/images/clean-discord', async (req, res) => {
@@ -240,7 +246,9 @@ route.post('/:id/images', async (req, res) => {
   const checkImageExists = await getHashFromBufferID(waifu.id, buffer);
   if (checkImageExists && checkImageExists[0]) return res.status(400).send({ error: `The hash for ${uri} already exists for ${waifu.id}.` });
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewImage, { width, height, nsfw, type: 'characters', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewImage, {
+    width, height, nsfw, type: 'characters', uploader,
+  });
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading ${uri}.` });
 
   const { image_id: imageID, image_url_path_extra: imageURLExtra, file_type: fileType } = row[0];

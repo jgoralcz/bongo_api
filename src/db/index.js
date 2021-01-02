@@ -1,9 +1,9 @@
 const { Pool } = require('pg');
 const logger = require('log4js').getLogger();
 
-const { api } = require('../util/constants/paths');
-const nconf = require('nconf').file('api', api);
-const db = nconf.get('db');
+const { api } = require('../util/constants/config');
+
+const { db } = api;
 
 const pool = new Pool(db);
 
@@ -18,11 +18,12 @@ const poolQuery = async (query, paramsArray) => {
     if (!result || !result.rows || !result.rowCount) return undefined;
 
     return result.rows;
+  } catch (error) {
+    logger.error(error);
   } finally {
     client.release();
   }
 };
-
 
 module.exports = {
   poolQuery,

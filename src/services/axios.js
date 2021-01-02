@@ -1,9 +1,8 @@
 const axios = require('axios');
 
-const { api } = require('../util/constants/paths');
-const nconf = require('nconf').file('api', api);
+const { api } = require('../util/constants/config');
 
-const mims = nconf.get('mims');
+const { mims } = api;
 
 const { api: mimsURL, username: mimsUsername, password: mimsPassword } = mims;
 
