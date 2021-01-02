@@ -1,9 +1,8 @@
 const basicAuth = require('express-basic-auth');
-const { basicAuth: auth } = require('../util/constants/paths');
-const nconf = require('nconf').file('auth', auth);
 
-const username = nconf.get('username');
-const password = nconf.get('password');
+const { auth } = require('../util/constants/config');
+
+const { username, password } = auth;
 
 const authorizer = (user, pass, cb) => {
   if (user === username && pass === password) {
