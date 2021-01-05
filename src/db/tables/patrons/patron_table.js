@@ -7,9 +7,9 @@ const getPatronRoleID = async (patronName) => poolQuery(`
 `, [patronName]);
 
 const getPatronRolesUserID = async (userID) => poolQuery(`
-  SELECT patron_name, pt.patron_id, guild_id
+  SELECT patron_name, pt.patron_id, guild_id, last_transfer
   FROM (
-    SELECT patron_id, guild_id
+    SELECT patron_id, guild_id, last_transfer
     FROM patron_table
     WHERE user_id = $1
   ) pt
@@ -57,6 +57,14 @@ const resetSuperBongoPatron = async (userID) => poolQuery(`
   WHERE "userId" = $1;
 `, [userID]);
 
+const haremCopy = async (oldServerID, newServerID) => poolQuery(`
+  INSERT into cg_claim_waifu_table (guild_user_id, user_id, guild_id, waifu_id, favorite, date)
+  SELECT guild_user_id, user_id, $2, waifu_id, favorite, date
+  FROM cg_claim_waifu_table cgwt
+  WHERE guild_id = $1
+  ON CONFLICT (user_id, guild_id, waifu_id) DO NOTHING;
+`, [oldServerID, newServerID]);
+
 module.exports = {
   insertPatron,
   removePatron,
@@ -67,4 +75,5 @@ module.exports = {
   updateGuildPatronTwo,
   resetGuildPatron,
   resetSuperBongoPatron,
+  haremCopy,
 };
