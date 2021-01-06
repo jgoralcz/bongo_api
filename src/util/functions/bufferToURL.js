@@ -53,7 +53,7 @@ const deleteCDNImage = async (id, imageURLDelete, deleteDBFunc) => {
   if (!imageURLDelete) throw new Error('url to delete is not defined.');
 
   const updatedURL = imageURLDelete.replace(imageURL, cdnURL);
-  if (!updatedURL || updatedURL === cdnURL || updatedURL.length <= cdnURL.length + 20) return undefined;
+  if (!updatedURL || updatedURL === cdnURL || updatedURL.length <= cdnURL.length + 7) return undefined;
 
   const { status } = await axios.delete(updatedURL, { headers: { AccessKey: apiKey } });
 
