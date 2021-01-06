@@ -179,9 +179,13 @@ route.delete('/url', async (req, res) => {
   }
 
   const {
-    image_url_path_extra: imageURL, image_url_clean_path_extra: imageURLClean, image_id: imageID, uploader,
+    image_url_path_extra: imageURL,
+    image_url_clean_path_extra: imageURLClean,
+    image_id: imageID,
+    image_url_clean: imageURLCleanMain,
+    image_url: imageURLMain,
+    uploader,
   } = image[0];
-  const { image_url_clean: imageURLCleanMain, image_url: imageURLMain } = image[0];
   if ((!uploader || !requester || uploader !== requester) && !override) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
 
   const successCrop = await deleteCDNImage(imageID, imageURLClean || imageURLCleanMain, deleteCleanImage).catch((error) => logger.error(error));
