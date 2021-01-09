@@ -382,7 +382,7 @@ route.patch('/:characterID/image', async (req, res) => {
   const { characterID } = req.params;
   const { discordCropURL, cropURL, imageURL } = req.body;
 
-  if (!discordCropURL || !cropURL || !imageURL) return res.status(400).send({ error: `need discordCropURL, cropURL, imageURL. Received: ${JSON.stringify(req.body)}` });
+  if (!discordCropURL || !cropURL || !imageURL) return res.status(400).send({ error: `need discordCropURL, cropURL, imageURL. Received: ${JSON.parse(req.body)}` });
 
   const updatedRows = await updateCharacterMainImage(characterID, discordCropURL, cropURL, imageURL);
   if (!updatedRows || updatedRows.length <= 0) return res.status(404).send({ error: `could not find a matching character with id ${characterID}` });
