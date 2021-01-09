@@ -13,6 +13,7 @@ const {
   updateGuildPatronTwo,
   getPatronRoleID,
   haremCopy,
+  updatePatronTransfer,
 } = require('../db/tables/patrons/patron_table');
 
 const bongoNeko = 3;
@@ -44,7 +45,9 @@ route.get('/users/:id', async (req, res) => {
   const rows = await getPatronRolesUserID(id);
   if (!rows || rows.length <= 0) return res.status(404).send({ error: `Could not find patron with user id ${id}` });
 
-  return res.status(200).send(rows);
+  const [user] = rows;
+
+  return res.status(200).send(user);
 });
 
 route.patch('/users/:id/reset', async (req, res) => {
@@ -105,10 +108,18 @@ route.get('/id-by-name/:roleName', async (req, res) => {
   return res.status(200).send({ patronID });
 });
 
+route.patch('/transfer', async (req, res) => {
+  const { userID } = req.body;
+
+  await updatePatronTransfer(userID);
+
+  return res.status(204).send();
+});
+
 route.post('/haremcopy', async (req, res) => {
   const { oldServerID, newServerID } = req.body;
 
-  if (!oldServerID || !newServerID) return res.status(400).send({ error: `Expected oldServerID and newServerID. Received ${JSON.stringify(req.body)}` });
+  if (!oldServerID || !newServerID) return res.status(400).send({ error: `Expected oldServerID and newServerID. Received ${JSON.parse(req.body)}` });
 
   const newGuild = await getGuild(newServerID);
   if (!newGuild) return res.status(404).send({ error: `Server ${newServerID} does not exist` });
@@ -128,7 +139,7 @@ route.post('/haremcopy', async (req, res) => {
   const rowsAfter = await getAllGuildClaimCount(newServerID);
   const countAfter = await rowsAfter[0].count;
 
-  if (countBefore <= countAfter) return res.status(500).send({ error: `Did not copy any from ${oldServerID} to ${newServerID}` });
+  if (countBefore >= countAfter) return res.status(400).send({ error: `Did not copy any from ${oldServerID} to ${newServerID}` });
 
   return res.status(200).send();
 });

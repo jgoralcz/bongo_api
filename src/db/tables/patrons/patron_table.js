@@ -7,7 +7,7 @@ const getPatronRoleID = async (patronName) => poolQuery(`
 `, [patronName]);
 
 const getPatronRolesUserID = async (userID) => poolQuery(`
-  SELECT patron_name, pt.patron_id, guild_id, last_transfer
+  SELECT patron_name, pt.patron_id, guild_id, last_transfer, NOW() as now
   FROM (
     SELECT patron_id, guild_id, last_transfer
     FROM patron_table
@@ -65,6 +65,12 @@ const haremCopy = async (oldServerID, newServerID) => poolQuery(`
   ON CONFLICT (user_id, guild_id, waifu_id) DO NOTHING;
 `, [oldServerID, newServerID]);
 
+const updatePatronTransfer = async (userID) => poolQuery(`
+  UPDATE patron_table
+  SET last_transfer = NOW()
+  WHERE user_id = $1;
+`, [userID]);
+
 module.exports = {
   insertPatron,
   removePatron,
@@ -76,4 +82,5 @@ module.exports = {
   resetGuildPatron,
   resetSuperBongoPatron,
   haremCopy,
+  updatePatronTransfer,
 };

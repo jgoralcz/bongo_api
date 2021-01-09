@@ -4,7 +4,7 @@ const { updateBotGuilds, getBotGuildsByGuildID } = require('../db/tables/bot_gui
 
 route.put('/patrons/guilds', async (req, res) => {
   const { botID, guilds } = req.body;
-  if (!botID || !Array.isArray(guilds)) return res.status(400).send({ error: `expected botID and array of guilds. Received botID=${botID} guilds=${JSON.stringify(guilds)}` })
+  if (!botID || !Array.isArray(guilds)) return res.status(400).send({ error: `expected botID and array of guilds. Received botID=${botID} guilds=${JSON.parse(guilds)}` });
 
   await updateBotGuilds(botID, guilds);
   return res.status(204).send();
