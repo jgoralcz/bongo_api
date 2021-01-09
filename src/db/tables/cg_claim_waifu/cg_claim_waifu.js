@@ -969,6 +969,12 @@ const getRemainingClaimWaifusServer = async (guildID) => poolQuery(`
   WHERE guild_id = $1;
 `, [guildID]);
 
+const getAllGuildClaimCount = async (guildID) => poolQuery(`
+  SELECT count(*)
+  FROM cg_claim_waifu_table
+  WHERE guild_id = $1;
+`, [guildID]);
+
 const getUniqueGuildMembersClaim = async (guildID) => poolQuery(`
   SELECT DISTINCT user_id
   FROM cg_claim_waifu_table
@@ -1083,4 +1089,5 @@ module.exports = {
   getUniqueGuildMembersClaimLessThanDays,
   removeDuplicateWaifuClaims,
   removeAllGuildClaimCharactersByID,
+  getAllGuildClaimCount,
 };
