@@ -18,7 +18,6 @@ const updateWishListVisibility = async (userID, guildID, visibility) => poolQuer
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userID, guildID, visibility]);
 
-
 const incrementClaimWaifuRoll = async (userID, guildID) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET rolls_waifu = rolls_waifu + 1, latest_roll_date = now()
@@ -83,7 +82,6 @@ const resetRollsByIdVote = async (userId, guildId) => poolQuery(`
     AND vote_enabled IS NOT NULL;
 `, [userId, guildId]);
 
-
 /**
  * adds a friend to their friends list.
  * @param friendId the friend's id.
@@ -114,7 +112,6 @@ const removeFriend = async (friendId, userId) => poolQuery(`
   WHERE "userId" = $2;
 `, [friendId, userId]);
 
-
 /**
  * gets all friends belonging to a user.
  * @param userId the user's id.
@@ -128,7 +125,6 @@ const getAllFriends = async (userId) => poolQuery(`
     WHERE "userId" = $1
   ) sub;
 `, [userId]);
-
 
 /**
 * get all the marriages and friends from a user.
@@ -188,7 +184,6 @@ const addMarriage = async (marryId, id, userId, guildId) => poolQuery(`
   WHERE "clientsGuildsTable"."id" = $2;
 `, [marryId, id, userId, guildId]);
 
-
 /**
  * remove their marriage from the user's array
  * @param marryId the marry id.
@@ -210,7 +205,6 @@ SELECT array_agg(marriages) AS "marryFromServer"
     WHERE "userId" = $1
   ) sub;
 `, [userId]);
-
 
 /**
  * gets the x top marriages
@@ -238,7 +232,6 @@ const getTopServerMarriages = async (guildId) => poolQuery(`
   LIMIT 20;
 `, [guildId]);
 
-
 /**
 * get all client info based off id
 * @param id the guild-user id key
@@ -262,7 +255,7 @@ const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
     achievement_reddit, achievement_search_anime, owoify, buy_rolls, buy_claims, gauntlet, show_waifu_rank, cropped_images,
     donut, pizza, cookie, fuel, stones, ramen, roll_game, roll_western, roll_anime, steal_character, roll_custom_only, banned_submission_date,
     anime_reactions_server, roll_western_server, cropped_images_server, roll_anime_server, claim_time_disappear, claim_other_rolls_seconds, music_leave_time_minutes,
-    unlock_color, embed_color
+    unlock_color, embed_color, nightcore_enabled
   FROM (
     SELECT "userId", "guildId", rolls_waifu, claim_waifu, public_wish_list
     FROM "clientsGuildsTable"

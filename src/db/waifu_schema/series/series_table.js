@@ -50,7 +50,6 @@ const storeNewSeriesImage = async (id, imageURL, _, width, height, nsfw, bufferL
   RETURNING *;
 `, [id, imageURL, width, height, nsfw, bufferLength, fileType]);
 
-
 module.exports = {
   getAllSeriesByName,
   getSeries,
