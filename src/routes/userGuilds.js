@@ -15,5 +15,4 @@ route.post('/', async (req, res) => {
   return res.status(201).send(query[0]);
 });
 
-
 module.exports = route;

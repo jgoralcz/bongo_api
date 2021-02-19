@@ -3,8 +3,12 @@ const route = require('express-promise-router')();
 const { validateBuffer } = require('../../handlers/validate');
 
 const {
-  storeNewSeriesImage, upsertSeries, getSeriesById,
-  getAllSeriesByName, getSeries, updateSeries,
+  storeNewSeriesImage,
+  upsertSeries,
+  getSeriesById,
+  getAllSeriesByName,
+  getSeries,
+  updateSeries,
 } = require('../../db/waifu_schema/series/series_table');
 
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
@@ -67,7 +71,9 @@ route.patch('/', async (req, res) => {
   const series = seriesQuery[0];
   const { id } = series;
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewSeriesImage, { width, height, nsfw, type: 'series', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewSeriesImage, {
+    width, height, nsfw, type: 'series', uploader,
+  });
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading series ${name}.` });
 
   const [info] = row;
@@ -114,7 +120,9 @@ route.post('/', async (req, res) => {
   const series = seriesQuery[0];
   const { id } = series;
 
-  const row = await storeImageBufferToURL(id, buffer, storeNewSeriesImage, { width, height, nsfw, type: 'series', uploader });
+  const row = await storeImageBufferToURL(id, buffer, storeNewSeriesImage, {
+    width, height, nsfw, type: 'series', uploader,
+  });
   if (!row || row.length <= 0 || !row[0]) return res.status(400).send({ error: `Failed uploading series ${name}.` });
 
   const [info] = row;
