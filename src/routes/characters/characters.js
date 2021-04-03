@@ -35,6 +35,7 @@ const {
   getHashFromBufferID,
   mergeWaifuImages,
   storeCleanWaifuImage: storeNewClaimWaifuImage,
+  getCharacterImagesByID,
 } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { getWaifuImagesAndInfoByID, storeCleanWaifuImage: storeCleanWaifuImageExtra } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
@@ -388,6 +389,23 @@ route.patch('/:characterID/image', async (req, res) => {
   if (!updatedRows || updatedRows.length <= 0) return res.status(404).send({ error: `could not find a matching character with id ${characterID}` });
 
   return res.status(201).send();
+});
+
+route.get('/:characterID/images/all', async (req, res) => {
+  const { characterID } = req.params;
+
+  const {
+    userID,
+    useDiscordImage,
+    nsfw,
+  } = req.query;
+
+  const useDiscordImageOnly = useDiscordImage === 'true';
+  const showNSFW = nsfw === 'true';
+
+  const characterImages = await getCharacterImagesByID(userID, characterID, showNSFW, useDiscordImageOnly);
+
+  return res.status(200).send(characterImages);
 });
 
 module.exports = route;
