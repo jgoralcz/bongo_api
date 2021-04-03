@@ -1,4 +1,4 @@
 module.exports = Object.freeze({
-  cdnURL: 'https://storage.bunnycdn.com/bongobot',
+  cdnURL: 'https://la.storage.bunnycdn.com/bongobot',
   imageURL: 'https://cdn.bongobot.io',
 });
