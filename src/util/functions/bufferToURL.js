@@ -55,11 +55,14 @@ const deleteCDNImage = async (id, imageURLDelete, deleteDBFunc) => {
   const updatedURL = imageURLDelete.replace(imageURL, cdnURL);
   if (!updatedURL || updatedURL === cdnURL || updatedURL.length <= cdnURL.length + 7) return undefined;
 
-  const { status } = await axios.delete(updatedURL, { headers: { AccessKey: apiKey } });
+  // going to remove bongo.best storage, so ignore those problems
+  if (imageURLDelete.startsWith(imageURL)) {
+    const { status } = await axios.delete(updatedURL, { headers: { AccessKey: apiKey } });
 
-  if (status !== 200) {
-    logger.error(`Problem deleting with: ${id}, ${imageURLDelete}`);
-    return false;
+    if (status !== 200) {
+      logger.error(`Problem deleting with: ${id}, ${imageURLDelete}`);
+      return false;
+    }
   }
 
   if (!id) return true;
