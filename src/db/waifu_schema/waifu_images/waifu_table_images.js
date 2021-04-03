@@ -90,26 +90,35 @@ const insertWaifuImages = async (waifuID, imageFilePath, imageURLPath) => {
 `, [waifuID, imageFilePath, imageURLPath]);
 };
 
-/**
- * get images and filter if they're nsfw or not
- * @param waifuID the waifu id to look up.
- * @param nsfw whether the channel is nsfw or not
- * @returns {Promise<*>}
- */
-const getWaifuImagesById = async (waifuID, nsfw = false) => {
-  if (nsfw) {
-    return poolQuery(`
-      SELECT image_id
+const getCharacterImagesByID = async (userID, waifuID, nsfw = false, useDiscordImage = false) => poolQuery(`
+  SELECT image_url_path_extra, image_id, nsfw, "imageURLOriginal", "imageURLCropped"
+  FROM (
+    SELECT (
+      CASE
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $4 THEN
+        COALESCE (image_url_clean_discord_path_extra, image_url_clean_path_extra)
+      WHEN ct.cropped_images = TRUE THEN
+        image_url_clean_path_extra
+      ELSE
+        image_url_path_extra
+      END
+    ) AS image_url_path_extra,
+    image_id, nsfw, image_url_path_extra AS "imageURLOriginal", image_url_clean_path_extra AS "imageURLCropped"
+    FROM (
+      SELECT image_id, nsfw, image_url_path_extra, image_url_clean_path_extra, image_url_clean_discord_path_extra, (
+        SELECT cropped_images
+        FROM "clientsTable"
+        WHERE "userId" = $1
+      ) AS cropped_images
       FROM waifu_schema.waifu_table_images
-      WHERE waifu_id = $1;
-`, [waifuID]);
-  }
-  return poolQuery(`
-    SELECT image_id
-    FROM waifu_schema.waifu_table_images
-    WHERE waifu_id = $1 AND (nsfw = FALSE OR nsfw IS NULL);
-`, [waifuID]);
-};
+      WHERE waifu_id = $2
+        AND (((nsfw = $3 AND nsfw = FALSE))
+          OR ((nsfw = $3 AND nsfw = TRUE) OR nsfw = FALSE)
+          OR nsfw IS NULL)
+    ) ct
+  ) t1
+  WHERE t1.image_url_path_extra IS NOT NULL;
+`, [userID, waifuID, nsfw, useDiscordImage]);
 
 const storeNewImage = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
   INSERT INTO waifu_schema.waifu_table_images (waifu_id, image_url_path_extra, 
@@ -210,7 +219,7 @@ module.exports = {
   updateWaifuImageReview,
   deleteImage,
   insertWaifuImages,
-  getWaifuImagesById,
+  getCharacterImagesByID,
   getWaifuImageByURL,
   deleteImageByURL,
   updateWaifusCDNurl,
