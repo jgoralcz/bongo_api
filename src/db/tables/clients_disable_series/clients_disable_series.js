@@ -5,7 +5,7 @@ const { poolQuery } = require('../../index');
  * @param userID the user's id.
  * @returns {Promise<*>}
  */
-const getBlacklistSeriesUser = async userID => poolQuery(`
+const getBlacklistSeriesUser = async (userID) => poolQuery(`
   SELECT series_id
   FROM clients_disable_series
   WHERE user_id = $1;
@@ -97,7 +97,7 @@ const getAllDisabledSeriesByName = async (userID, name) => poolQuery(`
     WHERE user_id = $1
   ) cgs
   JOIN waifu_schema.series_table wsst on wsst.id = cgs.series_id
-  WHERE name ILIKE '%' || $2 || '%' OR levenshtein(name, $2) <= 3;
+  WHERE f_unaccent(name) ILIKE '%' || $2 || '%' OR levenshtein(f_unaccent(name), $2) <= 3;
 `, [userID, name]);
 
 module.exports = {

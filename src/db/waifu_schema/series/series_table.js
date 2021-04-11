@@ -3,13 +3,13 @@ const { poolQuery } = require('../../index');
 const getAllSeriesByName = async (name) => poolQuery(`
   SELECT name, url, id
   FROM waifu_schema.series_table wsst
-  WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 3 
+  WHERE f_unaccent(name) ILIKE '%' || $1 || '%' OR levenshtein(f_unaccent(name), $1) <= 3 
   ORDER BY
     CASE
-    WHEN name ILIKE $1 THEN 0
-    WHEN name ILIKE $1 || '%' THEN 1
-    WHEN name ILIKE '%' || $1 THEN 2
-    WHEN name ILIKE '%' || $1 || '%' THEN 3
+    WHEN f_unaccent(name) ILIKE $1 THEN 0
+    WHEN f_unaccent(name) ILIKE $1 || '%' THEN 1
+    WHEN f_unaccent(name) ILIKE '%' || $1 THEN 2
+    WHEN f_unaccent(name) ILIKE '%' || $1 || '%' THEN 3
     ELSE 3 END, name
   LIMIT 20;
 `, [name]);
@@ -17,7 +17,7 @@ const getAllSeriesByName = async (name) => poolQuery(`
 const getSeries = async (name) => poolQuery(`
   SELECT id
   FROM waifu_schema.series_table
-  WHERE name ILIKE $1;
+  WHERE f_unaccent(name) ILIKE $1;
 `, [name]);
 
 const getSeriesById = async (id) => poolQuery(`

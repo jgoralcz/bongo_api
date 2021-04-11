@@ -27,7 +27,7 @@ const getAllSeriesByNameWishlist = async (userID, guildID, name) => poolQuery(`
   ) cgt
    JOIN waifu_schema.series_table st ON cgt.series_id = st.id
    JOIN "clientsGuildsTable" ct ON ct.id = cgt.user_guild_id
-   WHERE name ILIKE '%' || $3 || '%';
+   WHERE f_unaccent(name) ILIKE '%' || $3 || '%';
 `, [userID, guildID, name]);
 
 const removeWishlistSeriesUserGuild = async (userID, guildID, seriesID) => poolQuery(`

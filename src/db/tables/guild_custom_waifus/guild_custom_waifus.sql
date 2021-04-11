@@ -10,3 +10,7 @@ CREATE TABLE IF NOT EXISTS guild_custom_waifus (
   is_nsfw BOOLEAN NOT NULL DEFAULT FALSE,
   date_added TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+
+create index custom_accent_name_idx on guild_custom_waifus (f_unaccent(name));
+create index custom_accent_name_gin_idx on guild_custom_waifus using gin (f_unaccent(name) gin_trgm_ops);

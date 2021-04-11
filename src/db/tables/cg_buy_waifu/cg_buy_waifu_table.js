@@ -78,9 +78,9 @@ const findBuyWaifuByIdJoinURL = async (id, waifuName) => poolQuery(`
   FROM (
     SELECT waifu_name, waifu_id, favorite
     FROM cg_buy_waifu_table
-    WHERE user_id = $1 AND waifu_name ILIKE '%' || $2 || '%'
+    WHERE user_id = $1 AND f_unaccent(waifu_name) ILIKE '%' || $2 || '%'
     ORDER BY
-      CASE WHEN waifu_name ILIKE $2 || '%' THEN 0 ELSE 1 END, waifu_name
+      CASE WHEN f_unaccent(waifu_name) ILIKE $2 || '%' THEN 0 ELSE 1 END, waifu_name
     LIMIT 20
   ) cgbwt
   LEFT JOIN waifu_schema.waifu_table wt ON cgbwt.waifu_id = wt.id;
@@ -98,9 +98,9 @@ const findBuyWaifuByIdJoinURLFavorites = async (id, waifuName, favorite = true) 
   FROM (
     SELECT waifu_name, waifu_id, favorite
     FROM cg_buy_waifu_table
-    WHERE user_id = $1 AND waifu_name ILIKE '%' || $2 || '%' AND favorite = $3
+    WHERE user_id = $1 AND f_unaccent(waifu_name) ILIKE '%' || $2 || '%' AND favorite = $3
     ORDER BY
-      CASE WHEN waifu_name ILIKE $2 || '%' THEN 0 ELSE 1 END, waifu_name
+      CASE WHEN f_unaccent(waifu_name) ILIKE $2 || '%' THEN 0 ELSE 1 END, waifu_name
     LIMIT 20
   ) cgbwt
   LEFT JOIN waifu_schema.waifu_table wt ON cgbwt.waifu_id = wt.id;
@@ -172,7 +172,7 @@ const removeFavoriteBuyWaifuID = async (userID, waifuID) => poolQuery(`
  * @param userID the user's ID
  * @returns {Promise<Promise<*>|*>}
  */
-const removeAllButFavoriteBuyWaifu = async userID => poolQuery(`
+const removeAllButFavoriteBuyWaifu = async (userID) => poolQuery(`
   DELETE
   FROM cg_buy_waifu_table
   WHERE 
@@ -212,9 +212,8 @@ const buyWaifu = async (userID, guildID, waifuName, waifuID) => {
 const removeBuyWaifu = async (userID, waifuName, waifuID) => poolQuery(`
   DELETE FROM cg_buy_waifu_table
   WHERE id IN (SELECT id FROM cg_buy_waifu_table WHERE user_id = $1 AND
-      ((waifu_id IS NOT NULL AND waifu_id = $3) OR (waifu_name ILIKE $2 || '%')) LIMIT 1);
+      ((waifu_id IS NOT NULL AND waifu_id = $3) OR (f_unaccent(waifu_name) ILIKE $2 || '%')) LIMIT 1);
 `, [userID, waifuName, waifuID]);
-
 
 /**
  * gets the top buy waifus.
@@ -230,7 +229,7 @@ const getTopBuyWaifu = async () => poolQuery(`
  * @param guildID the guild id.
  * @returns {Promise<Promise<*>|*>}
  */
-const getTopServerBuyWaifu = async guildID => poolQuery(`
+const getTopServerBuyWaifu = async (guildID) => poolQuery(`
   SELECT user_id AS "userId", count(*) AS top
   FROM cg_buy_waifu_table
   WHERE guild_id = $1
@@ -244,7 +243,7 @@ const getTopServerBuyWaifu = async guildID => poolQuery(`
  * @param userID the user's id.
  * @returns {Promise<Promise<*>|*>}
  */
-const getBuyWaifuListSum = async userID => poolQuery(`
+const getBuyWaifuListSum = async (userID) => poolQuery(`
   SELECT count(*) AS top
   FROM cg_buy_waifu_table
   WHERE user_id = $1;
@@ -290,7 +289,6 @@ module.exports = {
 //                 GROUP BY SERIES;
 //             `, []);
 // };
-
 
 // /**
 //  * gets the top 500 claimed waifus of a server
