@@ -33,7 +33,7 @@ const getAllWaifusByNameWishlist = async (userID, guildID, name) => poolQuery(`
   SELECT name, series, url, waifu_id AS id
   FROM cg_wishlist_waifu_table cgt
   JOIN waifu_schema.waifu_table wt ON wt.id = cgt.waifu_id
-  WHERE user_id = $1 AND guild_id = $2 AND name ILIKE '%' || $3 || '%';
+  WHERE user_id = $1 AND guild_id = $2 AND f_unaccent(name) ILIKE '%' || $3 || '%';
 `, [userID, guildID, name]);
 
 const getUsersWishWaifu = async (guildID, waifuID) => poolQuery(`
@@ -62,7 +62,6 @@ const getUniqueUserCharacterWishlist = async (guildID) => poolQuery(`
   FROM cg_wishlist_waifu_table
   WHERE guild_id = $1;
 `, [guildID]);
-
 
 module.exports = {
   addWishlistWaifuUserGuild,

@@ -113,14 +113,14 @@ const searchWaifuByName = async (waifuName, limit = 100) => poolQuery(`
   FROM (
     SELECT name, series, husbando, unknown_gender, image_url, url, description, ws.id, original_name, origin
     FROM waifu_schema.waifu_table ws
-    WHERE name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 1
+    WHERE f_unaccent(name) ILIKE '%' || $1 || '%' OR levenshtein(f_unaccent(name), $1) <= 1
       OR (original_name ILIKE '%' || $1 || '%' AND original_name IS NOT NULL)
       OR (romaji_name ILIKE '%' || $1 || '%' AND romaji_name IS NOT NULL)
     ORDER BY
       CASE
-      WHEN name ILIKE $1 THEN 0
-      WHEN name ILIKE $1 || '%' THEN 1
-      WHEN name ILIKE '%' || $1 || '%' THEN 2
+      WHEN f_unaccent(name) ILIKE $1 THEN 0
+      WHEN f_unaccent(name) ILIKE $1 || '%' THEN 1
+      WHEN f_unaccent(name) ILIKE '%' || $1 || '%' THEN 2
       WHEN romaji_name ILIKE $1 THEN 3
       WHEN romaji_name ILIKE $1 || '%' THEN 4
       WHEN original_name ILIKE $1 THEN 5
@@ -131,16 +131,16 @@ const searchWaifuByName = async (waifuName, limit = 100) => poolQuery(`
   ) wt
   ORDER BY
     CASE
-    WHEN name ILIKE $1 THEN 0
-    WHEN original_name ILIKE $1 THEN 1
+    WHEN f_unaccent(name) ILIKE $1 THEN 0
+    WHEN f_unaccent(original_name) ILIKE $1 THEN 1
     WHEN $1 ILIKE ANY (
-      SELECT UNNEST(string_to_array(wt.name, ' ')) AS name
+      SELECT UNNEST(string_to_array(f_unaccent(wt.name), ' ')) AS name
     ) THEN 2
-    WHEN name ILIKE $1 || '%' THEN 3
-    WHEN name ILIKE '%' || $1 || '%' THEN 4
-    WHEN original_name ILIKE $1 THEN 5
-    WHEN original_name ILIKE $1 || '%' THEN 6
-    WHEN levenshtein(name, $1) <= 1 THEN 7
+    WHEN f_unaccent(name) ILIKE $1 || '%' THEN 3
+    WHEN f_unaccent(name) ILIKE '%' || $1 || '%' THEN 4
+    WHEN f_unaccent(original_name) ILIKE $1 THEN 5
+    WHEN f_unaccent(original_name) ILIKE $1 || '%' THEN 6
+    WHEN levenshtein(f_unaccent(name), $1) <= 1 THEN 7
     ELSE 8 END, name, original_name
   LIMIT $2;
 `, [waifuName, limit]);
@@ -271,7 +271,7 @@ const searchCharacterExactly = async (name, series, seriesID) => poolQuery(`
           SELECT series
           FROM waifu_schema.appears_in wsai
           JOIN waifu_schema.waifu_table wswt ON wswt.id = wsai.waifu_id AND wsai.series_id = $3
-          WHERE name ILIKE $1
+          WHERE f_unaccent(name) ILIKE $1
         ) wt1
       )
     );

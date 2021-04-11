@@ -43,7 +43,7 @@ const getRandomCustomWaifuOwnerClaimed = async (guildID, nsfw) => poolQuery(`
  * @param guildID the guild's id.
  * @returns {Promise<Promise<*>|*>}
  */
-const getUniqueGuildMembersCustom = async guildID => poolQuery(`
+const getUniqueGuildMembersCustom = async (guildID) => poolQuery(`
   SELECT DISTINCT user_id
   FROM cg_custom_waifu_table
   WHERE guild_id = $1;
@@ -77,12 +77,11 @@ const findCustomWaifuSearchName = async (userID, guildID, waifuName) => poolQuer
     WHERE user_id = $1 AND guild_id = $2
   ) cgcwt
   JOIN guild_custom_waifus wt ON cgcwt.waifu_id = wt.id
-  WHERE wt.name ILIKE '%' || $3 || '%'
+  WHERE f_unaccent('wt.name') ILIKE '%' || $3 || '%'
   ORDER BY
-    CASE WHEN wt.name ILIKE $3 || '%' THEN 0 ELSE 1 END, wt.name
+    CASE WHEN f_unaccent(wt.name) ILIKE $3 || '%' THEN 0 ELSE 1 END, wt.name
   LIMIT 20;
 `, [userID, guildID, waifuName]);
-
 
 /**
  * finds the bought waifu by name, has all the needed stuff in it.
@@ -98,7 +97,7 @@ const findCustomClaimWaifuByName = async (guildID, waifuName) => poolQuery(`
     WHERE guild_id = $1
   ) cgcwt
   JOIN guild_custom_waifus gcw ON cgcwt.waifu_id = gcw.id
-  WHERE gcw.name ILIKE '%' || $2 || '%'
+  WHERE f_unaccent(gcw.name) ILIKE '%' || $2 || '%'
   LIMIT 20;
 `, [guildID, waifuName]);
 
@@ -117,12 +116,11 @@ const findCustomWaifuSearchNameFavorites = async (userID, guildID, waifuName, fa
     WHERE user_id = $1 AND guild_id = $2 AND favorite = $4
   ) cgcwt
   LEFT JOIN guild_custom_waifus wt ON cgcwt.waifu_id = wt.id
-  WHERE wt.name ILIKE '%' || $3 || '%'
+  WHERE f_unaccent(wt.name) ILIKE '%' || $3 || '%'
   ORDER BY
-    CASE WHEN wt.name ILIKE $3 || '%' THEN 0 ELSE 1 END, wt.name
+    CASE WHEN f_unaccent(wt.name) ILIKE $3 || '%' THEN 0 ELSE 1 END, wt.name
   LIMIT 20;
 `, [userID, guildID, waifuName, favorite]);
-
 
 /**
  * remove the claimed waifu
@@ -264,7 +262,7 @@ const removeCustomWaifusRandomHalf = async (guildID, limit) => poolQuery(`
   );
 `, [guildID, limit]);
 
-const removeCustomWaifusAll = async guildID => poolQuery(`
+const removeCustomWaifusAll = async (guildID) => poolQuery(`
   DELETE
   FROM cg_custom_waifu_table
   WHERE guild_id = $1;

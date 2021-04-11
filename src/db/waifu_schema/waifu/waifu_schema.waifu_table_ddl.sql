@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS waifu_schema.waifu_table (
   UNIQUE (url)
 );
 
+create index accent_name_idx on waifu_schema.waifu_table (f_unaccent(name));
+create index accent_name_gin_idx on waifu_schema.waifu_table using gin (f_unaccent(name) gin_trgm_ops);
+
 --
 -- Indexes:
 --     "waifu_table_pkey" PRIMARY KEY, btree (id)

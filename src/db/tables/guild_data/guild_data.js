@@ -219,7 +219,6 @@ const cleanServerQueueMeta = async (guildID) => poolQuery(`
   WHERE "guildId" = $1;
 `, [guildID]);
 
-
 /**
  * clears the server queue meta.
  * @param guildID the guild's ID.
@@ -371,7 +370,6 @@ const moveServerQueueTrackTransaction = async (guildID, moveFrom, position, trac
   SET "serverQueue" = "serverQueue"[:$3+1] || $4::json || "serverQueue"[$3+2:]
   WHERE "guildId" = $1;
 `, [guildID, moveFrom, position, track]);
-
 
 // /**
 //  * removes guild and affects all the foreign keys.
@@ -561,7 +559,6 @@ const restartBackupQueue = async () => poolQuery(`
   WHERE array_length("serverQueue", 1) > 0;
 `, []);
 
-
 /**
  * selects the auto now play
  * @param guildId the guild id.
@@ -728,7 +725,6 @@ const getAutoLeave = async (guildID) => {
 
   return autoLeaveQuery.rows[0] && autoLeaveQuery.rows[0].auto_timeout;
 };
-
 
 /**
  * selects the auto now play
@@ -970,7 +966,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
   LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
   LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
   ORDER BY series ASC, name ASC
-  LIMIT 1000;
+  LIMIT 1500;
 `, [waifuSeries, guildID, userID, useDiscordImage]);
 
 const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`
@@ -986,7 +982,7 @@ const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`
   LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = wswt.id AND cgcwt.guild_id = $1
 
   ORDER BY series DESC, name ASC
-  LIMIT 1000;
+  LIMIT 1500;
 `, [guildID, tag]);
 
 /**

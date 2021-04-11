@@ -294,7 +294,6 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
   ) t1;
 `, [userID, guildID, nsfw, rollWestern, rollGame, croppedImage, rollAnime, isHusbando]);
 
-
 // nsfw, rollwestern, rollgame, rollanime, gender
 
 const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando) => poolQuery(`
@@ -616,34 +615,34 @@ const findClaimWaifuByIdJoinURL = async (userID, guildID, waifuName) => poolQuer
       WHERE user_id = $1 AND guild_id = $2
     ) cgcwt
     LEFT JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-    WHERE wt.name ILIKE '%' || $3 || '%' OR levenshtein(wt.name, $3) <= 1
-      OR (wt.original_name ILIKE '%' || $3 || '%' AND wt.original_name IS NOT NULL)
-      OR (wt.romaji_name ILIKE '%' || $3 || '%' AND wt.romaji_name IS NOT NULL)
+    WHERE f_unaccent(wt.name) ILIKE '%' || $3 || '%' OR levenshtein(f_unaccent(wt.name), $3) <= 1
+      OR (f_unaccent(wt.original_name) ILIKE '%' || $3 || '%' AND f_unaccent(wt.original_name) IS NOT NULL)
+      OR (f_unaccent(wt.romaji_name) ILIKE '%' || $3 || '%' AND f_unaccent(wt.romaji_name) IS NOT NULL)
     ORDER BY
       CASE
-      WHEN wt.name ILIKE $3 THEN 0
-      WHEN wt.name ILIKE $3 || '%' THEN 1
-      WHEN wt.name ILIKE '%' || $3 || '%' THEN 2
-      WHEN wt.romaji_name ILIKE $3 THEN 3
-      WHEN wt.romaji_name ILIKE $3 || '%' THEN 4
-      WHEN wt.original_name ILIKE $3 THEN 5
-      WHEN wt.original_name ILIKE $3 || '%' THEN 6
-      WHEN levenshtein(wt.name, $3) <= 1 THEN 7
+      WHEN f_unaccent(wt.name) ILIKE $3 THEN 0
+      WHEN f_unaccent(wt.name) ILIKE $3 || '%' THEN 1
+      WHEN f_unaccent(wt.name) ILIKE '%' || $3 || '%' THEN 2
+      WHEN f_unaccent(wt.romaji_name) ILIKE $3 THEN 3
+      WHEN f_unaccent(wt.romaji_name) ILIKE $3 || '%' THEN 4
+      WHEN f_unaccent(wt.original_name) ILIKE $3 THEN 5
+      WHEN f_unaccent(wt.original_name) ILIKE $3 || '%' THEN 6
+      WHEN levenshtein(f_unaccent(wt.name), $3) <= 1 THEN 7
       ELSE 8 END, wt.name, wt.romaji_name, wt.original_name
     LIMIT 100
   ) wt2
   ORDER BY
     CASE
-    WHEN wt2.name ILIKE $3 THEN 0
-    WHEN wt2.original_name ILIKE $3 THEN 1
+    WHEN f_unaccent(wt2.name) ILIKE $3 THEN 0
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 THEN 1
     WHEN $3 ILIKE ANY (
-      SELECT UNNEST(string_to_array(wt2.name, ' ')) AS name
+      SELECT UNNEST(string_to_array(f_unaccent(wt2.name), ' ')) AS name
     ) THEN 2
-    WHEN wt2.name ILIKE $3 || '%' THEN 3
-    WHEN wt2.name ILIKE '%' || $3 || '%' THEN 4
-    WHEN wt2.original_name ILIKE $3 THEN 5
-    WHEN wt2.original_name ILIKE $3 || '%' THEN 6
-    WHEN levenshtein(wt2.name, $3) <= 1 THEN 7
+    WHEN f_unaccent(wt2.name) ILIKE $3 || '%' THEN 3
+    WHEN f_unaccent(wt2.name) ILIKE '%' || $3 || '%' THEN 4
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 THEN 5
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 || '%' THEN 6
+    WHEN levenshtein(f_unaccent(wt2.name), $3) <= 1 THEN 7
     ELSE 8 END, wt2.name, wt2.original_name
   LIMIT 20;
 `, [userID, guildID, waifuName]);
@@ -735,34 +734,34 @@ const findClaimWaifuByIdJoinURLFavorites = async (userID, guildID, waifuName, fa
       WHERE user_id = $1 AND guild_id = $2 AND favorite = $4
     ) cgcwt
     JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-    WHERE wt.name ILIKE '%' || $3 || '%' OR levenshtein(wt.name, $3) <= 1 
-      OR (wt.original_name ILIKE '%' || $3 || '%' AND wt.original_name IS NOT NULL)
-      OR (wt.romaji_name ILIKE '%' || $3 || '%' AND wt.romaji_name IS NOT NULL)
+    WHERE f_unaccent(wt.name) ILIKE '%' || $3 || '%' OR levenshtein(f_unaccent(wt.name), $3) <= 1
+      OR (f_unaccent(wt.original_name) ILIKE '%' || $3 || '%' AND f_unaccent(wt.original_name) IS NOT NULL)
+      OR (f_unaccent(wt.romaji_name) ILIKE '%' || $3 || '%' AND f_unaccent(wt.romaji_name) IS NOT NULL)
     ORDER BY
       CASE
-      WHEN wt.name ILIKE $3 THEN 0
-      WHEN wt.name ILIKE $3 || '%' THEN 1
-      WHEN wt.name ILIKE '%' || $3 || '%' THEN 2
-      WHEN wt.romaji_name ILIKE $3 THEN 3
-      WHEN wt.romaji_name ILIKE $3 || '%' THEN 4
-      WHEN wt.original_name ILIKE $3 THEN 5
-      WHEN wt.original_name ILIKE $3 || '%' THEN 6
-      WHEN levenshtein(wt.name, $3) <= 1 THEN 7
+      WHEN f_unaccent(wt.name) ILIKE $3 THEN 0
+      WHEN f_unaccent(wt.name) ILIKE $3 || '%' THEN 1
+      WHEN f_unaccent(wt.name) ILIKE '%' || $3 || '%' THEN 2
+      WHEN f_unaccent(wt.romaji_name) ILIKE $3 THEN 3
+      WHEN f_unaccent(wt.romaji_name) ILIKE $3 || '%' THEN 4
+      WHEN f_unaccent(wt.original_name) ILIKE $3 THEN 5
+      WHEN f_unaccent(wt.original_name) ILIKE $3 || '%' THEN 6
+      WHEN levenshtein(f_unaccent(wt.name), $3) <= 1 THEN 7
       ELSE 8 END, wt.name, wt.romaji_name, wt.original_name
     LIMIT 100
   ) wt2
   ORDER BY
     CASE
-    WHEN wt2.name ILIKE $3 THEN 0
-    WHEN wt2.original_name ILIKE $3 THEN 1
+    WHEN f_unaccent(wt2.name) ILIKE $3 THEN 0
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 THEN 1
     WHEN $3 ILIKE ANY (
-      SELECT UNNEST(string_to_array(wt2.name, ' ')) AS name
+      SELECT UNNEST(string_to_array(f_unaccent(wt2.name), ' ')) AS name
     ) THEN 2
-    WHEN wt2.name ILIKE $3 || '%' THEN 3
-    WHEN wt2.name ILIKE '%' || $3 || '%' THEN 4
-    WHEN wt2.original_name ILIKE $3 THEN 5
-    WHEN wt2.original_name ILIKE $3 || '%' THEN 6
-    WHEN levenshtein(wt2.name, $3) <= 1 THEN 7
+    WHEN f_unaccent(wt2.name) ILIKE $3 || '%' THEN 3
+    WHEN f_unaccent(wt2.name) ILIKE '%' || $3 || '%' THEN 4
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 THEN 5
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 || '%' THEN 6
+    WHEN levenshtein(f_unaccent(wt2.name), $3) <= 1 THEN 7
     ELSE 8 END, wt2.name, wt2.original_name
   LIMIT 20;
 `, [userID, guildID, waifuName, favorite]);
@@ -790,34 +789,34 @@ const findClaimWaifuByNameJoinURL = async (guildID, waifuName) => poolQuery(`
       WHERE guild_id = $1
     ) cgcwt
     JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-    WHERE wt.name ILIKE '%' || $2 || '%' OR levenshtein(wt.name, $2) <= 1 
-      OR (wt.original_name ILIKE '%' || $2 || '%' AND wt.original_name IS NOT NULL)
-      OR (wt.romaji_name ILIKE '%' || $2 || '%' AND wt.romaji_name IS NOT NULL)
+    WHERE f_unaccent(wt.name) ILIKE '%' || $3 || '%' OR levenshtein(f_unaccent(wt.name), $3) <= 1
+      OR (f_unaccent(wt.original_name) ILIKE '%' || $3 || '%' AND f_unaccent(wt.original_name) IS NOT NULL)
+      OR (f_unaccent(wt.romaji_name) ILIKE '%' || $3 || '%' AND f_unaccent(wt.romaji_name) IS NOT NULL)
     ORDER BY
       CASE
-      WHEN wt.name ILIKE $2 THEN 0
-      WHEN wt.name ILIKE $2 || '%' THEN 1
-      WHEN wt.name ILIKE '%' || $2 || '%' THEN 2
-      WHEN wt.romaji_name ILIKE $2 THEN 3
-      WHEN wt.romaji_name ILIKE $2 || '%' THEN 4
-      WHEN wt.original_name ILIKE $2 THEN 5
-      WHEN wt.original_name ILIKE $2 || '%' THEN 6
-      WHEN levenshtein(wt.name, $2) <= 1 THEN 7
+      WHEN f_unaccent(wt.name) ILIKE $3 THEN 0
+      WHEN f_unaccent(wt.name) ILIKE $3 || '%' THEN 1
+      WHEN f_unaccent(wt.name) ILIKE '%' || $3 || '%' THEN 2
+      WHEN f_unaccent(wt.romaji_name) ILIKE $3 THEN 3
+      WHEN f_unaccent(wt.romaji_name) ILIKE $3 || '%' THEN 4
+      WHEN f_unaccent(wt.original_name) ILIKE $3 THEN 5
+      WHEN f_unaccent(wt.original_name) ILIKE $3 || '%' THEN 6
+      WHEN levenshtein(f_unaccent(wt.name), $3) <= 1 THEN 7
       ELSE 8 END, wt.name, wt.romaji_name, wt.original_name
     LIMIT 100
   ) wt2
   ORDER BY
     CASE
-    WHEN wt2.name ILIKE $2 THEN 0
-    WHEN wt2.original_name ILIKE $2 THEN 1
-    WHEN $2 ILIKE ANY (
-      SELECT UNNEST(string_to_array(wt2.name, ' ')) AS name
+    WHEN f_unaccent(wt2.name) ILIKE $3 THEN 0
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 THEN 1
+    WHEN $3 ILIKE ANY (
+      SELECT UNNEST(string_to_array(f_unaccent(wt2.name), ' ')) AS name
     ) THEN 2
-    WHEN wt2.name ILIKE $2 || '%' THEN 3
-    WHEN wt2.name ILIKE '%' || $2 || '%' THEN 4
-    WHEN wt2.original_name ILIKE $2 THEN 5
-    WHEN wt2.original_name ILIKE $2 || '%' THEN 6
-    WHEN levenshtein(wt2.name, $2) <= 1 THEN 7
+    WHEN f_unaccent(wt2.name) ILIKE $3 || '%' THEN 3
+    WHEN f_unaccent(wt2.name) ILIKE '%' || $3 || '%' THEN 4
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 THEN 5
+    WHEN f_unaccent(wt2.original_name) ILIKE $3 || '%' THEN 6
+    WHEN levenshtein(f_unaccent(wt2.name), $3) <= 1 THEN 7
     ELSE 8 END, wt2.name, wt2.original_name
   LIMIT 20;
 `, [guildID, waifuName]);
@@ -837,10 +836,9 @@ const findClaimWaifuByNameAndIDJoinURL = async (userID, guildID, waifuName) => p
     WHERE user_id = $1 AND guild_id = $2
   ) cgcwt
   JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-  WHERE wt.name ILIKE '%' || $3 || '%'
+  WHERE f_unaccent(wt.name) ILIKE '%' || $3 || '%'
   LIMIT 20;
 `, [userID, guildID, waifuName]);
-
 
 const claimClientWaifuID = async (userID, guildID, waifuID, date) => poolQuery(`
   INSERT INTO cg_claim_waifu_table (guild_user_id, guild_id, user_id, waifu_id, date)
@@ -914,7 +912,6 @@ const removeClaimWaifusLeavers = async (guildID, userIDArray) => {
   if (q && q.rowCount > 0 && q.rows[0] && q.rows[0].count) return parseInt(q.rows[0].count, 10);
   return 0;
 };
-
 
 /**
  * gets the top 20 claimed waifus overall from our stuff.
