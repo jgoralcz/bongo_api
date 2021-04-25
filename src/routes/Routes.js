@@ -22,6 +22,7 @@ const blacklists = require('./blacklists');
 const whitelists = require('./whitelists');
 const refresh = require('./refresh');
 const bots = require('./bots');
+const music = require('./music');
 
 router.use('/series', series);
 router.use('/characters', characters);
@@ -45,5 +46,6 @@ router.use('/blacklists', blacklists);
 router.use('/whitelists', whitelists);
 router.use('/refresh', refresh);
 router.use('/bots', bots);
+router.use('/music', music);
 
 module.exports = router;

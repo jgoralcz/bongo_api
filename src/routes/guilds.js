@@ -107,7 +107,6 @@ route.delete('/queue', async (_, res) => {
   return res.status(204).send();
 });
 
-
 route.delete('/:id/characters/:characterID/claims', async (req, res) => {
   const { id, characterID } = req.params;
 

@@ -86,7 +86,15 @@ route.patch('/clean-images', async (req, res) => {
   } = wRow[0];
 
   return res.status(201).send({
-    buffer: mimsBuffer, imageURLClean, imageURLPathExtra, name, series, url, imageID: id, id: waifuID, nsfw: wNSFW,
+    buffer: mimsBuffer,
+    imageURLClean,
+    imageURLPathExtra,
+    name,
+    series,
+    url,
+    imageID: id,
+    id: waifuID,
+    nsfw: wNSFW,
   });
 });
 
