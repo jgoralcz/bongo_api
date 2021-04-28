@@ -871,7 +871,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
       JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $4
     ) ct
-  ) AS image_url
+  ) AS image_url, image_url AS "imageURLOriginal", image_url_clean AS "imageURLCropped"
   FROM (
     SELECT ws.name, (
       SELECT
