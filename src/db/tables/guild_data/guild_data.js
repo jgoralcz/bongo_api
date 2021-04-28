@@ -1057,6 +1057,20 @@ const updateAllowOtherUsersToClaimAfterSeconds = async (guildID, seconds) => poo
   RETURNING claim_other_rolls_seconds AS "updatedBool";
 `, [guildID, seconds]);
 
+const updateGuildWebhookURL = async (guildID, webhookURL) => poolQuery(`
+  UPDATE "guildsTable"
+  SET webhook_url = $2
+  WHERE "guildId" = $1
+  RETURNING *;
+`, [guildID, webhookURL]);
+
+const updateGuildWebhookName = async (guildID, webhookName) => poolQuery(`
+  UPDATE "guildsTable"
+  SET webhook_name = $2
+  WHERE "guildId" = $1
+  RETURNING *;
+`, [guildID, webhookName]);
+
 module.exports = {
   getGuild,
   setupGuild,
@@ -1137,4 +1151,6 @@ module.exports = {
   updateGuildAnimeRolls,
   updateGuildUserClaimSeconds,
   updateAllowOtherUsersToClaimAfterSeconds,
+  updateGuildWebhookURL,
+  updateGuildWebhookName,
 };

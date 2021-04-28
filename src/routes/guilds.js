@@ -28,6 +28,8 @@ const {
   updateGuildAnimeRolls,
   updateGuildUserClaimSeconds,
   updateAllowOtherUsersToClaimAfterSeconds,
+  updateGuildWebhookURL,
+  updateGuildWebhookName,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -378,6 +380,24 @@ route.get('/:id', async (req, res) => {
   if (!guilds || guilds.length <= 0 || !guilds[0]) return res.status(404).send({ error: `Guild not found with id ${id}.` });
 
   return res.status(200).send(guilds[0]);
+});
+
+route.patch('/:id/webhook/name', async (req, res) => {
+  const { id: guildID, name } = req.body;
+  if (!guildID) return res.status(400).send({ error: `expected guildID in body ${guildID}`, body: req.body });
+
+  await updateGuildWebhookName(guildID, name);
+
+  return res.status(204).send();
+});
+
+route.patch('/:id/webhook/url', async (req, res) => {
+  const { id: guildID, url } = req.body;
+  if (!guildID) return res.status(400).send({ error: `expected guildID in body ${guildID}`, body: req.body });
+
+  await updateGuildWebhookURL(guildID, url);
+
+  return res.status(204).send();
 });
 
 module.exports = route;

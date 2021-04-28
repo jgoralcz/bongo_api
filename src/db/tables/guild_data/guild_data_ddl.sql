@@ -31,7 +31,9 @@ CREATE TABLE IF NOT EXISTS "guildsTable" (
   vote_skippers varchar(32)[],
   queue_last_updated TIMESTAMP,
   rarity INTEGER DEFAULT 100,
-  wishlist_multiplier SMALLINT DEFAULT 1
+  wishlist_multiplier SMALLINT DEFAULT 1,
+  webhook_url TEXT,
+  webhook_name varchar(32),
 );
 
 create index idx_server_queue_date_added on "guildsTable"(queue_last_updated);
