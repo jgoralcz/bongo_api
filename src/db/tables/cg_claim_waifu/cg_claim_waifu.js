@@ -67,11 +67,10 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
   (
     SELECT
       CASE
-      -- WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
-      --  image_url
-      -- WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
-      WHEN image_url_clean_discord IS NOT NULL THEN
-          image_url_clean_discord
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
+        image_url_clean_discord
       ELSE
         image_url_clean
       END
@@ -210,10 +209,9 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
   (
     SELECT
       CASE
-      -- WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
-      --  image_url
-      -- WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
-      WHEN image_url_clean_discord IS NOT NULL THEN
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
         image_url_clean_discord
       ELSE
         image_url_clean
@@ -324,10 +322,9 @@ const getRandomWaifuOwnerWishlistClaimed = async (userID, guildID, nsfw, rollWes
   (
     SELECT
       CASE
-      -- WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
-      --  image_url
-      -- WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
-      WHEN image_url_clean_discord IS NOT NULL THEN
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
         image_url_clean_discord
       ELSE
         image_url_clean
@@ -436,10 +433,9 @@ const getRandomWaifuOwnerClaimed = async (userID, guildID, nsfw, rollWestern, ro
   (
     SELECT
       CASE
-      -- WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
-      --  image_url
-      -- WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
-      WHEN image_url_clean_discord IS NOT NULL THEN
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $6 AND image_url_clean_discord IS NOT NULL THEN
         image_url_clean_discord
       ELSE
         image_url_clean
