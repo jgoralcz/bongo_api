@@ -884,39 +884,30 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
     FROM waifu_schema.waifu_table ws
     LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
     LEFT JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
-    WHERE ws.name ILIKE '%' || $1 || '%' OR levenshtein(ws.name, $1) <= 1
-      OR ws.name ILIKE ANY (
+    WHERE f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%' OR levenshtein(f_unaccent(ws.name), f_unaccent($1)) <= 1
+      OR f_unaccent(ws.name) ILIKE ANY (
         SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
       )
-      OR (ws.original_name ILIKE '%' || $1 || '%' AND ws.original_name IS NOT NULL)
-      OR (ws.romaji_name ILIKE '%' || $1 || '%' AND ws.romaji_name IS NOT NULL)
     ORDER BY
       CASE
-      WHEN ws.name ILIKE $1 THEN 0
-      WHEN ws.name ILIKE $1 || '%' THEN 1
-      WHEN ws.name ILIKE '%' || $1 || '%' THEN 2
-      WHEN ws.romaji_name ILIKE $1 THEN 3
-      WHEN ws.romaji_name ILIKE $1 || '%' THEN 4
-      WHEN ws.original_name ILIKE $1 THEN 5
-      WHEN ws.original_name ILIKE $1 || '%' THEN 6
-      WHEN levenshtein(ws.name, $1) <= 1 THEN 7
-      ELSE 8 END, ws.name, ws.romaji_name, ws.original_name
+      WHEN f_unaccent(ws.name) ILIKE f_unaccent($1) THEN 0
+      WHEN f_unaccent(ws.name) ILIKE f_unaccent($1) || '%' THEN 1
+      WHEN f_unaccent(ws.name) ILIKE '%' || f_unaccent($1)  || '%' THEN 2
+      WHEN levenshtein(f_unaccent(ws.name) , f_unaccent($1) ) <= 1 THEN 3
+      ELSE 4 END, ws.name
     LIMIT $3
   ) wt
   LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id
   ORDER BY
     CASE
-    WHEN name ILIKE $1 THEN 0
-    WHEN name ILIKE $1 || '%' THEN 1
-    WHEN name ILIKE '%' || $1 || '%' THEN 2
-    WHEN original_name ILIKE $1 THEN 3
-    WHEN name ILIKE ANY (
-      SELECT UNNEST(string_to_array('%' || $1 || '%', ' ')) AS name
-    ) THEN 4
-    WHEN original_name ILIKE $1 THEN 5
-    WHEN original_name ILIKE $1 || '%' THEN 6
-    WHEN levenshtein(name, $1) <= 1 THEN 7
-    ELSE 8 END, name, original_name
+    WHEN f_unaccent(name) ILIKE $1 THEN 0
+    WHEN f_unaccent(name) ILIKE $1 || '%' THEN 1
+    WHEN f_unaccent(name) ILIKE '%' || $1  || '%' THEN 2
+    WHEN f_unaccent(name) ILIKE ANY (
+      SELECT UNNEST(string_to_array('%' || f_unaccent($1) || '%', ' ')) AS name
+    ) THEN 3
+    WHEN levenshtein(f_unaccent(name), f_unaccent($1)) <= 1 THEN 4
+    ELSE 5 END, name
   LIMIT $3;
 `, [waifuName, guildID, limit, userID, useDiscordImage]);
 
@@ -958,8 +949,8 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
     FROM (
       SELECT id, name, nsfw
       FROM waifu_schema.series_table
-      WHERE name ILIKE '%' || $1 || '%'
-        OR alternate_name ILIKE '%' || $1 || '%'
+      WHERE f_unaccent(name) ILIKE '%' || $1 || '%'
+        OR f_unaccent(alternate_name) ILIKE '%' || $1 || '%'
     ) wsst
     JOIN waifu_schema.waifu_table wswt ON wsst.id = wswt.series_id
   ) ws
