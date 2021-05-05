@@ -3,6 +3,7 @@ const router = require('express-promise-router')();
 const images = require('./characters/images/images');
 const characters = require('./characters/characters');
 const series = require('./characters/series');
+const nicknames = require('./characters/nicknames');
 const validate = require('./validate');
 const patrons = require('./patrons');
 const users = require('./users');
@@ -25,6 +26,7 @@ const bots = require('./bots');
 const music = require('./music');
 
 router.use('/series', series);
+router.use('/characters/nicknames', nicknames);
 router.use('/characters', characters);
 router.use('/images', images);
 router.use('/validate', validate);

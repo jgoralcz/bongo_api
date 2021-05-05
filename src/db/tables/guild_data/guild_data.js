@@ -791,7 +791,8 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
 `, [guildID, waifuRankBool]);
 
 const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false) => poolQuery(`
-  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, last_edit_by, last_edit_date,
+  SELECT name, nsfw, series, husbando, unknown_gender, user_id,
+    url, description, last_edit_by, last_edit_date,
     wt.id, original_name, origin, count, position, (
       SELECT
       CASE
@@ -802,7 +803,14 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
             FROM (
               SELECT image_id
               FROM claim_waifu_user_images
-              WHERE user_id = wt.user_id AND waifu_id = wt.id
+              WHERE waifu_id = wt.id
+                AND user_id IN (
+                  SELECT user_id
+                  FROM cg_claim_waifu_table
+                  WHERE waifu_id = wt.id
+                  ORDER BY date
+                  LIMIT 1
+              )
             ) cwui
             JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
           ),
@@ -823,7 +831,14 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
             FROM (
               SELECT image_id
               FROM claim_waifu_user_images
-              WHERE user_id = wt.user_id AND waifu_id = wt.id
+              WHERE waifu_id = wt.id
+                AND user_id IN (
+                  SELECT user_id
+                  FROM cg_claim_waifu_table
+                  WHERE waifu_id = wt.id
+                  ORDER BY date
+                  LIMIT 1
+              )
             ) cwui
             JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
           ),
@@ -878,8 +893,9 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         CASE ws.nsfw WHEN TRUE then TRUE
           ELSE wsst.nsfw
         END
-    ) AS nsfw, ws.series, ws.husbando, ws.unknown_gender,
-      cg.user_id, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
+    ) AS nsfw, wsst.name AS series, ws.husbando, ws.unknown_gender,
+      COALESCE(json_object_agg(cg.date, cg.user_id ORDER BY cg.date) FILTER (WHERE user_id IS NOT NULL), '[]') AS user_id,
+      ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
       ws.id, ws.original_name, ws.origin, ws.last_edit_by, ws.last_edit_date
     FROM waifu_schema.waifu_table ws
     LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
@@ -888,6 +904,8 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
       OR f_unaccent(ws.name) ILIKE ANY (
         SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
       )
+    GROUP BY ws.name, ws.nsfw, wsst.nsfw, wsst.name, ws.husbando, ws.unknown_gender, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
+      ws.id, ws.original_name, ws.origin, ws.last_edit_by, ws.last_edit_date
     ORDER BY
       CASE
       WHEN f_unaccent(ws.name) ILIKE f_unaccent($1) THEN 0
@@ -912,8 +930,80 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
 `, [waifuName, guildID, limit, userID, useDiscordImage]);
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
-  SELECT name, nsfw, series, user_id, url, description, ws.id, original_name, origin, husbando, 
-    unknown_gender, count, position, last_edit_by, last_edit_date,
+  SELECT name, nsfw, series, husbando, unknown_gender, user_id,
+    url, description, last_edit_by, last_edit_date,
+    wt.id, original_name, origin, count, position,
+     (
+      SELECT
+      CASE
+      WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
+        COALESCE (
+          (
+            SELECT json_build_object('url', image_url_clean_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE waifu_id = wt.id
+                AND user_id IN (
+                  SELECT user_id
+                  FROM cg_claim_waifu_table
+                  WHERE waifu_id = wt.id
+                  ORDER BY date
+                  LIMIT 1
+              )
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          ),
+          (
+            SELECT json_build_object('url', image_url_clean_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = $3 AND waifu_id = wt.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          )
+        )
+      ELSE
+        COALESCE (
+          (
+            SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE waifu_id = wt.id
+                AND user_id IN (
+                  SELECT user_id
+                  FROM cg_claim_waifu_table
+                  WHERE waifu_id = wt.id
+                  ORDER BY date
+                  LIMIT 1
+              )
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          ),
+          (
+            SELECT json_build_object('url', image_url_path_extra, 'nsfw', nsfw) AS user_image
+            FROM (
+              SELECT image_id
+              FROM claim_waifu_user_images
+              WHERE user_id = $3 AND waifu_id = wt.id
+            ) cwui
+            JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+          )
+        )
+      END
+    FROM (
+      SELECT cropped_images, image_url_clean_path_extra, image_url_path_extra, nsfw
+      FROM (
+        SELECT image_id, user_id
+        FROM claim_waifu_user_images
+        WHERE user_id = $3 AND waifu_id = wt.id
+      ) cwui
+      JOIN waifu_schema.waifu_table_images wti ON wti.image_id = cwui.image_id
+      JOIN "clientsTable" c ON c."userId" = cwui.user_id
+    ) ct
+  ) AS user_image,
   (
     SELECT
       CASE
@@ -925,7 +1015,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
         image_url_clean
       END
     FROM (
-      SELECT 
+      SELECT
         CASE
         WHEN ctt.cropped_images = TRUE OR gt.cropped_images_server THEN
           TRUE
@@ -936,28 +1026,31 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
       JOIN "guildsTable" gt ON gt."guildId" = $2
       WHERE "userId" = $3
     ) ct
-  ) AS image_url
+  ) AS image_url, image_url AS "imageURLOriginal", image_url_clean AS "imageURLCropped"
   FROM (
-    SELECT wswt.name, (
+    SELECT ws.name, (
       SELECT
-        CASE wswt.nsfw WHEN TRUE then TRUE
+        CASE ws.nsfw WHEN TRUE then TRUE
           ELSE wsst.nsfw
         END
-    ) AS nsfw, wsst.name AS series, wswt.image_url, wswt.image_url_clean,
-      wswt.image_url_clean_discord, wswt.url, wswt.description, wswt.id, wswt.original_name,
-      wswt.origin, wswt.husbando, wswt.unknown_gender, wswt.last_edit_by, wswt.last_edit_date
+    ) AS nsfw, wsst.name AS series, ws.husbando, ws.unknown_gender,
+      COALESCE(json_object_agg(cg.date, cg.user_id ORDER BY cg.date) FILTER (WHERE user_id IS NOT NULL), '[]') AS user_id,
+      ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
+      ws.id, ws.original_name, ws.origin, ws.last_edit_by, ws.last_edit_date
     FROM (
       SELECT id, name, nsfw
       FROM waifu_schema.series_table
       WHERE f_unaccent(name) ILIKE '%' || $1 || '%'
         OR f_unaccent(alternate_name) ILIKE '%' || $1 || '%'
     ) wsst
-    JOIN waifu_schema.waifu_table wswt ON wsst.id = wswt.series_id
-  ) ws
-  LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-  LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
-  ORDER BY series ASC, name ASC
-  LIMIT 1500;
+    JOIN waifu_schema.waifu_table ws ON wsst.id = ws.series_id
+    LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
+    GROUP BY ws.name, ws.nsfw, wsst.nsfw, wsst.name, ws.husbando, ws.unknown_gender, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
+      ws.id, ws.original_name, ws.origin, ws.last_edit_by, ws.last_edit_date
+    ORDER BY series ASC, name ASC
+    LIMIT 1500
+  ) wt
+  LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id;
 `, [waifuSeries, guildID, userID, useDiscordImage]);
 
 const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`

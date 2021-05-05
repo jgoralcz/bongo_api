@@ -39,7 +39,10 @@ const {
 } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
 const { getWaifuImagesAndInfoByID, storeCleanWaifuImage: storeCleanWaifuImageExtra } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
-const { removeDuplicateWaifuClaims } = require('../../db/tables/cg_claim_waifu/cg_claim_waifu');
+const {
+  removeDuplicateWaifuClaims,
+  getTopClaimCharacters,
+} = require('../../db/tables/cg_claim_waifu/cg_claim_waifu');
 
 const {
   updateWaifuImage,
@@ -51,6 +54,24 @@ const {
   getWaifuByNoCleanImageRandom,
   getRandomWaifu,
 } = require('../../db/waifu_schema/waifu/waifu');
+
+route.get('/top-claim', async (req, res) => {
+  const { query } = req;
+
+  const {
+    offset = 0,
+    limit = 0,
+    useDiscordImage = false,
+    user: userID = null,
+    guild: guildID = null,
+  } = query;
+
+  if (isNaN(offset) || isNaN(limit)) return res.status(400).send({ error: 'limit and offset must be numbers.', query });
+
+  const rows = await getTopClaimCharacters(offset, limit, guildID, userID, useDiscordImage);
+
+  return res.status(200).send(rows);
+});
 
 route.post('/', async (req, res) => {
   const { body } = req;

@@ -1,45 +1,40 @@
 const { poolQuery } = require('../../index.js');
 
-/**
- * gets the waifu id's rank.
- * @param waifuID the waifu's ID
- * @returns {Promise<*>}
- */
-const getWaifuRankById = async (waifuID) => poolQuery(`
-  SELECT top.position as rank
+const getTopClaimCharacters = async (offset, limit, guildID, userID, useDiscordImage) => poolQuery(`
+  SELECT name, series, url, waifu_id, user_id, count, position, (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $5 AND image_url_clean_discord IS NOT NULL THEN
+        image_url_clean_discord
+      ELSE
+        image_url_clean
+      END
+    FROM (
+      SELECT cropped_images
+      FROM "clientsTable"
+      WHERE "userId" = $4
+    ) ct
+  ) AS image_url
   FROM (
-    SELECT waifu_id, 
-    row_number() over (
-      ORDER BY count(cgcwt.waifu_id) DESC
-    ) as position
-    FROM cg_claim_waifu_table cgcwt
-    GROUP BY waifu_id                   
-  ) top
-  WHERE top.waifu_id = $1;
-`, [waifuID]);
-
-/**
- * gets the top 500 claimed waifus of a server
- * @param offset the offset
- * @param limit the limit
- * @param guildID the guild's id.
- * @returns {Promise<*>}
- */
-const getTopClaimWaifus = async (offset, limit, guildID) => poolQuery(`
-  SELECT name, series, url, top_waifu, top.waifu_id, image_url, cg.user_id
-  FROM (
-    SELECT waifu_id, count(waifu_id) AS top_waifu
-    FROM cg_claim_waifu_table cgcwt
-    GROUP BY waifu_id
-    ORDER BY top_waifu DESC
-    LIMIT $2 OFFSET $1
-  ) top
-  JOIN waifu_schema.waifu_table wswt ON top.waifu_id = wswt.id
-  LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = top.waifu_id AND cg.guild_id = $3
-  GROUP BY name, series, url, top_waifu, top.waifu_id, image_url, cg.user_id
-  ORDER BY top_waifu DESC
-  LIMIT $2;
-`, [offset, limit, guildID]);
+    SELECT wswt.name, wsst.name AS series, wswt.url, top.waifu_id,
+      COALESCE(json_object_agg(cg.date, cg.user_id ORDER BY cg.date) FILTER (WHERE cg.user_id IS NOT NULL), '[]') AS user_id,
+      wswt.image_url, wswt.image_url_clean, wswt.image_url_clean_discord,
+      top.count, top.position
+    FROM (
+      SELECT waifu_id, count, position
+      FROM mv_rank_claim_waifu
+      LIMIT $2 OFFSET $1
+    ) top
+    JOIN waifu_schema.waifu_table wswt ON top.waifu_id = wswt.id
+    JOIN waifu_schema.series_table wsst ON wsst.id = wswt.series_id
+    LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = top.waifu_id AND cg.guild_id = $3
+    GROUP BY wswt.name, wsst.name, wswt.url, top.waifu_id, wswt.image_url,
+      wswt.image_url_clean, wswt.image_url_clean_discord, top.count, top.position
+    ORDER BY top.position
+  ) t;
+`, [offset, limit, guildID, userID, useDiscordImage]);
 
 const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando) => poolQuery(`
   SELECT name, nsfw, husbando, unknown_gender, user_id AS "ownerID", original_name, origin, series, series_id, url, t1.id, t1.date, is_game, is_western, (
@@ -1055,8 +1050,7 @@ const removeAllGuildClaimCharactersByID = async (guildID, characterID) => poolQu
 `, [guildID, characterID]);
 
 module.exports = {
-  getWaifuRankById,
-  getTopClaimWaifus,
+  getTopClaimCharacters,
   getRandomWaifuOwnerWishlistNotClaimed,
   getRandomWaifuOwnerWishlistClaimed,
   getRandomWaifuOwnerNotClaimed,
