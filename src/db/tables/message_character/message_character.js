@@ -17,8 +17,15 @@ const deleteStaleMessageCharacter = async () => poolQuery(`
   WHERE date < NOW() - INTERVAL '7 days';
 `, []);
 
+const deleteMessageCharacter = async (messageID) => poolQuery(`
+  DELETE
+  FROM message_character
+  WHERE message_id = $1
+`, [messageID]);
+
 module.exports = {
   insertMessageIDCharacter,
   getMessageIDCharacter,
   deleteStaleMessageCharacter,
+  deleteMessageCharacter,
 };

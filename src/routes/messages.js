@@ -1,6 +1,11 @@
 const route = require('express-promise-router')();
 
-const { getMessageIDCharacter, insertMessageIDCharacter, deleteStaleMessageCharacter } = require('../db/tables/message_character/message_character');
+const {
+  getMessageIDCharacter,
+  insertMessageIDCharacter,
+  deleteStaleMessageCharacter,
+  deleteMessageCharacter,
+} = require('../db/tables/message_character/message_character');
 const { invalidBoolSetting } = require('../util/functions/validators');
 
 const { getMessageIDPendingImage, insertPendingImage, deleteMessageIDPendingImage } = require('../db/tables/pending_images/pending_images');
@@ -30,6 +35,13 @@ route.delete('/characters/one-day', async (_, res) => {
   await deleteStaleMessageCharacter();
 
   return res.status(204).send();
+});
+
+route.delete('/:messageID/characters', async (req, res) => {
+  const { messageID } = req.params;
+  await deleteMessageCharacter(messageID);
+
+  res.status(204).send();
 });
 
 route.get('/:messageID/characters', async (req, res) => {
