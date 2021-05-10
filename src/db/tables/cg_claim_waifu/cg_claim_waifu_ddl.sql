@@ -26,7 +26,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_random_waifu_series AS
         CASE ws.nsfw WHEN TRUE then TRUE
           ELSE wsst.nsfw
         END
-    ) AS nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, ws.series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
+    ) AS nsfw, ws.husbando, ws.unknown_gender, ws.id, ws.original_name, ws.origin, wsst.name AS series, ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.series_id, wsst.is_game, wsst.is_western
   FROM waifu_schema.waifu_table ws
   JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
   ORDER BY random()

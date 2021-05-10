@@ -3,7 +3,7 @@ const logger = require('log4js').getLogger();
 
 const { deleteCDNImage } = require('../../../util/functions/bufferToURL');
 const {
-  deleteImage,
+  deleteImageByID,
   deleteCleanImage,
   selectImage,
   selectImageByURL,
@@ -194,10 +194,11 @@ route.delete('/url', async (req, res) => {
     image_url: imageURLMain,
     uploader,
   } = image[0];
+
   if ((!uploader || !requester || uploader !== requester) && !override) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
 
   const successCrop = await deleteCDNImage(imageID, imageURLClean || imageURLCleanMain, deleteCleanImage).catch((error) => logger.error(error));
-  const successFull = await deleteCDNImage(imageID, imageURL || imageURLMain, deleteImage);
+  const successFull = await deleteCDNImage(imageID, imageURL || imageURLMain, deleteImageByID);
 
   if (!successCrop && !successFull) return res.status(404).send({ error: 'Image not found.' });
 
@@ -219,7 +220,7 @@ route.delete('/:id', async (req, res) => {
   if ((uploader && uploader !== requester && !override)) return res.status(401).send({ error: 'Not authorized.', message: 'You are not the owner of this image.' });
 
   await deleteCDNImage(imageID, imageURLClean);
-  await deleteCDNImage(imageID, imageURL, deleteImage);
+  await deleteCDNImage(imageID, imageURL, deleteImageByID);
 
   return res.status(204).send();
 });

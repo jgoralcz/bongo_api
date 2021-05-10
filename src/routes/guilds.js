@@ -325,16 +325,6 @@ route.get('/:id/characters/custom/remaining', async (req, res) => {
   return res.status(200).send(query[0]);
 });
 
-route.get('/:guildID/characters/claims', async (req, res) => {
-  const { guildID } = req.params;
-  const { name } = req.query;
-
-  if (!name) return res.status(400).send({ error: 'Expected name for character claims.' });
-  const query = await findClaimWaifuByNameJoinURL(guildID, name);
-
-  return res.status(200).send(query || []);
-});
-
 route.get('/:id/characters/custom/count', async (req, res) => {
   const { id } = req.params;
 
@@ -347,10 +337,22 @@ route.get('/:id/characters/custom/count', async (req, res) => {
 route.get('/:id/requester/:requesterID/characters', async (req, res) => {
   const { id, requesterID } = req.params;
 
-  const { name, limit, useDiscordImage } = req.query;
-  if (!name || (limit != null && isNaN(limit)) || (useDiscordImage != null && useDiscordImage !== 'true' && useDiscordImage !== 'false')) return res.status(400).send({ error: 'Incorrect query string.', query: req.query });
+  const {
+    name,
+    limit,
+    useDiscordImage,
+    claimsOnly,
+    favoritesOnly,
+  } = req.query;
+  if (
+    !name
+    || (limit != null && isNaN(limit))
+    || (useDiscordImage != null && useDiscordImage !== 'true' && useDiscordImage !== 'false')
+    || (claimsOnly != null && claimsOnly !== 'true' && claimsOnly !== 'false')
+    || (favoritesOnly != null && favoritesOnly !== 'true' && favoritesOnly !== 'false')
+  ) return res.status(400).send({ error: 'Incorrect query string.', query: req.query });
 
-  const query = await getAllWaifusByName(name, id, limit, requesterID, useDiscordImage);
+  const query = await getAllWaifusByName(name, id, limit, requesterID, useDiscordImage, claimsOnly, favoritesOnly);
   return res.status(200).send(query);
 });
 

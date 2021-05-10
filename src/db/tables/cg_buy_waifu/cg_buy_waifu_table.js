@@ -1,27 +1,39 @@
 const { poolQuery } = require('../../index.js');
 
-/**
- * gets the top 500 bought waifus of a server
- * @param offset the offset
- * @param limit the user's limit
- * @param guildID the guild's id
- * @returns {Promise<*>}
- */
-const getTopBoughtWaifus = async (offset, limit, guildID) => poolQuery(`
-  SELECT name, series, url, top_waifu, top.waifu_id, image_url, cg.user_id
+const getTopBoughtCharacters = async (offset, limit, guildID, userID, useDiscordImage) => poolQuery(`
+  SELECT name, series, url, top_waifu, waifu_id, user_id, count, position, (
+    SELECT
+      CASE
+      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
+        image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $5 AND image_url_clean_discord IS NOT NULL THEN
+        image_url_clean_discord
+      ELSE
+        image_url_clean
+      END
+    FROM (
+      SELECT cropped_images
+      FROM "clientsTable"
+      WHERE "userId" = $4
+    ) ct
+  ) AS image_url
   FROM (
-    SELECT waifu_id, count(waifu_id) AS top_waifu
-    FROM cg_buy_waifu_table cgcwt
-    GROUP BY waifu_id
+    SELECT wswt.name, wsst.name AS series, wswt.url, top_waifu, top.waifu_id, cg.user_id, count, position, wswt.image_url, wswt.image_url_clean, wswt.image_url_clean_discord
+    FROM (
+      SELECT waifu_id, count(waifu_id) AS top_waifu
+      FROM cg_buy_waifu_table cgcwt
+      GROUP BY waifu_id
+      ORDER BY top_waifu DESC
+      LIMIT $2 OFFSET $1
+    ) top
+    JOIN waifu_schema.waifu_table wswt ON top.waifu_id = wswt.id
+    JOIN waifu_schema.series_table wsst ON wsst.id = wswt.series_id
+    LEFT JOIN mv_rank_buy_waifu mv ON mv.waifu_id = top.waifu_id
+    LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = top.waifu_id AND cg.guild_id = $3
     ORDER BY top_waifu DESC
-    LIMIT $2 OFFSET $1
-  ) top
-  JOIN waifu_schema.waifu_table wswt ON top.waifu_id = wswt.id
-  LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = top.waifu_id AND cg.guild_id = $3
-  GROUP BY name, series, url, top_waifu, top.waifu_id, image_url, cg.user_id
-  ORDER BY top_waifu DESC
+  ) t
   LIMIT $2;
-`, [offset, limit, guildID]);
+`, [offset, limit, guildID, userID, useDiscordImage]);
 
 /**
  * gets the user's bought waifulist based on a range for better performance.
@@ -48,22 +60,6 @@ const getBuyWaifuList = async (id, offset, limit) => poolQuery(`
 
   WHERE t1.user_id = $1
   ORDER BY favorite DESC, series ASC, waifu_name ASC
-  LIMIT $3 OFFSET $2;
-`, [id, offset, limit]);
-
-/**
- *
- * @param id the user's id.
- * @param offset the page offset.
- * @param limit the page limit.
- * @returns {Promise<Promise<*>|*>}
- */
-const getBuyWaifuListAll = async (id, offset, limit) => poolQuery(`
-  SELECT waifu_name AS name, favorite, waifu_id, url
-  FROM cg_buy_waifu_table
-  LEFT JOIN waifu_schema.waifu_table w ON waifu_id = w.id
-  WHERE user_id = $1
-  ORDER BY favorite DESC, waifu_name ASC
   LIMIT $3 OFFSET $2;
 `, [id, offset, limit]);
 
@@ -250,9 +246,8 @@ const getBuyWaifuListSum = async (userID) => poolQuery(`
 `, [userID]);
 
 module.exports = {
-  getTopBoughtWaifus,
+  getTopBoughtCharacters,
   getBuyWaifuList,
-  getBuyWaifuListAll,
   findBuyWaifuByIdJoinURL,
   findBuyWaifuByIdJoinURLFavorites,
   buyUniqueWaifu,

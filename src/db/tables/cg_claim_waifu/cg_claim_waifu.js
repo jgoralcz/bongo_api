@@ -774,67 +774,6 @@ const checkWaifuOwner = async (userID, guildID, waifuID) => poolQuery(`
   WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
 `, [userID, guildID, waifuID]);
 
-const findClaimWaifuByNameJoinURL = async (guildID, waifuName) => poolQuery(`
-  SELECT *
-  FROM (
-    SELECT waifu_id, wt.name, wt.url, wt.series, wt.image_url, wt.original_name, wt.romaji_name, cgcwt.user_id
-    FROM (
-      SELECT waifu_id, user_id
-      FROM cg_claim_waifu_table
-      WHERE guild_id = $1
-    ) cgcwt
-    JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-    WHERE f_unaccent(wt.name) ILIKE '%' || $2 || '%' OR levenshtein(f_unaccent(wt.name), $2) <= 1
-      OR (f_unaccent(wt.original_name) ILIKE '%' || $2 || '%' AND f_unaccent(wt.original_name) IS NOT NULL)
-      OR (f_unaccent(wt.romaji_name) ILIKE '%' || $2 || '%' AND f_unaccent(wt.romaji_name) IS NOT NULL)
-    ORDER BY
-      CASE
-      WHEN f_unaccent(wt.name) ILIKE $2 THEN 0
-      WHEN f_unaccent(wt.name) ILIKE $2 || '%' THEN 1
-      WHEN f_unaccent(wt.name) ILIKE '%' || $2 || '%' THEN 2
-      WHEN f_unaccent(wt.romaji_name) ILIKE $2 THEN 3
-      WHEN f_unaccent(wt.romaji_name) ILIKE $2 || '%' THEN 4
-      WHEN f_unaccent(wt.original_name) ILIKE $2 THEN 5
-      WHEN f_unaccent(wt.original_name) ILIKE $2 || '%' THEN 6
-      WHEN levenshtein(f_unaccent(wt.name), $2) <= 1 THEN 7
-      ELSE 8 END, wt.name, wt.romaji_name, wt.original_name
-    LIMIT 100
-  ) wt2
-  ORDER BY
-    CASE
-    WHEN f_unaccent(wt2.name) ILIKE $2 THEN 0
-    WHEN f_unaccent(wt2.original_name) ILIKE $2 THEN 1
-    WHEN $2 ILIKE ANY (
-      SELECT UNNEST(string_to_array(f_unaccent(wt2.name), ' ')) AS name
-    ) THEN 2
-    WHEN f_unaccent(wt2.name) ILIKE $2 || '%' THEN 3
-    WHEN f_unaccent(wt2.name) ILIKE '%' || $2 || '%' THEN 4
-    WHEN f_unaccent(wt2.original_name) ILIKE $2 THEN 5
-    WHEN f_unaccent(wt2.original_name) ILIKE $2 || '%' THEN 6
-    WHEN levenshtein(f_unaccent(wt2.name), $2) <= 1 THEN 7
-    ELSE 8 END, wt2.name, wt2.original_name
-  LIMIT 20;
-`, [guildID, waifuName]);
-
-/**
- * finds the bought waifu by name and user's ID.
- * @param userID the user's id.
- * @param guildID the guild's id.
- * @param waifuName the waifu's ID.
- * @returns {Promise<*>}
- */
-const findClaimWaifuByNameAndIDJoinURL = async (userID, guildID, waifuName) => poolQuery(`
-  SELECT waifu_id, wt.name, wt.url, wt.series, wt.image_url, cgcwt.user_id
-  FROM (
-    SELECT waifu_id, user_id
-    FROM cg_claim_waifu_table
-    WHERE user_id = $1 AND guild_id = $2
-  ) cgcwt
-  JOIN waifu_schema.waifu_table wt ON cgcwt.waifu_id = wt.id
-  WHERE f_unaccent(wt.name) ILIKE '%' || $3 || '%'
-  LIMIT 20;
-`, [userID, guildID, waifuName]);
-
 const claimClientWaifuID = async (userID, guildID, waifuID, date) => poolQuery(`
   INSERT INTO cg_claim_waifu_table (guild_user_id, guild_id, user_id, waifu_id, date)
   VALUES ($1, $2, $3, $4, $5)
@@ -1060,7 +999,6 @@ module.exports = {
   findClaimWaifuByIdJoinURL,
   findClaimWaifuByIdJoinURLFavorites,
   checkWaifuOwner,
-  findClaimWaifuByNameJoinURL,
   claimClientWaifuID,
   removeClaimWaifu,
   addFavoriteClaimWaifuID,
@@ -1071,7 +1009,6 @@ module.exports = {
   getTopServerClaimWaifu,
   getRemainingClaimWaifusServer,
   getClaimWaifuListSum,
-  findClaimWaifuByNameAndIDJoinURL,
   getUniqueGuildMembersClaim,
   removeClaimWaifusLeavers,
   removeClaimWaifusRandomHalf,

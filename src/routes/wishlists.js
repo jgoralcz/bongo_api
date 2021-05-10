@@ -24,7 +24,6 @@ const {
   updateWishListVisibility,
 } = require('../db/tables/clients_guilds/clients_guilds_table');
 
-
 route.get('/users/:userID/guilds/:guildID/characters', async (req, res) => {
   const { userID, guildID } = req.params;
 

@@ -7,7 +7,6 @@ const {
   insertWaifu,
   searchCharacterExactly,
   upsertWaifu,
-  searchWaifuByName,
   updateWaifu,
   updateWaifuCleanImage,
   getWaifuCount,
@@ -38,11 +37,19 @@ const {
   getCharacterImagesByID,
 } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
 
-const { getWaifuImagesAndInfoByID, storeCleanWaifuImage: storeCleanWaifuImageExtra } = require('../../db/waifu_schema/waifu_images/waifu_table_images');
+const {
+  getWaifuImagesAndInfoByID,
+  storeCleanWaifuImage: storeCleanWaifuImageExtra,
+} = require('../../db/waifu_schema/waifu_images/waifu_table_images');
+
 const {
   removeDuplicateWaifuClaims,
   getTopClaimCharacters,
 } = require('../../db/tables/cg_claim_waifu/cg_claim_waifu');
+
+const {
+  getTopBoughtCharacters,
+} = require('../../db/tables/cg_buy_waifu/cg_buy_waifu_table');
 
 const {
   updateWaifuImage,
@@ -69,6 +76,24 @@ route.get('/top-claim', async (req, res) => {
   if (isNaN(offset) || isNaN(limit)) return res.status(400).send({ error: 'limit and offset must be numbers.', query });
 
   const rows = await getTopClaimCharacters(offset, limit, guildID, userID, useDiscordImage);
+
+  return res.status(200).send(rows);
+});
+
+route.get('/top-bought', async (req, res) => {
+  const { query } = req;
+
+  const {
+    offset = 0,
+    limit = 0,
+    useDiscordImage = false,
+    user: userID = null,
+    guild: guildID = null,
+  } = query;
+
+  if (isNaN(offset) || isNaN(limit)) return res.status(400).send({ error: 'limit and offset must be numbers.', query });
+
+  const rows = await getTopBoughtCharacters(offset, limit, guildID, userID, useDiscordImage);
 
   return res.status(200).send(rows);
 });
@@ -390,14 +415,6 @@ route.get('/:id', async (req, res) => {
   if (!query || !query[0]) return res.status(404).send({ error: `${id} is not a valid id.` });
 
   return res.status(200).send(query[0]);
-});
-
-route.get('/', async (req, res) => {
-  const { name, limit = 30 } = req.query;
-  if (!name) return res.status(400).send({ error: 'Need query parameter name.' });
-
-  const waifuRows = await searchWaifuByName(name, limit);
-  return res.status(200).send(waifuRows);
 });
 
 route.patch('/:characterID/image', async (req, res) => {

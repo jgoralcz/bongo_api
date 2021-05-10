@@ -88,63 +88,6 @@ const findWaifuByURL = async (url) => poolQuery(`
   WHERE url = $1;
 `, [url]);
 
-// /**
-//  * gets all waifus that have a similar name
-//  * @param waifuName the waifu's name.
-//  * @returns {Promise<*>}
-//  */
-// const getAllWaifusByNameOrSeries = async (waifuName) => poolQuery(`
-//   SELECT *
-//   FROM (
-//     SELECT *
-//     FROM waifu_schema.waifu_table
-//     WHERE
-//       name ILIKE '%' || $1 || '%' OR levenshtein(name, $1) <= 3
-//       OR series ILIKE '%' || $1 || '%'
-//     ) alias
-//   ORDER BY
-//     CASE
-//     WHEN name ILIKE $1 || '%' THEN 0
-//     ELSE 1 END, name;
-// `, [waifuName]);
-
-const searchWaifuByName = async (waifuName, limit = 100) => poolQuery(`
-  SELECT name, series, husbando, unknown_gender, image_url, url, description, wt.id, original_name, origin
-  FROM (
-    SELECT name, series, husbando, unknown_gender, image_url, url, description, ws.id, original_name, origin
-    FROM waifu_schema.waifu_table ws
-    WHERE f_unaccent(name) ILIKE '%' || $1 || '%' OR levenshtein(f_unaccent(name), $1) <= 1
-      OR (original_name ILIKE '%' || $1 || '%' AND original_name IS NOT NULL)
-      OR (romaji_name ILIKE '%' || $1 || '%' AND romaji_name IS NOT NULL)
-    ORDER BY
-      CASE
-      WHEN f_unaccent(name) ILIKE $1 THEN 0
-      WHEN f_unaccent(name) ILIKE $1 || '%' THEN 1
-      WHEN f_unaccent(name) ILIKE '%' || $1 || '%' THEN 2
-      WHEN romaji_name ILIKE $1 THEN 3
-      WHEN romaji_name ILIKE $1 || '%' THEN 4
-      WHEN original_name ILIKE $1 THEN 5
-      WHEN original_name ILIKE $1 || '%' THEN 6
-      WHEN levenshtein(name, $1) <= 1 THEN 7
-      ELSE 8 END, name, romaji_name, original_name
-    LIMIT $2
-  ) wt
-  ORDER BY
-    CASE
-    WHEN f_unaccent(name) ILIKE $1 THEN 0
-    WHEN f_unaccent(original_name) ILIKE $1 THEN 1
-    WHEN $1 ILIKE ANY (
-      SELECT UNNEST(string_to_array(f_unaccent(wt.name), ' ')) AS name
-    ) THEN 2
-    WHEN f_unaccent(name) ILIKE $1 || '%' THEN 3
-    WHEN f_unaccent(name) ILIKE '%' || $1 || '%' THEN 4
-    WHEN f_unaccent(original_name) ILIKE $1 THEN 5
-    WHEN f_unaccent(original_name) ILIKE $1 || '%' THEN 6
-    WHEN levenshtein(f_unaccent(name), $1) <= 1 THEN 7
-    ELSE 8 END, name, original_name
-  LIMIT $2;
-`, [waifuName, limit]);
-
 /**
  * gets specific waifus by the name and series
  * @param waifu the waifu
@@ -158,15 +101,15 @@ const getSpecificWaifu = async (waifu, series) => poolQuery(`
 `, [waifu, series]);
 
 const getRandomWaifu = async (nsfw, userID, useDiscordImage = false) => poolQuery(`
-  SELECT name, series, id, url, (
+  SELECT wswt.name, wsst.name AS series, wswt.id, wswt.url, (
     SELECT
       CASE
-      WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
-        image_url
-      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $3 AND image_url_clean_discord IS NOT NULL THEN
-        image_url_clean_discord
+      WHEN ct.cropped_images = FALSE OR wswt.image_url_clean IS NULL THEN
+        wswt.image_url
+      WHEN ct.cropped_images = TRUE AND ct.cropped_images = $3 AND wswt.image_url_clean_discord IS NOT NULL THEN
+        wswt.image_url_clean_discord
       ELSE
-        image_url_clean
+        wswt.image_url_clean
       END
     FROM (
       SELECT cropped_images
@@ -174,10 +117,11 @@ const getRandomWaifu = async (nsfw, userID, useDiscordImage = false) => poolQuer
       WHERE "userId" = $2
     ) ct
   ) AS image_url
-  FROM waifu_schema.waifu_table
-  WHERE (((nsfw = $1 AND nsfw = FALSE))
-    OR ((nsfw = $1 AND nsfw = TRUE) OR nsfw = FALSE)
-    OR nsfw IS NULL
+  FROM waifu_schema.waifu_table wswt
+  JOIN waifu_schema.series_table wsst ON wsst.id = wswt.series_id
+  WHERE (((wsst.nsfw = $1 AND wsst.nsfw = FALSE))
+    OR ((wsst.nsfw = $1 AND wsst.nsfw = TRUE) OR wsst.nsfw = FALSE)
+    OR wsst.nsfw IS NULL
   )
   ORDER BY random()
   LIMIT 1;
@@ -329,7 +273,6 @@ module.exports = {
   searchCharacterExactly,
   storeCleanWaifuImage,
   getWaifuByNoCleanImageRandom,
-  searchWaifuByName,
   updateWaifu,
   updateWaifuCleanImage,
   getWaifuByImageURL,

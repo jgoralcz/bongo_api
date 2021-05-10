@@ -1,14 +1,5 @@
 const { poolQuery } = require('../../index');
 
-const getRandomWaifuImageNonReviewed = async () => poolQuery(`
-  SELECT wti.image_id, wti.image_url_path_extra as image_url, name, url
-  FROM waifu_schema.waifu_table_images wti
-  LEFT JOIN waifu_schema.waifu_table ws ON ws.id = wti.waifu_id
-  WHERE reviewer IS NULL
-  ORDER BY random()
-  LIMIT 1;
-`, []);
-
 const markSFWImageByURL = async (uri, nsfw) => poolQuery(`
   UPDATE waifu_schema.waifu_table_images
   SET nsfw = $2
@@ -37,7 +28,7 @@ const updateWaifuImageReview = async (nsfw, reviewed, badImage, imageID) => pool
   WHERE image_id = $4;
 `, [nsfw, reviewed, badImage, imageID]);
 
-const deleteImage = async (imageID) => poolQuery(`
+const deleteImageByID = async (imageID) => poolQuery(`
   DELETE
   FROM waifu_schema.waifu_table_images
   WHERE image_id = $1
@@ -201,8 +192,9 @@ const storeCleanWaifuImage = async (id, imageURL, _, width, height, __, bufferLe
 `, [id, imageURL, width, height, bufferLength, fileType]);
 
 const getWaifuImagesAndInfoByID = async (id, imageID) => poolQuery(`
-  SELECT id, waifu_id, image_id, name, url, series, wswti.nsfw, image_url_path_extra, image_url_clean_path_extra
+  SELECT wswt.id, wswti.waifu_id, wswti.image_id, wswt.name, wswt.url, wsst.name AS series, wswti.nsfw, wswti.image_url_path_extra, wswti.image_url_clean_path_extra
   FROM waifu_schema.waifu_table wswt
+  JOIN waifu_schema.series_table wsst ON wsst.id = wswt.series_id
   JOIN waifu_schema.waifu_table_images wswti ON wswti.waifu_id = wswt.id
   WHERE wswt.id = $1 AND wswti.image_id = $2;
 `, [id, imageID]);
@@ -214,10 +206,9 @@ const updateWaifuDiscordImageURL = async (id, imageDiscordURL) => poolQuery(`
 `, [id, imageDiscordURL]);
 
 module.exports = {
-  getRandomWaifuImageNonReviewed,
   getRemainingImages,
   updateWaifuImageReview,
-  deleteImage,
+  deleteImageByID,
   insertWaifuImages,
   getCharacterImagesByID,
   getWaifuImageByURL,

@@ -287,7 +287,6 @@ route.delete('/:userID/stones/random', async (req, res) => {
   return res.status(204).send({ stones });
 });
 
-
 route.get('/:userID/guilds/:guildID/claims/favorites', async (req, res) => {
   const { userID, guildID } = req.params;
   const { name, favorite } = req.query;

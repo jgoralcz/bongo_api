@@ -790,7 +790,7 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
   RETURNING show_waifu_rank AS "updatedBool";
 `, [guildID, waifuRankBool]);
 
-const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false) => poolQuery(`
+const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false, claimsOnly = false, favoritesOnly = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id,
     url, description, last_edit_by, last_edit_date, nicknames,
     wt.id, count, position, (
@@ -899,17 +899,33 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
           END
       ) AS nsfw, wsst.name AS series, ws.husbando, ws.unknown_gender,
         ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
-        ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id
+        ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id, favorite
       FROM waifu_schema.waifu_table ws
+      JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
       LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-      LEFT JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
       LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = ws.id
-      WHERE f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%'
-        OR levenshtein(f_unaccent(ws.name), f_unaccent($1)) <= 1
-        OR f_unaccent(ws.name) ILIKE ANY (
-          SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
+      WHERE
+        (
+        -- claims only
+          ($6 = TRUE AND ws.id IN (
+            SELECT waifu_id AS id
+            FROM cg_claim_waifu_table
+            WHERE guild_id = $2
+          ))
+          OR $6 = FALSE
         )
-        OR f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%'
+        -- favorites
+        AND (
+          ($7 = TRUE AND favorite = TRUE) OR $7 = FALSE
+        ) 
+        AND (
+          f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%'
+          OR levenshtein(f_unaccent(ws.name), f_unaccent($1)) <= 1
+          OR f_unaccent(ws.name) ILIKE ANY (
+            SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
+          )
+          OR f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%'
+        )
       ORDER BY
         CASE
         WHEN f_unaccent(ws.name) ILIKE f_unaccent($1) THEN 0
@@ -937,7 +953,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
     WHEN levenshtein(f_unaccent(name), f_unaccent($1)) <= 1 THEN 4
     ELSE 5 END, name
   LIMIT $3;
-`, [waifuName, guildID, limit, userID, useDiscordImage]);
+`, [waifuName, guildID, limit, userID, useDiscordImage, claimsOnly, favoritesOnly]);
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id,
