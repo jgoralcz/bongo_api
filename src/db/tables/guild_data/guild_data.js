@@ -910,7 +910,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
           ($6 = TRUE AND ws.id IN (
             SELECT waifu_id AS id
             FROM cg_claim_waifu_table
-            WHERE guild_id = $2
+            WHERE guild_id = $2 AND user_id = $4
           ))
           OR $6 = FALSE
         )
