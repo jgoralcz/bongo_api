@@ -790,7 +790,7 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
   RETURNING show_waifu_rank AS "updatedBool";
 `, [guildID, waifuRankBool]);
 
-const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false, claimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false) => poolQuery(`
+const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false, claimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false, wishlistOnly = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id,
     url, description, last_edit_by, last_edit_date, nicknames,
     wt.id, count, position, (
@@ -916,7 +916,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         -- favorite claims
         AND (
           ($7 = TRUE AND ws.id IN (
-            SELECT waifu_id
+            SELECT waifu_id AS id
             FROM cg_claim_waifu_table
             WHERE guild_id = $2 AND user_id = $4 AND favorite = TRUE
           )) OR $7 = FALSE
@@ -933,10 +933,17 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         -- favorite boughts
         AND (
           ($9 = TRUE AND ws.id IN (
-            SELECT waifu_id
+            SELECT waifu_id AS id
             FROM cg_buy_waifu_table
             WHERE user_id = $4 AND favorite = TRUE
           )) OR $9 = FALSE
+        )
+        AND (
+          ($10 = TRUE AND ws.id IN (
+            SELECT waifu_id AS id
+            FROM cg_wishlist_waifu_table
+            WHERE user_id = $4 AND guild_id = $2
+          )) OR $10 = FALSE
         )
         AND (
           f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%'
@@ -973,7 +980,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
     WHEN levenshtein(f_unaccent(name), f_unaccent($1)) <= 1 THEN 4
     ELSE 5 END, name
   LIMIT $3;
-`, [waifuName, guildID, limit, userID, useDiscordImage, claimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly]);
+`, [waifuName, guildID, limit, userID, useDiscordImage, claimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly]);
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id,
