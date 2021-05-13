@@ -4,7 +4,6 @@ const {
   addWishlistWaifuUserGuild,
   getWishlistWaifuUserGuild,
   removeWishlistWaifuUserGuild,
-  getAllWaifusByNameWishlist,
   removeAllCharactersWishlist,
   removeCharactersWishlistInArray,
   getUniqueUserCharacterWishlist,
@@ -28,15 +27,6 @@ route.get('/users/:userID/guilds/:guildID/characters', async (req, res) => {
   const { userID, guildID } = req.params;
 
   const query = await getWishlistWaifuUserGuild(userID, guildID);
-
-  return res.status(200).send(query || []);
-});
-
-route.get('/users/:userID/guilds/:guildID/characters/search', async (req, res) => {
-  const { userID, guildID } = req.params;
-  const { name } = req.query;
-
-  const query = await getAllWaifusByNameWishlist(userID, guildID, name);
 
   return res.status(200).send(query || []);
 });
