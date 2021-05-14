@@ -255,7 +255,7 @@ const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
     achievement_reddit, achievement_search_anime, owoify, buy_rolls, buy_claims, gauntlet, show_waifu_rank, cropped_images,
     donut, pizza, cookie, fuel, stones, ramen, roll_game, roll_western, roll_anime, steal_character, roll_custom_only, banned_submission_date,
     anime_reactions_server, roll_western_server, cropped_images_server, roll_anime_server, claim_time_disappear, claim_other_rolls_seconds, music_leave_time_minutes,
-    unlock_color, embed_color, nightcore_enabled, volume, bass_boost, webhook_url, webhook_name
+    unlock_color, embed_color, nightcore_enabled, volume, bass_boost, webhook_url, webhook_name, use_my_image
   FROM (
     SELECT "userId", "guildId", rolls_waifu, claim_waifu, public_wish_list
     FROM "clientsGuildsTable"

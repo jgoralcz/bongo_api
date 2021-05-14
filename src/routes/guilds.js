@@ -346,6 +346,7 @@ route.get('/:id/requester/:requesterID/characters', async (req, res) => {
     boughtOnly,
     boughtFavoriteOnly,
     wishlistOnly,
+    anyClaimsOnly,
   } = req.query;
   if (
     !name
@@ -356,9 +357,10 @@ route.get('/:id/requester/:requesterID/characters', async (req, res) => {
     || (boughtOnly != null && boughtOnly !== 'true' && boughtOnly !== 'false')
     || (boughtFavoriteOnly != null && boughtFavoriteOnly !== 'true' && boughtFavoriteOnly !== 'false')
     || (wishlistOnly != null && wishlistOnly !== 'true' && wishlistOnly !== 'false')
+    || (anyClaimsOnly != null && anyClaimsOnly !== 'true' && anyClaimsOnly !== 'false')
   ) return res.status(400).send({ error: 'Incorrect query string.', query: req.query });
 
-  const query = await getAllWaifusByName(name, id, limit, requesterID, useDiscordImage, claimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly);
+  const query = await getAllWaifusByName(name, id, limit, requesterID, useDiscordImage, claimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly, anyClaimsOnly);
   return res.status(200).send(query);
 });
 

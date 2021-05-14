@@ -20,6 +20,7 @@ const {
   updateClientAnimeRolls,
   updateUserEmbedColor,
   updateUserUnlockEmbedColor,
+  updateUserUseMyImage,
 } = require('../db/tables/clients/clients_table');
 
 const { banSubmissionUser, unbanSubmissionUser } = require('../db/tables/bans_submissions/bans_submissions.js');
@@ -148,6 +149,7 @@ route.patch('/:id/settings/cropped-images', async (req, res) => updateSettings(r
 route.patch('/:id/settings/roll-claimed', async (req, res) => updateSettings(req, res, updateClientRollClaimed));
 route.patch('/:id/settings/custom-commands', async (req, res) => updateSettings(req, res, updateUniversalCustomCommandsUsage));
 route.patch('/:id/settings/unlock-embed-color', async (req, res) => updateSettings(req, res, updateUserUnlockEmbedColor));
+route.patch('/:id/settings/use-my-image', async (req, res) => updateSettings(req, res, updateUserUseMyImage));
 
 route.patch('/:id/settings/embed-color', async (req, res) => {
   const { id } = req.params;

@@ -72,6 +72,13 @@ const updateUserUnlockEmbedColor = async (userID, bool) => poolQuery(`
   RETURNING unlock_color AS "updatedBool";
 `, [userID, bool]);
 
+const updateUserUseMyImage = async (userID, bool) => poolQuery(`
+  UPDATE "clientsTable"
+  SET use_my_image = $2
+  WHERE "userId" = $1
+  RETURNING use_my_image AS "updatedBool";
+`, [userID, bool]);
+
 const addGameAndBankPoints = async (userId, points) => poolQuery(`
   UPDATE "clientsTable"
   SET "bankPoints" = 
@@ -168,7 +175,6 @@ const getTopFuels = async () => poolQuery(`
   ORDER BY top DESC
   LIMIT 20;
 `, []);
-
 
 const getTopServerCookies = async (guildId) => poolQuery(`
   SELECT ct."userId", ct.top
@@ -313,7 +319,6 @@ const buyPizza = async (id, amount) => poolQuery(`
   SET pizza = pizza + $2
   WHERE "userId" = $1;
 `, [id, amount]);
-
 
 const buyCookie = async (id, amount) => poolQuery(`
   UPDATE "clientsTable"
@@ -589,4 +594,5 @@ module.exports = {
   updateClientAnimeRolls,
   updateUserEmbedColor,
   updateUserUnlockEmbedColor,
+  updateUserUseMyImage,
 };

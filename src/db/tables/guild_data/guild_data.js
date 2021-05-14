@@ -790,7 +790,7 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
   RETURNING show_waifu_rank AS "updatedBool";
 `, [guildID, waifuRankBool]);
 
-const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false, claimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false, wishlistOnly = false) => poolQuery(`
+const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false, claimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false, wishlistOnly = false, anyClaimsOnly = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id,
     url, description, last_edit_by, last_edit_date, nicknames,
     wt.id, count, position, (
@@ -890,7 +890,8 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
   FROM (
     SELECT name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date,
       array_remove(array_agg(DISTINCT(wscn.nickname)), NULL) AS nicknames,
-      COALESCE(json_object_agg(t1.date, t1.user_id ORDER BY t1.date) FILTER (WHERE user_id IS NOT NULL), '[]') AS user_id
+      COALESCE(json_object_agg(t1.date, t1.user_id ORDER BY t1.date) FILTER (WHERE user_id IS NOT NULL), '[]') AS user_id,
+      count, position
     FROM (
       SELECT ws.name, (
         SELECT
@@ -899,11 +900,12 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
           END
       ) AS nsfw, wsst.name AS series, ws.husbando, ws.unknown_gender,
         ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
-        ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id
+        ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id, count, position
       FROM waifu_schema.waifu_table ws
       JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
       LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
       LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = ws.id
+      LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
       WHERE
         -- claims only
         (
@@ -938,6 +940,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
             WHERE user_id = $4 AND favorite = TRUE
           )) OR $9 = FALSE
         )
+        -- wishlist only
         AND (
           ($10 = TRUE AND ws.id IN (
             SELECT waifu_id AS id
@@ -946,8 +949,14 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
           )) OR $10 = FALSE
         )
         AND (
+          ($11 = TRUE AND ws.id IN (
+            SELECT waifu_id AS id
+            FROM cg_claim_waifu_table
+            WHERE guild_id = $2
+          )) OR $11 = FALSE
+        )
+        AND (
           f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%'
-          OR levenshtein(f_unaccent(ws.name), f_unaccent($1)) <= 1
           OR f_unaccent(ws.name) ILIKE ANY (
             SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
           )
@@ -961,26 +970,14 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         WHEN f_unaccent(wscn.nickname) ILIKE f_unaccent($1) || '%' THEN 3
         WHEN f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
         WHEN f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%' THEN 5
-        WHEN levenshtein(f_unaccent(ws.name) , f_unaccent($1) ) <= 1 THEN 6
-        ELSE 7 END, ws.name
+        ELSE 6 END, ws.name
       LIMIT $3
     ) t1
     LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = t1.id
-    GROUP BY name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date
+    GROUP BY name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date, count, position
   ) wt
-  LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id
-  ORDER BY
-    CASE
-    WHEN f_unaccent(name) ILIKE $1 THEN 0
-    WHEN f_unaccent(name) ILIKE $1 || '%' THEN 1
-    WHEN f_unaccent(name) ILIKE '%' || $1 || '%' THEN 2
-    WHEN f_unaccent(name) ILIKE ANY (
-      SELECT UNNEST(string_to_array('%' || f_unaccent($1) || '%', ' ')) AS name
-    ) THEN 3
-    WHEN levenshtein(f_unaccent(name), f_unaccent($1)) <= 1 THEN 4
-    ELSE 5 END, name
   LIMIT $3;
-`, [waifuName, guildID, limit, userID, useDiscordImage, claimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly]);
+`, [waifuName, guildID, limit, userID, useDiscordImage, claimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly, anyClaimsOnly]);
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id,

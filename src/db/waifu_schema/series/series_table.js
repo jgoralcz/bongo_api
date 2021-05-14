@@ -17,7 +17,7 @@ const getAllSeriesByName = async (name) => poolQuery(`
 const getSeries = async (name) => poolQuery(`
   SELECT id
   FROM waifu_schema.series_table
-  WHERE f_unaccent(name) ILIKE $1;
+  WHERE name ILIKE $1;
 `, [name]);
 
 const getSeriesById = async (id) => poolQuery(`

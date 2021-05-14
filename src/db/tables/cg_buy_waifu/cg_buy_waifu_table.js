@@ -1,7 +1,7 @@
 const { poolQuery } = require('../../index.js');
 
 const getTopBoughtCharacters = async (offset, limit, guildID, userID, useDiscordImage) => poolQuery(`
-  SELECT name, series, url, top_waifu, waifu_id, user_id, count, position, (
+  SELECT name, series, url, waifu_id, user_id, count, position, (
     SELECT
       CASE
       WHEN ct.cropped_images = FALSE OR image_url_clean IS NULL THEN
@@ -18,21 +18,22 @@ const getTopBoughtCharacters = async (offset, limit, guildID, userID, useDiscord
     ) ct
   ) AS image_url
   FROM (
-    SELECT wswt.name, wsst.name AS series, wswt.url, top_waifu, top.waifu_id, cg.user_id, count, position, wswt.image_url, wswt.image_url_clean, wswt.image_url_clean_discord
+    SELECT wswt.name, wsst.name AS series, wswt.url, top.waifu_id,
+      COALESCE(json_object_agg(cg.date, cg.user_id ORDER BY cg.date) FILTER (WHERE cg.user_id IS NOT NULL), '[]') AS user_id,
+      wswt.image_url, wswt.image_url_clean, wswt.image_url_clean_discord,
+      top.count, top.position
     FROM (
-      SELECT waifu_id, count(waifu_id) AS top_waifu
-      FROM cg_buy_waifu_table cgcwt
-      GROUP BY waifu_id
-      ORDER BY top_waifu DESC
+      SELECT waifu_id, count, position
+      FROM mv_rank_buy_waifu
       LIMIT $2 OFFSET $1
     ) top
     JOIN waifu_schema.waifu_table wswt ON top.waifu_id = wswt.id
     JOIN waifu_schema.series_table wsst ON wsst.id = wswt.series_id
-    LEFT JOIN mv_rank_buy_waifu mv ON mv.waifu_id = top.waifu_id
     LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = top.waifu_id AND cg.guild_id = $3
-    ORDER BY top_waifu DESC
-  ) t
-  LIMIT $2;
+    GROUP BY wswt.name, wsst.name, wswt.url, top.waifu_id, wswt.image_url,
+      wswt.image_url_clean, wswt.image_url_clean_discord, top.count, top.position
+    ORDER BY top.position
+  ) t;
 `, [offset, limit, guildID, userID, useDiscordImage]);
 
 /**
