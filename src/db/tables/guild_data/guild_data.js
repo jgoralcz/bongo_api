@@ -957,25 +957,33 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         )
         AND (
           f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%'
-          OR f_unaccent(ws.name) ILIKE ANY (
-            SELECT UNNEST(string_to_array($1 || '%', ' ')) AS name
-          )
           OR f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%'
+          OR levenshtein(f_unaccent(lower(ws.name)), f_unaccent(lower($1))) <= 2
+          OR levenshtein(f_unaccent(lower(wscn.nickname)), f_unaccent(lower($1))) <= 2
         )
       ORDER BY
         CASE
-        WHEN f_unaccent(ws.name) ILIKE f_unaccent($1) THEN 0
-        WHEN f_unaccent(wscn.nickname) ILIKE f_unaccent($1) THEN 1
-        WHEN f_unaccent(ws.name) ILIKE f_unaccent($1) || '%' THEN 2
-        WHEN f_unaccent(wscn.nickname) ILIKE f_unaccent($1) || '%' THEN 3
-        WHEN f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
-        WHEN f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%' THEN 5
+          WHEN f_unaccent(ws.name) ILIKE f_unaccent($1) THEN 0
+          WHEN f_unaccent(wscn.nickname) ILIKE f_unaccent($1) THEN 1
+          WHEN f_unaccent(ws.name) ILIKE f_unaccent($1) || '%' THEN 2
+          WHEN f_unaccent(wscn.nickname) ILIKE f_unaccent($1) || '%' THEN 3
+          WHEN f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
+          WHEN f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%' THEN 5
         ELSE 6 END, ws.name
       LIMIT $3
     ) t1
     LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = t1.id
     GROUP BY name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date, count, position
   ) wt
+  ORDER BY
+    CASE
+      WHEN f_unaccent(name) ILIKE f_unaccent($1) THEN 0
+      WHEN f_unaccent($1) ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
+      WHEN f_unaccent(name) ILIKE f_unaccent($1) || '%' THEN 2
+      WHEN f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
+      WHEN f_unaccent(name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
+      WHEN '%' || f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
+    ELSE 6 END, name
   LIMIT $3;
 `, [waifuName, guildID, limit, userID, useDiscordImage, claimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly, anyClaimsOnly]);
 
