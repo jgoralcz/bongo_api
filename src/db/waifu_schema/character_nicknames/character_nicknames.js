@@ -1,11 +1,11 @@
 const { poolQuery } = require('../../index');
 
-const insertNicknameByID = async (characterID, nickname) => poolQuery(`
-  INSERT INTO waifu_schema.character_nicknames(character_id, nickname)
-  VALUES ($1, $2)
+const insertNicknameByID = async (characterID, nickname, spoiler) => poolQuery(`
+  INSERT INTO waifu_schema.character_nicknames(character_id, nickname, is_spoiler)
+  VALUES ($1, $2, $3)
   ON CONFLICT (character_id, nickname) DO NOTHING
   RETURNING *;
-`, [characterID, nickname]);
+`, [characterID, nickname, spoiler]);
 
 const updateNicknameByID = async (id, newNickname) => poolQuery(`
   UPDATE waifu_schema.character_nicknames

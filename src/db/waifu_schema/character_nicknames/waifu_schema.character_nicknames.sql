@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS waifu_schema.character_nicknames (
   nickname TEXT NOT NULL,
   created TIMESTAMP NOT NULL DEFAULT NOW(),
   updated TIMESTAMP,
+  is_spoiler BOOLEAN NOT NULL DEFAULT FALSE,
   
   UNIQUE (character_id, nickname)
 );

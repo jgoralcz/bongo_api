@@ -22,9 +22,11 @@ route.post('/', async (req, res) => {
 
   if (!body.nickname || !body.characterID) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: nickname, character_id', body });
 
+  const spoiler = body.isSpoiler === 'true' || body.isSpoiler === true;
+
   const { characterID, nickname } = body;
 
-  const rows = await insertNicknameByID(characterID, nickname);
+  const rows = await insertNicknameByID(characterID, nickname, spoiler);
   if (!rows || rows.length <= 0) return res.status(500).send({ error: 'Problem inserting nickname.', message: 'Could not insert character nickname', body });
 
   return res.status(201).send(rows[0]);
