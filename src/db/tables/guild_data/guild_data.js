@@ -990,7 +990,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id,
-    url, description, last_edit_by, last_edit_date, nicknames,
+    url, description, last_edit_by, last_edit_date, nicknames, spoiler_nicknames,
     wt.id, count, position, (
       SELECT
       CASE
@@ -1088,6 +1088,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
   FROM (
     SELECT name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date,
       array_remove(array_agg(DISTINCT(wscn.nickname)), NULL) AS nicknames,
+      array_remove(array_agg(DISTINCT(CASE WHEN wscn.is_spoiler = TRUE THEN wscn.nickname ELSE NULL END)), NULL) AS spoiler_nicknames,
       COALESCE(json_object_agg(t1.date, t1.user_id ORDER BY t1.date) FILTER (WHERE user_id IS NOT NULL), '[]') AS user_id
     FROM (
       SELECT ws.name, (
