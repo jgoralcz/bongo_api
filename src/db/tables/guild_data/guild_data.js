@@ -958,9 +958,9 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         )
         AND (
           f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%'
-          OR f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%'
+          OR (f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%' AND wscn.is_spoiler = FALSE)
           OR levenshtein(f_unaccent(lower(ws.name)), f_unaccent(lower($1))) <= 2
-          OR levenshtein(f_unaccent(lower(wscn.nickname)), f_unaccent(lower($1))) <= 2
+          OR (levenshtein(f_unaccent(lower(wscn.nickname)), f_unaccent(lower($1))) <= 2 AND wscn.is_spoiler = FALSE)
         )
       ORDER BY
         CASE
