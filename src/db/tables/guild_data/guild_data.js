@@ -888,25 +888,23 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
     ) ct
   ) AS image_url, image_url AS "imageURLOriginal", image_url_clean AS "imageURLCropped"
   FROM (
-    SELECT name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date,
+    SELECT t1.name, (
+      SELECT
+        CASE t1.nsfw WHEN TRUE then TRUE
+          ELSE wsst.nsfw
+        END
+    ) AS nsfw, wsst.name AS series, husbando, unknown_gender, t1.image_url, t1.image_url_clean_discord, t1.image_url_clean, t1.url, t1.description, t1.id, t1.last_edit_by, t1.last_edit_date,
       COALESCE(array_remove(array_agg(DISTINCT(wscn.nickname)), NULL), '{}') AS nicknames,
       COALESCE(array_remove(array_agg(DISTINCT(CASE WHEN wscn.is_spoiler = TRUE THEN wscn.nickname ELSE NULL END)), NULL), '{}') AS spoiler_nicknames,
       COALESCE(json_object_agg(t1.date, t1.user_id ORDER BY t1.date) FILTER (WHERE user_id IS NOT NULL), '[]') AS user_id,
       count, position
     FROM (
-      SELECT ws.name, (
-        SELECT
-          CASE ws.nsfw WHEN TRUE then TRUE
-            ELSE wsst.nsfw
-          END
-      ) AS nsfw, wsst.name AS series, ws.husbando, ws.unknown_gender,
+      SELECT ws.name, nsfw, series_id, ws.husbando, ws.unknown_gender,
         ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
-        ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id, count, position
+        ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id
       FROM waifu_schema.waifu_table ws
-      JOIN waifu_schema.series_table wsst ON wsst.id = ws.series_id
       LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
       LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = ws.id
-      LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
       WHERE
         -- claims only
         (
@@ -958,9 +956,9 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         )
         AND (
           f_unaccent(ws.name) ILIKE '%' || f_unaccent($1) || '%'
-          OR (f_unaccent(wscn.nickname) ILIKE '%' || f_unaccent($1) || '%' AND wscn.is_spoiler = FALSE)
-          OR levenshtein(f_unaccent(lower(ws.name)), f_unaccent(lower($1))) <= 2
-          OR (levenshtein(f_unaccent(lower(wscn.nickname)), f_unaccent(lower($1))) <= 2 AND wscn.is_spoiler = FALSE)
+          OR (nickname_lower LIKE '%' || f_unaccent(lower($1)) || '%' AND wscn.is_spoiler = FALSE)
+          -- OR levenshtein(f_unaccent(lower(ws.name)), f_unaccent(lower($1))) <= 2
+          -- OR (levenshtein(nickname_lower, f_unaccent(lower($1))) <= 2 AND wscn.is_spoiler = FALSE)
         )
       ORDER BY
         CASE
@@ -973,8 +971,10 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
         ELSE 6 END, ws.name
       LIMIT $3
     ) t1
+    JOIN waifu_schema.series_table wsst ON wsst.id = t1.series_id
+    LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = t1.id
     LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = t1.id
-    GROUP BY name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date, count, position
+    GROUP BY t1.name, t1.nsfw, wsst.name, wsst.nsfw, husbando, unknown_gender, t1.image_url, t1.image_url_clean_discord, t1.image_url_clean, t1.url, t1.description, t1.id, t1.last_edit_by, t1.last_edit_date, count, position
   ) wt
   ORDER BY
     CASE

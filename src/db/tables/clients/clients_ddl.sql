@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS "clientsTable" (
   game_points INTEGER DEFAULT 0,
   waifu_list_title varchar(200),
   pokemon_list_title varchar(200),
-  amiibo_list_title varchar(200),
+  -- amiibo_list_title varchar(200),
   daily_gather BOOLEAN,
   waifu_list_url varchar(128),
   streak_daily INTEGER DEFAULT 0,

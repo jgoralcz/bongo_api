@@ -2,9 +2,9 @@ const axios = require('axios');
 
 const { api } = require('../util/constants/config');
 
-const { mims } = api;
-
+const { mims, messenger_api: messengerConfig } = api;
 const { api: mimsURL, username: mimsUsername, password: mimsPassword } = mims;
+const { api: messengerURL, username: messengerUsername, password: messengerPassword } = messengerConfig;
 
 const mimsAPI = axios.create({
   baseURL: mimsURL,
@@ -13,6 +13,13 @@ const mimsAPI = axios.create({
   responseType: 'arraybuffer',
 });
 
+const messengerAPI = axios.create({
+  baseURL: messengerURL,
+  auth: { username: messengerUsername, password: messengerPassword },
+  headers: { 'Content-type': 'application/json' },
+});
+
 module.exports = {
   mimsAPI,
+  messengerAPI,
 };

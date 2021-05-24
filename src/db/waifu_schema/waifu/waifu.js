@@ -117,9 +117,11 @@ const getRandomWaifu = async (nsfw, userID, useDiscordImage = false) => poolQuer
       WHERE "userId" = $2
     ) ct
   ) AS image_url,
-  array_remove(array_agg(DISTINCT(wscn.nickname)), NULL) AS nicknames
+  COALESCE(array_remove(array_agg(DISTINCT(wscn.nickname)), NULL), '{}') AS nicknames,
+  COALESCE(array_remove(array_agg(DISTINCT(wssn.nickname)), NULL), '{}') AS series_nicknames
   FROM waifu_schema.waifu_table wswt
   JOIN waifu_schema.series_table wsst ON wsst.id = wswt.series_id
+  LEFT JOIN waifu_schema.series_nicknames wssn ON wssn.series_id = wsst.id
   LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = wswt.id
   WHERE (((wsst.nsfw = $1 AND wsst.nsfw = FALSE))
     OR ((wsst.nsfw = $1 AND wsst.nsfw = TRUE) OR wsst.nsfw = FALSE)

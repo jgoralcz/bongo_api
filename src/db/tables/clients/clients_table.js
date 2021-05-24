@@ -265,18 +265,6 @@ const getPokemonListTitle = async (userId) => poolQuery(`
   WHERE "userId" = $1;
 `, [userId]);
 
-const setAmiiboListTitle = async (userId, title) => poolQuery(`
-  UPDATE "clientsTable"
-  SET amiibo_list_title = $2
-  WHERE "userId" = $1;
-`, [userId, title]);
-
-const getAmiiboListTitle = async (userId) => poolQuery(`
-  SELECT amiibo_list_title
-  FROM "clientsTable"
-  WHERE "userId" = $1;
-`, [userId]);
-
 const updateClientBankPointsDaily = async (userId, points, dailyGather) => poolQuery(`
   UPDATE "clientsTable"
   SET "bankPoints" = "bankPoints" + $2, daily_gather = $3
@@ -461,9 +449,9 @@ const checkSnipe = async (userID) => poolQuery(`
   WHERE "userId" = $1;
 `, [userID]);
 
-const updateUserBankPointsVote = async (userID, points) => poolQuery(`
+const updateUserBankPointsAndRollsVote = async (userID, points) => poolQuery(`
   UPDATE "clientsTable" 
-  SET "bankPoints" = "bankPoints" + $2, vote_date = NOW(), 
+  SET "bankPoints" = "bankPoints" + $2, vote_date = NOW(), bank_rolls = bank_rolls + 1,
   streak_vote_date = NOW() + INTERVAL '2 days', vote_enabled = TRUE,
   streak_vote = streak_vote + 1
   WHERE "userId" = $1
@@ -559,8 +547,6 @@ module.exports = {
   getWaifuListTitleAndURL,
   setPokemonListTitle,
   getPokemonListTitle,
-  setAmiiboListTitle,
-  getAmiiboListTitle,
   updateClientBankPointsDaily,
   setClientInfo,
   getClientInfo,
@@ -587,7 +573,7 @@ module.exports = {
   updateAnimeSearchAchievement,
   clientBuyGauntlet,
   checkSnipe,
-  updateUserBankPointsVote,
+  updateUserBankPointsAndRollsVote,
   resetAllClientDaily,
   clearVoteStreaks,
   removeRandomStone,

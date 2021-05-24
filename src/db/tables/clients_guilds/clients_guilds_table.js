@@ -67,21 +67,6 @@ const resetClaimByUserId = async (userId, guildId) => poolQuery(`
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userId, guildId]);
 
-const resetRollsByIdVote = async (userId, guildId) => poolQuery(`                
-  WITH cte AS (
-    UPDATE "clientsGuildsTable"
-    SET rolls_waifu = 0, claim_waifu = NULL
-    WHERE "userId" = $1 AND "guildId" = $2
-    RETURNING *
-  )
-  UPDATE "clientsTable"
-  SET vote_enabled = NULL
-  FROM cte
-  
-  WHERE "clientsTable"."userId" = $1
-    AND vote_enabled IS NOT NULL;
-`, [userId, guildId]);
-
 /**
  * adds a friend to their friends list.
  * @param friendId the friend's id.
@@ -322,7 +307,6 @@ module.exports = {
   addClaimWaifuFail,
   resetRollsByUserId,
   resetClaimByUserId,
-  resetRollsByIdVote,
   addFriend,
   removeFriend,
   getAllFriends,

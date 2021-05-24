@@ -20,7 +20,7 @@ route.delete('/:id', async (req, res) => {
 route.post('/', async (req, res) => {
   const { body } = req;
 
-  if (!body.nickname || !body.characterID) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: nickname, character_id', body });
+  if (!body.nickname || !body.characterID) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: nickname, characterID', body });
 
   const spoiler = body.isSpoiler === 'true' || body.isSpoiler === true;
 
@@ -35,7 +35,7 @@ route.post('/', async (req, res) => {
 route.put('/:id', async (req, res) => {
   const { body } = req;
 
-  if (!body.nickname || !body.characterID) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: nickname, character_id', body });
+  if (!body.nickname || !body.characterID) return res.status(400).send({ error: 'Missing body info.', message: 'Required body: nickname, characterID', body });
 
   const { characterID, nickname } = body;
   const rows = await updateNicknameByID(characterID, nickname);
