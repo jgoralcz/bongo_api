@@ -10,7 +10,7 @@ const basicAuthExpress = (req, res, next) => {
   }
 
   const user = basicAuth(req);
-  if (!user || !user.name || user.name !== username || !password || user.password !== password) {
+  if (!user || !user.name || !user.pass || user.name !== username || user.pass !== password) {
     return res.status(401).send({ error: 'credentials rejected' });
   }
 
