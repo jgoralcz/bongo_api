@@ -1,10 +1,12 @@
 const axios = require('axios');
 
-const { api } = require('../util/constants/config');
+const { api, config } = require('../util/constants/config');
 
-const { mims, messenger_api: messengerConfig } = api;
+const { messenger_api: messengerURL } = config;
+const { mims, messenger_api: messengerAuth } = api;
+
 const { api: mimsURL, username: mimsUsername, password: mimsPassword } = mims;
-const { api: messengerURL, username: messengerUsername, password: messengerPassword } = messengerConfig;
+const { username: messengerUsername, password: messengerPassword } = messengerAuth;
 
 const mimsAPI = axios.create({
   baseURL: mimsURL,
