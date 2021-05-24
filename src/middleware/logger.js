@@ -1,6 +1,6 @@
 const { levels, connectLogger } = require('log4js');
-const { LOCAL } = require('../util/constants/environments');
 const log4js = require('log4js');
+const { LOCAL } = require('../util/constants/environments');
 
 log4js.configure({
   appenders: {

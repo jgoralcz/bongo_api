@@ -4,7 +4,7 @@ const logger = require('log4js').getLogger();
 
 const router = require('./routes/Routes');
 
-const { basicAuth, authorizer, unauthResponse } = require('./middleware/basicAuth');
+const { basicAuthExpress } = require('./middleware/basicAuth');
 const { errorHandler } = require('./middleware/errorhandler');
 const { httpLogger } = require('./middleware/logger');
 
@@ -16,11 +16,7 @@ const env = process.env.NODE_ENV || LOCAL;
 
 const server = express();
 
-server.use(basicAuth({
-  authorizer,
-  authorizeAsync: true,
-  unauthorizedResponse: unauthResponse,
-}));
+server.use(basicAuthExpress);
 
 server.use(bodyparser.urlencoded({ extended: true }));
 server.use(bodyparser.json());

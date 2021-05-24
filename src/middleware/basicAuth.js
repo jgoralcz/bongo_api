@@ -1,23 +1,22 @@
-const basicAuth = require('express-basic-auth');
+const basicAuth = require('basic-auth');
 
 const { auth } = require('../util/constants/config');
 
 const { username, password } = auth;
 
-const authorizer = (user, pass, cb) => {
-  if (user === username && pass === password) {
-    return cb(null, true);
+const basicAuthExpress = (req, res, next) => {
+  if (req.originalUrl === '/dbl/webhook') {
+    return next();
   }
-  return cb(null, false);
+
+  const user = basicAuth(req);
+  if (!user || !user.name || user.name !== username || !password || user.password !== password) {
+    return res.status(401).send({ error: 'credentials rejected' });
+  }
+
+  return next();
 };
 
-const unauthResponse = (req) => (req.auth
-  ? JSON.stringify({ error: `Credentials ${req.auth.user}:${req.auth.password} rejected` })
-  : JSON.stringify({ error: 'No credentials provided' })
-);
-
 module.exports = {
-  basicAuth,
-  authorizer,
-  unauthResponse,
+  basicAuthExpress,
 };
