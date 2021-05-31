@@ -59,13 +59,16 @@ const deleteCDNImage = async (id, imageURLDelete, deleteDBFunc) => {
   if (!updatedURL || updatedURL === cdnURL) return undefined;
 
   // going to remove bongo.best storage, so ignore those problems
-  if (imageURLDelete.startsWith(imageURL)) {
-    const { status } = await axios.delete(updatedURL, { headers: { AccessKey: apiKey } });
-
-    if (status !== 200) {
+  if (imageURLDelete.startsWith(imageURL) && ['.jpg', '.png', '.gif', '.webp'].some((e) => updatedURL.endsWith(e))) {
+    // problem with bunny cdn api
+    axios.delete(updatedURL, { headers: { AccessKey: apiKey } }).then(({ status }) => {
+      if (status !== 200) {
+        logger.error(`Problem deleting with: ${id}, ${imageURLDelete}`);
+      }
+    }).catch((error) => {
+      logger.error(error);
       logger.error(`Problem deleting with: ${id}, ${imageURLDelete}`);
-      return false;
-    }
+    });
   }
 
   if (!id) return true;
