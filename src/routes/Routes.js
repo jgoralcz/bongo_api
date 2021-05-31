@@ -25,6 +25,7 @@ const refresh = require('./refresh');
 const bots = require('./bots');
 const music = require('./music');
 const dbl = require('./dbl');
+const votes = require('./votes');
 
 router.use('/series/nicknames', seriesNicknames);
 router.use('/series', series);
@@ -51,5 +52,6 @@ router.use('/refresh', refresh);
 router.use('/bots', bots);
 router.use('/music', music);
 router.use('/dbl', dbl);
+router.use('/votes', votes);
 
 module.exports = router;
