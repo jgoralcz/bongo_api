@@ -22,7 +22,7 @@ route.post('/webhook', wh.listener(async (vote) => {
     throw new Error(`invalid vote, ${vote}`);
   }
 
-  let points = (vote.isWeekend) ? 4000 : 3000;
+  let points = (vote.isWeekend) ? 10000 : 5000;
 
   try {
     // create new user if not found
@@ -38,13 +38,19 @@ route.post('/webhook', wh.listener(async (vote) => {
       [data] = userQuery;
     }
 
-    const streak = (data.streak_vote || 0) + 1;
-    points += (streak > 10) ? streakAmount * maxStreak : streakAmount * (streak - 1);
+    const {
+      streak_vote: streakVote,
+      patron,
+    } = data;
+
+    const streak = (streakVote || 0) + 1;
+    points += patron ? 15000 : 0;
+    points += streak > 10 ? streakAmount * maxStreak : streakAmount * (streak - 1);
 
     await updateUserBankPointsAndRollsVote(vote.user, points);
 
     if (streak < 20) {
-      logger.info(`${vote.user} has received ${points} points, added roles, and is on a ${streak} day voting streak.`);
+      logger.info(`${vote.user} has received ${points} points, stored +1 roll reset, and is on a ${streak} day voting streak.`);
       return;
     }
 

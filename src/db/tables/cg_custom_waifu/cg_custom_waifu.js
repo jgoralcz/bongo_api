@@ -38,6 +38,12 @@ const getRandomCustomWaifuOwnerClaimed = async (guildID, nsfw) => poolQuery(`
   LEFT JOIN cg_custom_waifu_table t2 on t2.waifu_id = t1.id AND t2.guild_id = $1;
 `, [guildID, nsfw]);
 
+const updateFavoriteCustomCharacter = async (userID, guildID, characterID, favorite = false) => poolQuery(`
+  UPDATE cg_custom_waifu_table
+  SET favorite = $4
+  WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
+`, [userID, guildID, characterID, favorite]);
+
 /**
  * gets the unique members from the guild who have claimed a custom.
  * @param guildID the guild's id.
@@ -48,6 +54,12 @@ const getUniqueGuildMembersCustom = async (guildID) => poolQuery(`
   FROM cg_custom_waifu_table
   WHERE guild_id = $1;
 `, [guildID]);
+
+const moveAllCustomWaifu = async (myID, guildID, theirID) => poolQuery(`
+  UPDATE cg_custom_waifu_table
+  SET user_id = $3, date = NOW()
+  WHERE user_id = $1 AND guild_id = $2;
+`, [myID, guildID, theirID]);
 
 /**
  * gets specific claim waifu from the guild.
@@ -302,4 +314,6 @@ module.exports = {
   getRemainingCustomWaifusServer,
   removeCustomWaifusAll,
   removeAllGuildCustomsCharactersByID,
+  moveAllCustomWaifu,
+  updateFavoriteCustomCharacter,
 };

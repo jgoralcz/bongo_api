@@ -15,11 +15,14 @@ const {
   updateUniversalCustomCommandsUsage,
   updateGuildCustomCommandUsage,
   addGameAndBankPoints,
+  addBankPoints,
   removeRandomStone,
   updateClientAnimeRolls,
   updateUserEmbedColor,
   updateUserUnlockEmbedColor,
   updateUserUseMyImage,
+  updateBankRollsByUserID,
+  subtractClientPoints,
 } = require('../db/tables/clients/clients_table');
 
 const { banSubmissionUser, unbanSubmissionUser } = require('../db/tables/bans_submissions/bans_submissions.js');
@@ -28,19 +31,32 @@ const {
   checkWaifuOwner,
   claimClientWaifuID,
   getClaimWaifuList,
-} = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
-const { claimClientCustomWaifuID } = require('../db/tables/cg_custom_waifu/cg_custom_waifu');
-
-const {
-  getBuyWaifuList,
-} = require('../db/tables/cg_buy_waifu/cg_buy_waifu_table');
-
-const {
+  moveAllClaimedWaifu,
+  moveSeries,
+  moveBuySeries,
   getRandomWaifuOwnerNotClaimed,
   getRandomWaifuOwnerWishlistClaimed,
   getRandomWaifuOwnerClaimed,
   getRandomWaifuOwnerWishlistNotClaimed,
+  updateFavoriteClaimWaifuBySeriesID,
+  updateFavoriteClaimCharacter,
 } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
+
+const {
+  claimClientCustomWaifuID,
+  moveAllCustomWaifu,
+  updateFavoriteCustomCharacter,
+} = require('../db/tables/cg_custom_waifu/cg_custom_waifu');
+
+const {
+  getBuyWaifuList,
+  getUniqueWaifu,
+  buyWaifu,
+  removeBuyWaifu,
+  moveAllBuyWaifu,
+  updateFavoriteBuyWaifuBySeriesID,
+  updateFavoriteBuyCharacter,
+} = require('../db/tables/cg_buy_waifu/cg_buy_waifu_table');
 
 const {
   incrementClaimWaifuRoll,
@@ -48,6 +64,8 @@ const {
   getClientsGuildsInfo,
   addClaimWaifuTrue,
   addClaimWaifuFail,
+  resetRollsByUserID,
+  resetClaimByUserID,
 } = require('../db/tables/clients_guilds/clients_guilds_table');
 
 const { insertGuildRolled } = require('../db/tables/guild_rolled/guild_rolled');
@@ -56,6 +74,7 @@ const { initializeGetNewUser } = require('../util/functions/user');
 const { invalidBoolSetting } = require('../util/functions/validators');
 
 const { rollCharacter } = require('../handlers/rolls');
+const { restartBackupQueue } = require('../db/tables/guild_data/guild_data');
 
 const rollRequest = async (req, res, rollFunction) => {
   const { userID, guildID } = req.params;
@@ -322,6 +341,18 @@ route.patch('/:userID/games/points', async (req, res) => {
   if (!points) return res.status(400).send({ error: `Points given not a valid number for changing: ${points}` });
 
   const queryPoints = await addGameAndBankPoints(userID, points);
+  if (!queryPoints || !queryPoints[0] || !queryPoints[0].points) return res.status(500).send({ error: 'A problem occurred when updating the bank points and game points.' });
+
+  return res.status(200).send({ points: queryPoints[0].points });
+});
+
+route.patch('/:userID/points', async (req, res) => {
+  const { userID } = req.params;
+  const { points } = req.body;
+
+  if (!points || isNaN(points)) return res.status(400).send({ error: `Points given not a valid number for changing: ${points}` });
+
+  const queryPoints = points < 0 ? await subtractClientPoints(userID, -points) : await addBankPoints(userID, points);
   if (!queryPoints || !queryPoints[0] || !queryPoints[0].points) return res.status(500).send({ error: 'A problem occurred when updating the bank points.' });
 
   return res.status(200).send({ points: queryPoints[0].points });
@@ -354,6 +385,170 @@ route.get('/:userID/characters/bought', async (req, res) => {
   }
 
   return res.status(200).send(query);
+});
+
+route.patch('/:userID/guilds/:guildID/reset-claim', async (req, res) => {
+  const { userID, guildID } = req.params;
+
+  await resetClaimByUserID(userID, guildID);
+
+  res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/reset-rolls', async (req, res) => {
+  const { userID, guildID } = req.params;
+
+  await resetRollsByUserID(userID, guildID);
+
+  res.status(204).send();
+});
+
+route.patch('/:userID/bank-rolls', async (req, res) => {
+  const { userID } = req.params;
+  const { changeBankRollAmount } = req.body;
+
+  await updateBankRollsByUserID(userID, changeBankRollAmount);
+
+  res.status(204).send();
+});
+
+route.get('/:userID/buys/waifus/unique', async (req, res) => {
+  const { userID } = req.params;
+  const { nsfw = false, useDiscordImage = false, limit = 1 } = req.query;
+
+  const nsfwClean = nsfw === 'true' || nsfw === true;
+  const useDiscordImageClean = useDiscordImage === 'true' || useDiscordImage === true;
+  const limitClean = limit > 0 && limit <= 10 && !isNaN(limit) ? limit : 1;
+
+  const rows = await getUniqueWaifu(userID, nsfwClean, useDiscordImageClean, limitClean);
+
+  res.status(200).send(rows);
+});
+
+route.post('/:userID/buys/waifus', async (req, res) => {
+  const { userID } = req.params;
+  const {
+    guildID,
+    name,
+    characterID,
+  } = req.body;
+
+  const rows = await buyWaifu(userID, guildID, name, characterID);
+
+  res.status(201).send(rows);
+});
+
+route.delete('/:userID/buys/waifus/:characterID', async (req, res) => {
+  const { userID, characterID } = req.params;
+  const { name } = req.query;
+
+  const rows = await removeBuyWaifu(userID, name, characterID);
+
+  if (rows.length > 0) {
+    return res.status(204).send();
+  }
+
+  return res.status(404).send();
+});
+
+route.patch('/:userID/buys/waifus/move/all', async (req, res) => {
+  const { userID } = req.params;
+  const { theirID } = req.body;
+
+  await moveAllBuyWaifu(userID, theirID);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/claims/waifus/move/all', async (req, res) => {
+  const { userID, guildID } = req.params;
+  const { theirID } = req.body;
+
+  await moveAllClaimedWaifu(userID, guildID, theirID);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/customs/waifus/move/all', async (req, res) => {
+  const { userID, guildID } = req.params;
+  const { theirID } = req.body;
+
+  await moveAllCustomWaifu(userID, guildID, theirID);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/claims/series/:seriesID/move', async (req, res) => {
+  const { userID, guildID, seriesID } = req.params;
+  const { theirID } = req.body;
+
+  await moveSeries(userID, theirID, guildID, seriesID);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/buys/series/:seriesID/move', async (req, res) => {
+  const { userID, guildID, seriesID } = req.params;
+  const { theirID } = req.body;
+
+  await moveBuySeries(userID, theirID, guildID, seriesID);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/claims/series/:seriesID/favorites', async (req, res) => {
+  const { userID, guildID, seriesID } = req.params;
+  const { favorite } = req.body;
+
+  const favoriteClean = favorite === 'true' || favorite === true;
+
+  await updateFavoriteClaimWaifuBySeriesID(userID, guildID, seriesID, favoriteClean);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/buys/series/:seriesID/favorites', async (req, res) => {
+  const { userID, seriesID } = req.params;
+  const { favorite } = req.body;
+
+  const favoriteClean = favorite === 'true' || favorite === true;
+
+  await updateFavoriteBuyWaifuBySeriesID(userID, seriesID, favoriteClean);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/claims/characters/:characterID/favorites', async (req, res) => {
+  const { userID, guildID, characterID } = req.params;
+  const { favorite } = req.body;
+
+  const favoriteClean = favorite === 'true' || favorite === true;
+
+  await updateFavoriteClaimCharacter(userID, guildID, characterID, favoriteClean);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/guilds/:guildID/customs/characters/:characterID/favorites', async (req, res) => {
+  const { userID, guildID, characterID } = req.params;
+  const { favorite } = req.body;
+
+  const favoriteClean = favorite === 'true' || favorite === true;
+
+  await updateFavoriteCustomCharacter(userID, guildID, characterID, favoriteClean);
+
+  return res.status(204).send();
+});
+
+route.patch('/:userID/buys/characters/:characterID/favorites', async (req, res) => {
+  const { userID, characterID } = req.params;
+  const { favorite } = req.body;
+
+  const favoriteClean = favorite === 'true' || favorite === true;
+
+  await updateFavoriteBuyCharacter(userID, characterID, favoriteClean);
+
+  return res.status(204).send();
 });
 
 module.exports = route;

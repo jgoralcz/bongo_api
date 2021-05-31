@@ -95,6 +95,13 @@ const addGameAndBankPoints = async (userId, points) => poolQuery(`
   RETURNING game_points AS points;
 `, [userId, points]);
 
+const addBankPoints = (userID, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET "bankPoints" = "bankPoints" + $2
+  WHERE "userId" = $1
+  RETURNING "bankPoints" AS points;
+`, [userID, points]);
+
 const getTopPizzas = async () => poolQuery(`
   SELECT "userId", pizza AS top
   FROM "clientsTable"
@@ -265,12 +272,6 @@ const getPokemonListTitle = async (userId) => poolQuery(`
   WHERE "userId" = $1;
 `, [userId]);
 
-const updateClientBankPointsDaily = async (userId, points, dailyGather) => poolQuery(`
-  UPDATE "clientsTable"
-  SET "bankPoints" = "bankPoints" + $2, daily_gather = $3
-  WHERE "userId" = $1;
-`, [userId, points, dailyGather]);
-
 const setClientInfo = async (userID) => poolQuery(`
   INSERT INTO "clientsTable" ("userId")
   VALUES ($1)
@@ -338,11 +339,12 @@ const buyStones = async (id, stoneName) => poolQuery(`
   WHERE "userId" = $1;
 `, [id, stoneName]);
 
-const subtractClientPoints = async (id, subtractPrice) => poolQuery(`
+const subtractClientPoints = async (userID, points) => poolQuery(`
   UPDATE "clientsTable"
   SET "bankPoints" = "bankPoints" - $2
-  WHERE "userId" = $1;
-`, [id, subtractPrice]);
+  WHERE "userId" = $1
+  RETURNING "bankPoints" AS points;
+`, [userID, points]);
 
 const incrementClientGuessCorrect = async (id) => poolQuery(`
   UPDATE "clientsTable"
@@ -517,6 +519,12 @@ const removeRandomStone = async (userID) => poolQuery(`
   RETURNING stones;
 `, [userID]);
 
+const updateBankRollsByUserID = async (userID, changeAmount) => poolQuery(`
+  UPDATE "clientsTable"
+  SET bank_rolls = bank_rolls + $2
+  WHERE "userId" = $1;
+`, [userID, changeAmount]);
+
 module.exports = {
   updateClientDaily,
   updateClientAnimeReactions,
@@ -547,7 +555,6 @@ module.exports = {
   getWaifuListTitleAndURL,
   setPokemonListTitle,
   getPokemonListTitle,
-  updateClientBankPointsDaily,
   setClientInfo,
   getClientInfo,
   updateClientPrefix,
@@ -581,4 +588,6 @@ module.exports = {
   updateUserEmbedColor,
   updateUserUnlockEmbedColor,
   updateUserUseMyImage,
+  addBankPoints,
+  updateBankRollsByUserID,
 };

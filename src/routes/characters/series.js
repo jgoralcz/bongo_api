@@ -130,11 +130,25 @@ route.post('/', async (req, res) => {
 });
 
 route.get('/', async (req, res) => {
-  const { name } = req.query;
-
+  const {
+    name,
+    userID,
+    guildID,
+    claimsOnly = false,
+    anyClaimsOnly = false,
+    favoritesOnly = false,
+    boughtOnly = false,
+    boughtFavoriteOnly = false,
+  } = req.query;
   if (!name) return res.status(400).send({ error: 'Name query parameter expected.' });
 
-  const series = await getAllSeriesByName(name);
+  const claimsOnlyClean = claimsOnly === 'true' || claimsOnly === true;
+  const anyClaimsOnlyClean = anyClaimsOnly === 'true' || anyClaimsOnly === true;
+  const favoritesOnlyClean = favoritesOnly === 'true' || favoritesOnly === true;
+  const boughtOnlyClean = boughtOnly === 'true' || boughtOnly === true;
+  const boughtFavoriteOnlyClean = boughtFavoriteOnly === 'true' || boughtFavoriteOnly === true;
+
+  const series = await getAllSeriesByName(name, userID, guildID, claimsOnlyClean, anyClaimsOnlyClean, favoritesOnlyClean, boughtOnlyClean, boughtFavoriteOnlyClean);
 
   return res.status(200).send(series || []);
 });

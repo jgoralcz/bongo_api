@@ -49,23 +49,17 @@ const addClaimWaifuFail = async (userId, guildId) => poolQuery(`
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userId, guildId]);
 
-const resetRollsByUserId = async (userId, guildId) => poolQuery(`
+const resetRollsByUserID = async (userID, guildID) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET rolls_waifu = 0
   WHERE "userId" = $1 AND "guildId" = $2;
-`, [userId, guildId]);
+`, [userID, guildID]);
 
-/**
-* resets the claim based off the user's id and guild id
-* @param userId the user's id
-* @param guildId the guild's id
-* @returns {Promise<void>}
-*/
-const resetClaimByUserId = async (userId, guildId) => poolQuery(`
+const resetClaimByUserID = async (userID, guildID) => poolQuery(`
   UPDATE "clientsGuildsTable"
   SET claim_waifu = NULL
   WHERE "userId" = $1 AND "guildId" = $2;
-`, [userId, guildId]);
+`, [userID, guildID]);
 
 /**
  * adds a friend to their friends list.
@@ -233,14 +227,15 @@ JOIN "clientsTable" ct ON cgt."userId" = ct."userId";
 `, [id]);
 
 const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
-  SELECT cgt."userId", cgt."guildId", "guildPrefix", prefix, "prefixForAllEnable", daily, daily_gather, streak, rolls_waifu, claim_waifu, public_wish_list,
+  SELECT cgt."userId", cgt."userId" AS "userID", cgt."guildId" AS "guildID", cgt."guildId",
+    "guildPrefix", prefix, "prefixForAllEnable", daily, daily_gather, streak, rolls_waifu, claim_waifu, public_wish_list,
     patron, patron_one, patron_two, unlimited_claims, claim_seconds, wishlist_multiplier, rarity, "maxVolume", auto_now_play,
     autoplay, show_skips, "voteSkip", max_songs_per_user, anime_reactions, "bankPoints", streak_vote, vote_date,
     vote_enabled, auto_timeout, user_roll_claimed, play_first, roll_claim_minute, roll_claim_hour, sniped, achievement_aki, show_gender,
     achievement_reddit, achievement_search_anime, owoify, buy_rolls, buy_claims, gauntlet, show_waifu_rank, cropped_images,
     donut, pizza, cookie, fuel, stones, ramen, roll_game, roll_western, roll_anime, steal_character, roll_custom_only, banned_submission_date,
     anime_reactions_server, roll_western_server, cropped_images_server, roll_anime_server, claim_time_disappear, claim_other_rolls_seconds, music_leave_time_minutes,
-    unlock_color, embed_color, nightcore_enabled, volume, bass_boost, webhook_url, webhook_name, use_my_image
+    unlock_color, embed_color, nightcore_enabled, volume, bass_boost, webhook_url, webhook_name, use_my_image, bank_rolls
   FROM (
     SELECT "userId", "guildId", rolls_waifu, claim_waifu, public_wish_list
     FROM "clientsGuildsTable"
@@ -305,8 +300,8 @@ module.exports = {
   maxClaimWaifuRoll,
   addClaimWaifuTrue,
   addClaimWaifuFail,
-  resetRollsByUserId,
-  resetClaimByUserId,
+  resetRollsByUserID,
+  resetClaimByUserID,
   addFriend,
   removeFriend,
   getAllFriends,

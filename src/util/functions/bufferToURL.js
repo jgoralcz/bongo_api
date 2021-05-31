@@ -3,11 +3,9 @@ const { nanoid } = require('nanoid');
 const logger = require('log4js').getLogger();
 
 const { imageIdentifier } = require('../constants/magicNumbers');
-
 const { auth } = require('../constants/config');
 
 const { apiKey } = auth;
-
 const { cdnURL, imageURL } = require('../constants/cdn');
 
 const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
@@ -50,7 +48,10 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
 };
 
 const deleteCDNImage = async (id, imageURLDelete, deleteDBFunc) => {
-  if (!imageURLDelete) throw new Error('url to delete is not defined.');
+  if (!imageURLDelete) {
+    logger.error(`url to delete is not defined ${imageURLDelete}`);
+    return undefined;
+  }
 
   const updatedURL = imageURLDelete.replace(imageURL, cdnURL);
   if (!updatedURL || updatedURL === cdnURL) return undefined;

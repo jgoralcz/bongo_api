@@ -1,6 +1,7 @@
 const { poolQuery } = require('../../index');
 
-const getAllSeriesByName = async (name) => poolQuery(`
+// TODO: verify this works
+const getAllSeriesByName = async (name, userID, guildID, claimsOnly = false, anyClaimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false) => poolQuery(`
 SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_western, nicknames
   FROM (
     SELECT wsst.id, wsst.name, description, image_url, url, release_date, nsfw, is_game, is_western,
@@ -9,9 +10,55 @@ SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_we
       SELECT wsst.id, wssn.series_id, wssn.nickname
       FROM waifu_schema.series_table wsst
       LEFT JOIN waifu_schema.series_nicknames wssn ON wssn.series_id = wsst.id
-      WHERE
-        f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%'
-        OR f_unaccent(nickname) ILIKE '%' || f_unaccent($1) || '%'
+      WHERE (
+          f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%'
+          OR f_unaccent(nickname) ILIKE '%' || f_unaccent($1) || '%'
+        )
+        -- claims only
+        AND (
+          ($4 = TRUE AND wsst.id IN (
+            SELECT series_id AS id
+            FROM cg_claim_waifu_table cgwt
+            JOIN waifu_schema.waifu_table wswt ON wswt.id = cgwt.waifu_id
+            WHERE guild_id = $3 AND user_id = $2
+          )) OR $4 = FALSE
+        )
+        -- any claims only
+        AND (
+          ($5 = TRUE AND wsst.id IN (
+            SELECT series_id AS id
+            FROM cg_claim_waifu_table cgwt
+            JOIN waifu_schema.waifu_table wswt ON wswt.id = cgwt.waifu_id
+            WHERE guild_id = $3
+          )) OR $5 = FALSE
+        )
+        -- favorite claims
+        AND (
+          ($6 = TRUE AND wsst.id IN (
+            SELECT series_id AS id
+            FROM cg_claim_waifu_table cgwt
+            JOIN waifu_schema.waifu_table wswt ON wswt.id = cgwt.waifu_id
+            WHERE guild_id = $3 AND user_id = $2 AND favorite = TRUE
+          )) OR $6 = FALSE
+        )
+        -- bought only
+        AND (
+          ($7 = TRUE AND wsst.id IN (
+            SELECT series_id AS id
+            FROM cg_buy_waifu_table cgwt
+            JOIN waifu_schema.waifu_table wswt ON wswt.id = cgwt.waifu_id
+            WHERE user_id = $2
+          )) OR $7 = FALSE
+        )
+        -- favorite boughts
+        AND (
+          ($8 = TRUE AND wsst.id IN (
+            SELECT series_id AS id
+            FROM cg_buy_waifu_table cgwt
+            JOIN waifu_schema.waifu_table wswt ON wswt.id = cgwt.waifu_id
+            WHERE user_id = $2 AND favorite = TRUE
+          )) OR $8 = FALSE
+        )
       ORDER BY
         CASE
           WHEN f_unaccent(wsst.name) ILIKE f_unaccent($1) THEN 0
@@ -36,7 +83,7 @@ SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_we
       WHEN '%' || f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
     ELSE 6 END, name
   LIMIT 20;
-`, [name]);
+`, [name, userID, guildID, claimsOnly, anyClaimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly]);
 
 const getSeries = async (name) => poolQuery(`
   SELECT id

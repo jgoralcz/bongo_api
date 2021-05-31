@@ -542,57 +542,29 @@ const claimClientWaifuID = async (userID, guildID, waifuID, date) => poolQuery(`
   RETURNING *;
 `, [`${guildID}-${userID}`, guildID, userID, waifuID, date]);
 
-/**
- * remove the claimed waifu
- * @param userID the user's id
- * @param guildID the guild's id
- * @param waifuID the waifu's ID.
- * @returns {Promise<*>}
- */
 const removeClaimWaifu = async (userID, guildID, waifuID) => poolQuery(`
   DELETE 
   FROM cg_claim_waifu_table
   WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
 `, [userID, guildID, waifuID]);
 
-// /**
-//  * adds a favorite to their claim waifu in the database.
-//  * @param userID the id of the user
-//  * @param guildID the id of the guild
-//  * @param waifuID the id of the waifu
-//  * @returns {Promise<*>}
-//  */
-// const addFavoriteClaimWaifu = async (userID, guildID, waifuID) => poolQuery(`
-//   UPDATE cg_claim_waifu_table
-//   SET favorite = TRUE
-//   WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
-// `, [userID, guildID, waifuID]);
-
-/**
- * add favorite waifu by id.
- * @param userID the user's id
- * @param guildID the guild's id
- * @param id the waifu id to add.
- * @returns {Promise<*>}
- */
-const addFavoriteClaimWaifuID = async (userID, guildID, id) => poolQuery(`
+const updateFavoriteClaimCharacter = async (userID, guildID, characterID, favorite = false) => poolQuery(`
   UPDATE cg_claim_waifu_table
-  SET favorite = TRUE
+  SET favorite = $4
   WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
-`, [userID, guildID, id]);
+`, [userID, guildID, characterID, favorite]);
 
-/**
- * removed favorite waifus
- * @param userID the user's id
- * @param guildID the guild's id
- * @param waifuID the waifu's id
- * @returns {Promise<*>}
- */
-const removeFavoriteClaimWaifuID = async (userID, guildID, waifuID) => poolQuery(`
+const updateFavoriteClaimWaifuBySeriesID = async (userID, guildID, seriesID, favorite = false) => poolQuery(`
   UPDATE cg_claim_waifu_table
-  SET favorite = FALSE
-  WHERE user_id = $1 AND guild_id = $2 AND waifu_id = $3;
-`, [userID, guildID, waifuID]);
+  SET favorite = $4
+  WHERE user_id = $1
+    AND guild_id = $2
+    AND waifu_id IN (
+      SELECT id
+      FROM waifu_schema.waifu_table
+      WHERE series_id = $3
+    );
+`, [userID, guildID, seriesID, favorite]);
 
 const removeClaimWaifusLeavers = async (guildID, userIDArray) => {
   const q = await poolQuery(`
@@ -750,6 +722,36 @@ const removeAllGuildClaimCharactersByID = async (guildID, characterID) => poolQu
   RETURNING *;
 `, [guildID, characterID]);
 
+const moveAllClaimedWaifu = async (myID, guildID, theirID) => poolQuery(`
+  UPDATE cg_claim_waifu_table
+  SET user_id = $3
+  WHERE user_id = $1 AND guild_id = $2;
+`, [myID, guildID, theirID]);
+
+const moveSeries = async (userID, theirID, guildID, seriesID) => poolQuery(`
+  UPDATE cg_claim_waifu_table
+  SET user_id = $2, date = NOW(), favorite = FALSE
+  WHERE user_id = $1
+    AND guild_id = $3
+    AND waifu_id IN (
+      SELECT id AS waifu_id
+      FROM waifu_schema.waifu_table
+      WHERE series_id = $4
+    );
+`, [userID, theirID, guildID, seriesID]);
+
+const moveBuySeries = async (userID, theirID, guildID, seriesID) => poolQuery(`
+  UPDATE cg_buy_waifu_table
+  SET user_id = $2, date = NOW(), favorite = FALSE
+  WHERE user_id = $1
+    AND guild_id = $3
+    AND waifu_id IN (
+      SELECT id AS waifu_id
+      FROM waifu_schema.waifu_table
+      WHERE series_id = $4
+    );
+`, [userID, theirID, guildID, seriesID]);
+
 module.exports = {
   getTopClaimCharacters,
   getRandomWaifuOwnerWishlistNotClaimed,
@@ -761,8 +763,7 @@ module.exports = {
   checkWaifuOwner,
   claimClientWaifuID,
   removeClaimWaifu,
-  addFavoriteClaimWaifuID,
-  removeFavoriteClaimWaifuID,
+  updateFavoriteClaimCharacter,
   getTopClaimWaifu,
   removeAllButFavoriteClaimWaifu,
   removeAllClaimWaifus,
@@ -778,4 +779,8 @@ module.exports = {
   removeDuplicateWaifuClaims,
   removeAllGuildClaimCharactersByID,
   getAllGuildClaimCount,
+  moveAllClaimedWaifu,
+  moveSeries,
+  moveBuySeries,
+  updateFavoriteClaimWaifuBySeriesID,
 };
