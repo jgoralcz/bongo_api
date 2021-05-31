@@ -2,7 +2,7 @@ const axios = require('axios');
 const logger = require('log4js').getLogger();
 const imageSize = require('image-size');
 
-const { MBLIMIT } = require('../../util/constants/bytes');
+const { MBLIMIT } = require('../constants/bytes');
 
 const getBuffer = async (uri) => {
   const { status, data } = await axios.get(uri, { responseType: 'arraybuffer', validateStatus: () => true });
