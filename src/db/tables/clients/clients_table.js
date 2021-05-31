@@ -14,6 +14,15 @@ const updateClientPlayFirst = async (userId, boolValue) => poolQuery(`
   RETURNING play_first AS "updatedBool";
 `, [userId, boolValue]);
 
+const updateUserBankPointsVote = async (userID, points) => poolQuery(`
+  UPDATE "clientsTable" 
+  SET "bankPoints" = "bankPoints" + $2, vote_date = NOW(), 
+  streak_vote_date = NOW() + INTERVAL '2 days', vote_enabled = TRUE,
+  streak_vote = streak_vote + 1
+  WHERE "userId" = $1
+  RETURNING *;
+`, [userID, points]);
+
 const updateClientRollClaimed = async (userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET user_roll_claimed = $2
@@ -581,4 +590,5 @@ module.exports = {
   updateUserEmbedColor,
   updateUserUnlockEmbedColor,
   updateUserUseMyImage,
+  updateUserBankPointsVote,
 };
