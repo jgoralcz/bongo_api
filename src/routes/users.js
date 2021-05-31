@@ -3,6 +3,7 @@ const route = require('express-promise-router')();
 
 const {
   updateClientDaily,
+  updateUserBankPointsVote,
   getClientInfo,
   resetAllClientDaily,
   clearVoteStreaks,
@@ -354,6 +355,19 @@ route.get('/:userID/characters/bought', async (req, res) => {
   }
 
   return res.status(200).send(query);
+});
+
+route.patch('/:id/vote/points', async (req, res) => {
+  const { id } = req.params;
+  const { points: tempPoints } = req.body;
+
+  const points = !tempPoints || tempPoints < 0 || isNaN(tempPoints) ? 0 : tempPoints;
+
+  if (!id) return res.status(400).send({ error: `id expected. Received: id=${id}` });
+
+  await updateUserBankPointsVote(id, points);
+
+  return res.status(204).send();
 });
 
 module.exports = route;

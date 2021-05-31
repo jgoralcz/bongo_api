@@ -1,41 +1,17 @@
 const { poolQuery } = require('../../index');
 
 const getAllSeriesByName = async (name) => poolQuery(`
-SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_western, nicknames
-  FROM (
-    SELECT wsst.id, wsst.name, description, image_url, url, release_date, nsfw, is_game, is_western,
-    COALESCE(array_remove(array_agg(DISTINCT(wssn.nickname)), NULL), '{}') AS nicknames
-    FROM (
-      SELECT wsst.id, wssn.series_id, wssn.nickname
-      FROM waifu_schema.series_table wsst
-      LEFT JOIN waifu_schema.series_nicknames wssn ON wssn.series_id = wsst.id
-      WHERE
-        f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%'
-        OR f_unaccent(nickname) ILIKE '%' || f_unaccent($1) || '%'
-      ORDER BY
-        CASE
-          WHEN f_unaccent(wsst.name) ILIKE f_unaccent($1) THEN 0
-          WHEN f_unaccent(wssn.nickname) ILIKE f_unaccent($1) THEN 1
-          WHEN f_unaccent(wsst.name) ILIKE f_unaccent($1) || '%' THEN 2
-          WHEN f_unaccent(wssn.nickname) ILIKE f_unaccent($1) || '%' THEN 3
-          WHEN f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
-          WHEN f_unaccent(wssn.nickname) ILIKE '%' || f_unaccent($1) || '%' THEN 5
-        ELSE 6 END, wsst.name
-      LIMIT 20
-    ) wssn
-    JOIN waifu_schema.series_table wsst ON wsst.id = wssn.id
-    GROUP BY wsst.id, wsst.name, description, image_url, url, release_date, nsfw, is_game, is_western
-  ) t1
+  SELECT name, url, id
+  FROM waifu_schema.series_table wsst
+  WHERE f_unaccent(name) ILIKE '%' || $1 || '%' OR levenshtein(f_unaccent(name), $1) <= 3
   ORDER BY
     CASE
-      WHEN f_unaccent(name) ILIKE f_unaccent($1) THEN 0
-      WHEN f_unaccent($1) ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
-      WHEN f_unaccent(name) ILIKE f_unaccent($1) || '%' THEN 2
-      WHEN f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
-      WHEN f_unaccent(name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
-      WHEN '%' || f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
-    ELSE 6 END, name
-  LIMIT 20;
+    WHEN f_unaccent(name) ILIKE $1 THEN 0
+    WHEN f_unaccent(name) ILIKE $1 || '%' THEN 1
+    WHEN f_unaccent(name) ILIKE '%' || $1 THEN 2
+    WHEN f_unaccent(name) ILIKE '%' || $1 || '%' THEN 3
+    ELSE 3 END, name
+    LIMIT 20;
 `, [name]);
 
 const getSeries = async (name) => poolQuery(`
