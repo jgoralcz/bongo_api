@@ -22,7 +22,20 @@ const {
   updateUserUnlockEmbedColor,
   updateUserUseMyImage,
   updateBankRollsByUserID,
+  updateUserCharacterLimit,
   subtractClientPoints,
+  upgradeUserDisableSeries,
+  upgradeUserDisableCharacters,
+  upgradeUserWishlistSeries,
+  upgradeUserWishlistCharacter,
+  upgradeUserRollsPerReset,
+  upgradeUserWishlistChance,
+  upgradeUserRollRankGreaterThan,
+  upgradeUserDiscount,
+  upgradeUserBotImages,
+  updateUserBotNSFWImage,
+  updateUserBotSFWImage,
+  setWaifuListTitle,
 } = require('../db/tables/clients/clients_table');
 
 const { banSubmissionUser, unbanSubmissionUser } = require('../db/tables/bans_submissions/bans_submissions.js');
@@ -34,13 +47,13 @@ const {
   moveAllClaimedWaifu,
   moveSeries,
   moveBuySeries,
-  getRandomWaifuOwnerNotClaimed,
-  getRandomWaifuOwnerWishlistClaimed,
-  getRandomWaifuOwnerClaimed,
-  getRandomWaifuOwnerWishlistNotClaimed,
   updateFavoriteClaimWaifuBySeriesID,
   updateFavoriteClaimCharacter,
 } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
+
+const {
+  selectImageByURL,
+} = require('../db/waifu_schema/waifu_images/waifu_table_images');
 
 const {
   claimClientCustomWaifuID,
@@ -59,6 +72,20 @@ const {
 } = require('../db/tables/cg_buy_waifu/cg_buy_waifu_table');
 
 const {
+  addBlacklistCharacterUser,
+  removeBlacklistCharacterUser,
+  getBlacklistCharacterUserCount,
+  getBlacklistCharactersUserPage,
+} = require('../db/tables/clients_disable_characters/clients_disable_characters');
+
+const {
+  addBlacklistSeriesUser,
+  removeBlacklistSeriesUser,
+  getBlacklistSeriesUserCount,
+  getBlacklistSeriesUserPage,
+} = require('../db/tables/clients_disable_series/clients_disable_series');
+
+const {
   incrementClaimWaifuRoll,
   clearStreaks,
   getClientsGuildsInfo,
@@ -68,6 +95,22 @@ const {
   resetClaimByUserID,
 } = require('../db/tables/clients_guilds/clients_guilds_table');
 
+const {
+  addUserFriend,
+  removeUserFriend,
+  getAllFriendUser,
+  getTopFriends,
+  getTopServerFriends,
+} = require('../db/tables/clients_friends/clients_friends');
+
+const {
+  addUserMarry,
+  removeUserMarry,
+  getAllMarryUser,
+  getTopMarries,
+  getTopServerMarries,
+} = require('../db/tables/clients_marries/clients_marries');
+
 const { insertGuildRolled } = require('../db/tables/guild_rolled/guild_rolled');
 
 const { initializeGetNewUser } = require('../util/functions/user');
@@ -75,34 +118,6 @@ const { invalidBoolSetting } = require('../util/functions/validators');
 
 const { rollCharacter } = require('../handlers/rolls');
 const { restartBackupQueue } = require('../db/tables/guild_data/guild_data');
-
-const rollRequest = async (req, res, rollFunction) => {
-  const { userID, guildID } = req.params;
-  if (!userID || !guildID) return res.status(400).send({ error: 'Missing userID or guildID' });
-
-  const {
-    nsfw,
-    limitMultiplier,
-    rollWestern,
-    rollGame,
-    croppedDiscordImage = true,
-    rollAnime,
-    isHusbando,
-  } = req.query;
-
-  const rows = await rollFunction(
-    userID,
-    guildID,
-    invalidBoolSetting(nsfw, false),
-    invalidBoolSetting(rollWestern, true),
-    invalidBoolSetting(rollGame, true),
-    invalidBoolSetting(croppedDiscordImage, false),
-    limitMultiplier || 1,
-    !invalidBoolSetting(rollAnime, true),
-    isHusbando,
-  );
-  return res.status(200).send(rows || []);
-};
 
 const updateSettings = async (req, res, updateFunction) => {
   const { id } = req.params;
@@ -154,6 +169,28 @@ route.patch('/:id/settings/custom-commands', async (req, res) => updateSettings(
 route.patch('/:id/settings/unlock-embed-color', async (req, res) => updateSettings(req, res, updateUserUnlockEmbedColor));
 route.patch('/:id/settings/use-my-image', async (req, res) => updateSettings(req, res, updateUserUseMyImage));
 
+route.patch('/:id/settings/character-limit', async (req, res) => {
+  const { id } = req.params;
+  const { number } = req.body;
+
+  if (!id || !number || isNaN(number)) return res.status(400).send({ error: 'Expected param id and number (valid) in body' });
+
+  await updateUserCharacterLimit(id, parseInt(number, 10));
+
+  return res.status(200).send({ id, number });
+});
+
+route.patch('/:id/settings/lists/waifu/title', async (req, res) => {
+  const { id } = req.params;
+  const { title } = req.body;
+
+  if (title && title.length > 120) return res.status(400).send({ error: 'title must be less than 120 characters in length' });
+
+  await setWaifuListTitle(id, title);
+
+  return res.status(204).send();
+});
+
 route.patch('/:id/settings/embed-color', async (req, res) => {
   const { id } = req.params;
   const { color } = req.body;
@@ -170,6 +207,33 @@ route.patch('/:id/settings/embed-color', async (req, res) => {
   return res.status(204).send({ id, color });
 });
 
+route.patch('/:id/settings/images/bot/sfw', async (req, res) => {
+  const { id } = req.params;
+  const { url } = req.body;
+
+  if (!url.startsWith('https://cdn.bongo.best') && !url.startsWith('https://cdn.bongobot.io')) return res.status(400).send({ error: 'Image must be hosted by me.' });
+
+  const image = await selectImageByURL(url);
+  if (image && image[0] && image[0].nsfw) return res.status(400).send({ error: 'sfw bot image may not be nsfw.' });
+
+  const success = await updateUserBotSFWImage(id, url);
+  if (!success) return res.status(500).send();
+
+  return res.status(204).send();
+});
+
+route.patch('/:id/settings/images/bot/nsfw', async (req, res) => {
+  const { id } = req.params;
+  const { url } = req.body;
+
+  if (!url.startsWith('https://cdn.bongo.best') && !url.startsWith('https://cdn.bongobot.io')) return res.status(400).send({ error: 'Image must be hosted by me.' });
+
+  const success = await updateUserBotNSFWImage(id, url);
+  if (!success) return res.status(500).send();
+
+  return res.status(204).send();
+});
+
 route.patch('/:id/settings/guilds/:guildID/custom-commands', async (req, res) => {
   const { id, guildID } = req.params;
 
@@ -182,11 +246,6 @@ route.patch('/:id/settings/guilds/:guildID/custom-commands', async (req, res) =>
 
   return res.status(200).send({ id, updatedBool });
 });
-
-route.get('/:userID/guilds/:guildID/rolls/random-owner-not-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerNotClaimed));
-route.get('/:userID/guilds/:guildID/rolls/random-owner-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerClaimed));
-route.get('/:userID/guilds/:guildID/rolls/random-owner-wishlist-not-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerWishlistNotClaimed));
-route.get('/:userID/guilds/:guildID/rolls/random-owner-wishlist-claimed', async (req, res) => rollRequest(req, res, getRandomWaifuOwnerWishlistClaimed));
 
 // all in one to reduce latency and clean it up; this route is used very, very often
 route.get('/:userID/guilds/:guildID/rolls/random', async (req, res) => {
@@ -205,6 +264,8 @@ route.get('/:userID/guilds/:guildID/rolls/random', async (req, res) => {
     rarityPercentage,
     rollCustomCharacterOnly,
     unlimitedClaims,
+    upgradeWishlistChanceAmount = 0,
+    rollRankGreaterThan = 0,
   } = req.query;
 
   const characters = await rollCharacter(
@@ -221,6 +282,8 @@ route.get('/:userID/guilds/:guildID/rolls/random', async (req, res) => {
     invalidBoolSetting(unlimitedClaims, false),
     invalidBoolSetting(croppedDiscordImage, false),
     isHusbando,
+    upgradeWishlistChanceAmount,
+    rollRankGreaterThan,
   );
 
   // guild can't roll this character again for 10 min
@@ -550,5 +613,185 @@ route.patch('/:userID/buys/characters/:characterID/favorites', async (req, res) 
 
   return res.status(204).send();
 });
+
+// characters disable
+route.delete('/:userID/characters/:characterID/disable', async (req, res) => {
+  const { userID, characterID } = req.params;
+
+  await removeBlacklistCharacterUser(userID, characterID);
+
+  return res.status(204).send();
+});
+
+route.post('/characters/disable', async (req, res) => {
+  const { userID, characterID } = req.body;
+
+  await addBlacklistCharacterUser(userID, characterID);
+
+  return res.status(201).send();
+});
+
+route.get('/:userID/characters/disable/count', async (req, res) => {
+  const { userID } = req.params;
+
+  const rows = await getBlacklistCharacterUserCount(userID);
+  if (!rows || !rows[0] || rows[0].count == null) return res.status(404).send();
+
+  return res.status(200).send(rows[0].count);
+});
+
+route.get('/:userID/characters/disable', async (req, res) => {
+  const { userID } = req.params;
+  const { offset, limit } = req.query;
+
+  if (offset < 0 || limit < 0 || isNaN(offset) || isNaN(limit)) return res.status(400).send({ error: `offset and limit must be greater than zero and a number. Received: ${JSON.stringify({ offset, limit })}` });
+
+  const rows = await getBlacklistCharactersUserPage(userID, offset, limit);
+
+  return res.status(200).send(rows);
+});
+
+// series disable
+route.delete('/:userID/series/:seriesID/disable', async (req, res) => {
+  const { userID, seriesID } = req.params;
+
+  await removeBlacklistSeriesUser(userID, seriesID);
+
+  return res.status(204).send();
+});
+
+route.post('/series/disable', async (req, res) => {
+  const { userID, seriesID } = req.body;
+
+  await addBlacklistSeriesUser(userID, seriesID);
+
+  return res.status(201).send();
+});
+
+route.get('/:userID/series/disable/count', async (req, res) => {
+  const { userID } = req.params;
+
+  const rows = await getBlacklistSeriesUserCount(userID);
+  if (!rows || !rows[0] || rows[0].count == null) return res.status(404).send();
+
+  return res.status(200).send(rows[0].count);
+});
+
+route.get('/:userID/series/disable', async (req, res) => {
+  const { userID } = req.params;
+  const { offset, limit } = req.query;
+
+  if (offset < 0 || limit < 0 || isNaN(offset) || isNaN(limit)) return res.status(400).send({ error: `offset and limit must be greater than zero and a number. Received: ${JSON.stringify({ offset, limit })}` });
+
+  const rows = await getBlacklistSeriesUserPage(userID, offset, limit);
+
+  return res.status(200).send(rows);
+});
+
+// friends
+route.post('/friends', async (req, res) => {
+  const { userID, friendID } = req.body;
+
+  await addUserFriend(userID, friendID);
+
+  return res.status(201).send();
+});
+
+route.delete('/:userID/friends/:friendID', async (req, res) => {
+  const { userID, friendID } = req.params;
+
+  await removeUserFriend(userID, friendID);
+
+  return res.status(204).send();
+});
+
+route.get('/:userID/friends', async (req, res) => {
+  const { userID } = req.params;
+
+  const rows = await getAllFriendUser(userID);
+
+  return res.status(200).send(rows);
+});
+
+route.get('/friends/top', async (_, res) => {
+  const rows = await getTopFriends();
+
+  return res.status(200).send(rows);
+});
+
+route.get('/guilds/:guildID/friends/top', async (req, res) => {
+  const { guildID } = req.params;
+
+  const rows = await getTopServerFriends(guildID);
+
+  return res.status(200).send(rows);
+});
+
+// marries
+route.post('/marries', async (req, res) => {
+  const { userID, marryID } = req.body;
+
+  await addUserMarry(userID, marryID);
+
+  return res.status(201).send();
+});
+
+route.delete('/:userID/marries/:marryID', async (req, res) => {
+  const { userID, marryID } = req.params;
+
+  await removeUserMarry(userID, marryID);
+
+  return res.status(204).send();
+});
+
+route.get('/:userID/marries', async (req, res) => {
+  const { userID } = req.params;
+
+  const rows = await getAllMarryUser(userID);
+
+  return res.status(200).send(rows);
+});
+
+route.get('/marries/top', async (_, res) => {
+  const rows = await getTopMarries();
+
+  return res.status(200).send(rows);
+});
+
+route.get('/guilds/:guildID/marries/top', async (req, res) => {
+  const { guildID } = req.params;
+
+  const rows = await getTopServerMarries(guildID);
+
+  return res.status(200).send(rows);
+});
+
+// upgrades
+const upgrade = (upgradeFunction) => async (req, res) => {
+  const { userID } = req.params;
+  const { addNumber, points } = req.body;
+
+  await upgradeFunction(userID, addNumber, points);
+
+  return res.status(204).send();
+};
+
+route.patch('/:userID/upgrades/series/disable', upgrade(upgradeUserDisableSeries));
+
+route.patch('/:userID/upgrades/characters/disable', upgrade(upgradeUserDisableCharacters));
+
+route.patch('/:userID/upgrades/series/wishlist', upgrade(upgradeUserWishlistSeries));
+
+route.patch('/:userID/upgrades/characters/wishlist', upgrade(upgradeUserWishlistCharacter));
+
+route.patch('/:userID/upgrades/rolls', upgrade(upgradeUserRollsPerReset));
+
+route.patch('/:userID/upgrades/wishlist/percentage', upgrade(upgradeUserWishlistChance));
+
+route.patch('/:userID/upgrades/characters/limits', upgrade(upgradeUserRollRankGreaterThan));
+
+route.patch('/:userID/upgrades/discount', upgrade(upgradeUserDiscount));
+
+route.patch('/:userID/upgrades/bot-image', upgrade(upgradeUserBotImages));
 
 module.exports = route;

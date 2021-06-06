@@ -1,7 +1,7 @@
 const logger = require('log4js').getLogger();
 
 const { poolQuery } = require('../../index');
-const { getSeries } = require('../../../db/waifu_schema/series/series_table');
+const { getSeries } = require('../series/series_table');
 
 const insertAppearsIn = async (waifuID, seriesID) => poolQuery(`
   INSERT INTO waifu_schema.appears_in (waifu_id, series_id)

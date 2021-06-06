@@ -1,7 +1,6 @@
 const { poolQuery } = require('../../index');
 
-// TODO: verify this works
-const getAllSeriesByName = async (name, userID, guildID, claimsOnly = false, anyClaimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false) => poolQuery(`
+const getAllSeriesByName = async (name, userID, guildID, claimsOnly = false, anyClaimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false, wishlistOnly = false, disableSeriesOnly = false) => poolQuery(`
 SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_western, nicknames
   FROM (
     SELECT wsst.id, wsst.name, description, image_url, url, release_date, nsfw, is_game, is_western,
@@ -59,6 +58,22 @@ SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_we
             WHERE user_id = $2 AND favorite = TRUE
           )) OR $8 = FALSE
         )
+        -- wishlist only
+        AND (
+          ($9 = TRUE and wsst.id IN (
+              SELECT series_id AS id
+              FROM cg_wishlist_series_table
+              WHERE user_id = $2
+          )) OR $9 = FALSE
+        )
+        -- disable only
+        AND (
+          ($10 = TRUE and wsst.id IN (
+            SELECT series_id
+            FROM clients_disable_series cgs
+            WHERE user_id = $2
+          )) OR $10 = FALSE
+        )
       ORDER BY
         CASE
           WHEN f_unaccent(wsst.name) ILIKE f_unaccent($1) THEN 0
@@ -83,7 +98,7 @@ SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_we
       WHEN '%' || f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
     ELSE 6 END, name
   LIMIT 20;
-`, [name, userID, guildID, claimsOnly, anyClaimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly]);
+`, [name, userID, guildID, claimsOnly, anyClaimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly, disableSeriesOnly]);
 
 const getSeries = async (name) => poolQuery(`
   SELECT id

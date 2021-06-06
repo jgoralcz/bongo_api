@@ -1,6 +1,5 @@
 const { poolQuery } = require('../../index');
 
-
 const insertGuildRolled = async (guildID, characterID) => poolQuery(`
   INSERT INTO guild_rolled (guild_id, character_id)
   VALUES ($1, $2);

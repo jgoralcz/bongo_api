@@ -37,6 +37,81 @@ const updateClientAnimeRolls = async (userID, boolValue) => poolQuery(`
   RETURNING roll_anime AS "updatedBool";
 `, [userID, boolValue]);
 
+const updateUserCharacterLimit = async (userID, boolValue) => poolQuery(`
+  UPDATE "clientsTable"
+  SET set_upgrade_character_limit = $2
+  WHERE "userId" = $1
+  RETURNING set_upgrade_character_limit AS "updatedBool";
+`, [userID, boolValue]);
+
+const updateUserBotSFWImage = async (userID, imageURL) => poolQuery(`
+  UPDATE "clientsTable"
+  SET set_upgrade_bot_image_sfw = $2
+  WHERE "userId" = $1
+  RETURNING set_upgrade_bot_image_sfw AS "updatedBool";
+`, [userID, imageURL]);
+
+const updateUserBotNSFWImage = async (userID, imageURL) => poolQuery(`
+  UPDATE "clientsTable"
+  SET set_upgrade_bot_image_nsfw = $2
+  WHERE "userId" = $1
+  RETURNING set_upgrade_bot_image_nsfw AS "updatedBool";
+`, [userID, imageURL]);
+
+const upgradeUserDisableSeries = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_disable_series_amount = upgrade_disable_series_amount + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
+const upgradeUserBotImages = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_bot_image = upgrade_bot_image + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
+const upgradeUserDiscount = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_discount = upgrade_discount + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
+const upgradeUserRollRankGreaterThan = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_character_limit = upgrade_character_limit + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
+const upgradeUserDisableCharacters = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_disable_characters_amount = upgrade_disable_characters_amount + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
+const upgradeUserWishlistSeries = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_wishlist_series_amount = upgrade_wishlist_series_amount + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
+const upgradeUserRollsPerReset = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_user_rolls = upgrade_user_rolls + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
+const upgradeUserWishlistChance = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_wishlist_chance_amount = upgrade_wishlist_chance_amount + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
+const upgradeUserWishlistCharacter = async (userID, addNumber, points) => poolQuery(`
+  UPDATE "clientsTable"
+  SET upgrade_wishlist_characters_amount = upgrade_wishlist_characters_amount + $2, "bankPoints" = "bankPoints" - $3
+  WHERE "userId" = $1;
+`, [userID, addNumber, points]);
+
 const updateClientGameRolls = async (userID, boolValue) => poolQuery(`
   UPDATE "clientsTable"
   SET roll_game = $2
@@ -588,6 +663,18 @@ module.exports = {
   updateUserEmbedColor,
   updateUserUnlockEmbedColor,
   updateUserUseMyImage,
+  updateUserCharacterLimit,
   addBankPoints,
   updateBankRollsByUserID,
+  upgradeUserDisableSeries,
+  upgradeUserDisableCharacters,
+  upgradeUserWishlistSeries,
+  upgradeUserWishlistCharacter,
+  upgradeUserRollsPerReset,
+  upgradeUserWishlistChance,
+  upgradeUserRollRankGreaterThan,
+  upgradeUserDiscount,
+  upgradeUserBotImages,
+  updateUserBotSFWImage,
+  updateUserBotNSFWImage,
 };

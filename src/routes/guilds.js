@@ -47,7 +47,6 @@ const { getUsersWishSeries } = require('../db/tables/cg_wishlist_series/cg_wishl
 
 const {
   getRemainingClaimWaifusServer,
-  findClaimWaifuByNameJoinURL,
   removeAllGuildClaimCharactersByID,
 } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
 

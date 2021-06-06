@@ -61,171 +61,6 @@ const resetClaimByUserID = async (userID, guildID) => poolQuery(`
   WHERE "userId" = $1 AND "guildId" = $2;
 `, [userID, guildID]);
 
-/**
- * adds a friend to their friends list.
- * @param friendId the friend's id.
- * @param id the guild user id??
- * @param userId the user's id.
- * @param guildId the guild's id.
- * @returns {Promise<Promise<*>|*>}
- */
-const addFriend = async (friendId, id, userId, guildId) => poolQuery(`
-  INSERT INTO "clientsGuildsTable" ("friendsFromServer", "id", "userId", "guildId")
-  VALUES(ARRAY[$1]::TEXT[], $2, $3, $4)
-  ON CONFLICT(id) DO
-    UPDATE
-    SET "friendsFromServer" = array_append("clientsGuildsTable"."friendsFromServer", $1::TEXT),
-    "totalFriends" = "clientsGuildsTable"."totalFriends" + 1
-    WHERE "clientsGuildsTable"."id" = $2;
-`, [friendId, id, userId, guildId]);
-
-/**
- * removes a friend from the list
- * @param friendId the friend's id.
- * @param userId the user's id.
- * @returns {Promise<Promise<*>|*>}
- */
-const removeFriend = async (friendId, userId) => poolQuery(`
-  UPDATE "clientsGuildsTable"
-  SET "friendsFromServer" = array_remove("friendsFromServer", $1), "totalFriends" = "totalFriends" - 1
-  WHERE "userId" = $2;
-`, [friendId, userId]);
-
-/**
- * gets all friends belonging to a user.
- * @param userId the user's id.
- * @returns {Promise<Promise<*>|*>}
- */
-const getAllFriends = async (userId) => poolQuery(`
-  SELECT array_agg(friends) AS "friendsFromServer"
-  FROM (
-    SELECT UNNEST("friendsFromServer") AS friends
-    FROM "clientsGuildsTable"
-    WHERE "userId" = $1
-  ) sub;
-`, [userId]);
-
-/**
-* get all the marriages and friends from a user.
-* @param userId the user's id.
-* @returns {Promise<*>}
-*/
-const getAllFriendsAndMarriages = async (userId) => poolQuery(`
-  SELECT array_remove(array_agg(friends), NULL) AS "friendsFromServer", array_remove(array_agg(marriages), NULL) AS "marryFromServer"
-  FROM (
-    SELECT UNNEST("friendsFromServer") AS friends, UNNEST("marryFromServer") AS marriages
-    FROM "clientsGuildsTable"
-    WHERE "userId" = $1
-  ) sub;
-`, [userId]);
-
-/**
- * gets x top members with friends
- * @returns {Promise<*>}
- */
-const getTopFriends = async () => poolQuery(`
-  SELECT "userId", SUM("totalFriends") AS top
-  FROM "clientsGuildsTable"
-  WHERE "totalFriends" > 2
-  GROUP BY "userId"
-  ORDER BY top DESC
-  LIMIT 20;
-`, []);
-
-/**
- * gets x top server friends.
- * @param guildID the guild's id.
- * @returns {Promise<*>}
- */
-const getTopServerFriends = async (guildID) => poolQuery(`
-  SELECT "userId", "totalFriends" AS top
-  FROM "clientsGuildsTable"
-  WHERE "guildId" = $1
-  ORDER BY top DESC
-  LIMIT 20;
-`, [guildID]);
-
-/**
- * adds a marriage to the user's list.
- * @param marryId the user to add id.
- * @param id the combined id??
- * @param userId the user's id.
- * @param guildId the guild's id.
- * @returns {Promise<Promise<*>|*>}
- */
-const addMarriage = async (marryId, id, userId, guildId) => poolQuery(`
-  INSERT INTO "clientsGuildsTable" ("marryFromServer", "id", "userId", "guildId")
-  VALUES(ARRAY[$1]::TEXT[], $2, $3, $4)
-  ON CONFLICT(id) DO
-  UPDATE
-  SET "marryFromServer" = array_append("clientsGuildsTable"."marryFromServer", $1::TEXT),
-  "totalMarriages" = "clientsGuildsTable"."totalMarriages" + 1
-  WHERE "clientsGuildsTable"."id" = $2;
-`, [marryId, id, userId, guildId]);
-
-/**
- * remove their marriage from the user's array
- * @param marryId the marry id.
- * @param id the user's id.
- * @returns {Promise<*>}
- */
-const removeMarriage = async (marryId, id) => poolQuery(`
-  UPDATE "clientsGuildsTable"
-  SET "marryFromServer" = array_remove("marryFromServer", $1), 
-  "totalMarriages" = "totalMarriages" - 1
-  WHERE "userId" = $2;
-`, [marryId, id]);
-
-const getAllMarriages = async (userId) => poolQuery(`
-SELECT array_agg(marriages) AS "marryFromServer"
-  FROM (
-    SELECT UNNEST("marryFromServer") AS marriages
-    FROM "clientsGuildsTable"
-    WHERE "userId" = $1
-  ) sub;
-`, [userId]);
-
-/**
- * gets the x top marriages
- * @returns {Promise<*>}
- */
-const getTopMarriages = async () => poolQuery(`
-  SELECT "userId", SUM("totalMarriages") AS top
-  FROM "clientsGuildsTable"
-  WHERE "totalMarriages" > 2
-  GROUP BY "userId"
-  ORDER BY top DESC
-  LIMIT 20;
-`, []);
-
-/**
- * gets the top server marriages
- * @param guildId the guild's id.
- * @returns {Promise<Promise<*>|*>}
- */
-const getTopServerMarriages = async (guildId) => poolQuery(`
-  SELECT "userId", "totalMarriages" AS top
-  FROM "clientsGuildsTable"
-  WHERE "guildId" = $1
-  ORDER BY top DESC
-  LIMIT 20;
-`, [guildId]);
-
-/**
-* get all client info based off id
-* @param id the guild-user id key
-* @returns {Promise<*>}
-*/
-const getClientsGuildsInfoById = async (id) => poolQuery(`
-SELECT * 
-FROM (
-  SELECT *
-  FROM "clientsGuildsTable"
-  WHERE "id" = $1
-) cgt
-JOIN "clientsTable" ct ON cgt."userId" = ct."userId";
-`, [id]);
-
 const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
   SELECT cgt."userId", cgt."userId" AS "userID", cgt."guildId" AS "guildID", cgt."guildId",
     "guildPrefix", prefix, "prefixForAllEnable", daily, daily_gather, streak, rolls_waifu, claim_waifu, public_wish_list,
@@ -235,7 +70,9 @@ const getClientsGuildsInfo = async (userId, guildId) => poolQuery(`
     achievement_reddit, achievement_search_anime, owoify, buy_rolls, buy_claims, gauntlet, show_waifu_rank, cropped_images,
     donut, pizza, cookie, fuel, stones, ramen, roll_game, roll_western, roll_anime, steal_character, roll_custom_only, banned_submission_date,
     anime_reactions_server, roll_western_server, cropped_images_server, roll_anime_server, claim_time_disappear, claim_other_rolls_seconds, music_leave_time_minutes,
-    unlock_color, embed_color, nightcore_enabled, volume, bass_boost, webhook_url, webhook_name, use_my_image, bank_rolls
+    unlock_color, embed_color, nightcore_enabled, volume, bass_boost, webhook_url, webhook_name, use_my_image, bank_rolls, upgrade_disable_series_amount, upgrade_disable_characters_amount,
+    upgrade_wishlist_series_amount, upgrade_wishlist_characters_amount, upgrade_user_rolls, upgrade_wishlist_chance_amount, upgrade_character_limit, set_upgrade_character_limit, upgrade_discount,
+    set_upgrade_bot_image_nsfw, set_upgrade_bot_image_sfw, upgrade_bot_image, waifu_list_title
   FROM (
     SELECT "userId", "guildId", rolls_waifu, claim_waifu, public_wish_list
     FROM "clientsGuildsTable"
@@ -302,18 +139,6 @@ module.exports = {
   addClaimWaifuFail,
   resetRollsByUserID,
   resetClaimByUserID,
-  addFriend,
-  removeFriend,
-  getAllFriends,
-  getAllFriendsAndMarriages,
-  getTopFriends,
-  getTopServerFriends,
-  addMarriage,
-  removeMarriage,
-  getAllMarriages,
-  getTopMarriages,
-  getTopServerMarriages,
-  getClientsGuildsInfoById,
   getClientsGuildsInfo,
   initializeGuildClient,
   resetClaims,

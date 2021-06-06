@@ -9,15 +9,23 @@ const {
   getRandomWaifuOwnerNotClaimed,
   getRandomWaifuOwnerClaimed,
   getRandomWaifuOwnerWishlistNotClaimed,
+  getRandomWaifuOwnerPersonalWishlist,
 } = require('../db/tables/cg_claim_waifu/cg_claim_waifu');
 
+let serverCharacterAll = {};
+
+setInterval(() => {
+  serverCharacterAll = {};
+}, 1000 * 60 * 10); // 10 minutes
 
 const getServerCharacterAll = async (guildID) => {
+  if (serverCharacterAll[guildID]) return serverCharacterAll[guildID];
+
   const query = await getCountForServer(guildID);
 
   if (!query || query.length <= 0 || !query[0]) {
     return {
-      characterCount: 30000,
+      characterCount: 40000,
       characterClaimed: 0,
       customCount: 0,
       customCharacterClaimed: 0,
@@ -33,12 +41,16 @@ const getServerCharacterAll = async (guildID) => {
     claimed_custom_characters: customCharacterClaimed,
   } = data;
 
-  return {
-    characterCount: parseInt(characterCount || 30000, 10),
+  const serverCount = {
+    characterCount: parseInt(characterCount || 40000, 10),
     characterClaimed: parseInt(characterClaimed || 0, 10),
     customCount: parseInt(customCount || 0, 10),
     customCharacterClaimed: parseInt(customCharacterClaimed || 0, 10),
   };
+
+  serverCharacterAll[guildID] = serverCount;
+
+  return serverCount;
 };
 
 const rollCharacter = async (
@@ -49,12 +61,14 @@ const rollCharacter = async (
   rollWestern,
   rollAnime = true,
   rollGame,
-  rarityPercentage = 100,
-  limitMultiplier = 1,
+  _, // rarityPercentage = 100 this is no longer used
+  limitMultiplierTemp = 1, // wishlist multiplier
   rollCustomWaifuOnly,
   unlimitedClaims,
   croppedImage,
   isHusbando,
+  upgradeWishlistChanceAmount,
+  rollRankGreaterThanTemp = 0,
 ) => {
   const {
     characterClaimed,
@@ -63,14 +77,21 @@ const rollCharacter = async (
     customCharacterClaimed,
   } = await getServerCharacterAll(guildID);
 
+  const limitMultiplier = Math.ceil(limitMultiplierTemp / 1.25);
   const total = customCount + characterCount;
   const randomDecision = Math.floor(Math.random() * total);
   const randomWeight = Math.random();
   const randomRarity = Math.random();
 
+  // 5000 = 5
+  // 10000 = 4
+  // 15000 = 3
+  // 10000 = 25000 * x
+  const rollRankGreaterThan = rollRankGreaterThanTemp > 0 ? 25000 * (1 - (rollRankGreaterThanTemp / 5) + 0.2) : 0;
+
   // custom only
   if (rollCustomWaifuOnly && customCount > 0) {
-    if (!userRollClaimed && (randomRarity <= ((customCharacterClaimed / customCount / 100) * rarityPercentage))) {
+    if (!userRollClaimed && (randomRarity <= (customCharacterClaimed / customCount))) {
       const claimedCustomQuery = await getRandomCustomWaifuOwnerClaimed(guildID, nsfw);
       if (claimedCustomQuery && claimedCustomQuery[0]) {
         return { customWaifu: true, waifu: claimedCustomQuery[0] };
@@ -93,7 +114,7 @@ const rollCharacter = async (
   }
 
   // normal
-  if (!userRollClaimed && (randomRarity <= ((characterClaimed / total / 100) * rarityPercentage))) {
+  if (!userRollClaimed && randomRarity <= (characterClaimed / total)) {
     if ((randomDecision > characterCount || randomWeight <= 0.005) && customCount > 0) {
       const claimedCustomQuery = await getRandomCustomWaifuOwnerClaimed(guildID, nsfw);
       if (claimedCustomQuery && claimedCustomQuery[0]) {
@@ -101,7 +122,7 @@ const rollCharacter = async (
       }
     }
 
-    const randomOwnerClaimed = await getRandomWaifuOwnerClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando);
+    const randomOwnerClaimed = await getRandomWaifuOwnerClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando, rollRankGreaterThan);
     if (randomOwnerClaimed && randomOwnerClaimed[0]) return randomOwnerClaimed;
   }
 
@@ -112,13 +133,21 @@ const rollCharacter = async (
     }
   }
 
+  const offsetPersonalWishlist = Math.ceil(upgradeWishlistChanceAmount * 0.1);
   const limitMultiplierRandom = (Math.random() * 200) - 1;
   if (limitMultiplierRandom <= limitMultiplier) {
-    const randomOwnerWishlistNotClaimed = await getRandomWaifuOwnerWishlistNotClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando);
+    const randomOwnerWishlistNotClaimed = await getRandomWaifuOwnerWishlistNotClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando, rollRankGreaterThan);
     if (randomOwnerWishlistNotClaimed && randomOwnerWishlistNotClaimed[0]) return randomOwnerWishlistNotClaimed;
   }
 
-  const randomOwnerNotClaimed = await getRandomWaifuOwnerNotClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando);
+  // personal wishlist
+  const offsetPersonalWishlistLimit = Math.random() * 50;
+  if (offsetPersonalWishlist > offsetPersonalWishlistLimit) {
+    const randomOwnerWishlistNotClaimed = await getRandomWaifuOwnerPersonalWishlist(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, offsetPersonalWishlist, rollAnime, isHusbando, rollRankGreaterThan);
+    if (randomOwnerWishlistNotClaimed && randomOwnerWishlistNotClaimed[0]) return randomOwnerWishlistNotClaimed;
+  }
+
+  const randomOwnerNotClaimed = await getRandomWaifuOwnerNotClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando, rollRankGreaterThan);
   return randomOwnerNotClaimed;
 };
 

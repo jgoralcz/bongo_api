@@ -139,6 +139,8 @@ route.get('/', async (req, res) => {
     favoritesOnly = false,
     boughtOnly = false,
     boughtFavoriteOnly = false,
+    wishlistOnly = false,
+    disableSeriesOnly = false,
   } = req.query;
   if (!name) return res.status(400).send({ error: 'Name query parameter expected.' });
 
@@ -147,8 +149,10 @@ route.get('/', async (req, res) => {
   const favoritesOnlyClean = favoritesOnly === 'true' || favoritesOnly === true;
   const boughtOnlyClean = boughtOnly === 'true' || boughtOnly === true;
   const boughtFavoriteOnlyClean = boughtFavoriteOnly === 'true' || boughtFavoriteOnly === true;
+  const wishlistOnlyClean = wishlistOnly === 'true' || wishlistOnly === true;
+  const disableSeriesOnlyClean = disableSeriesOnly === 'true' || disableSeriesOnly === true;
 
-  const series = await getAllSeriesByName(name, userID, guildID, claimsOnlyClean, anyClaimsOnlyClean, favoritesOnlyClean, boughtOnlyClean, boughtFavoriteOnlyClean);
+  const series = await getAllSeriesByName(name, userID, guildID, claimsOnlyClean, anyClaimsOnlyClean, favoritesOnlyClean, boughtOnlyClean, boughtFavoriteOnlyClean, wishlistOnlyClean, disableSeriesOnlyClean);
 
   return res.status(200).send(series || []);
 });
