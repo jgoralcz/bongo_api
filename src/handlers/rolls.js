@@ -61,7 +61,7 @@ const rollCharacter = async (
   rollWestern,
   rollAnime = true,
   rollGame,
-  _, // rarityPercentage = 100 this is no longer used
+  rarityPercentage = 100,
   limitMultiplierTemp = 1, // wishlist multiplier
   rollCustomWaifuOnly,
   unlimitedClaims,
@@ -91,7 +91,7 @@ const rollCharacter = async (
 
   // custom only
   if (rollCustomWaifuOnly && customCount > 0) {
-    if (!userRollClaimed && (randomRarity <= (customCharacterClaimed / customCount))) {
+    if (!userRollClaimed && (randomRarity <= (customCharacterClaimed / customCount / 1000) * rarityPercentage)) {
       const claimedCustomQuery = await getRandomCustomWaifuOwnerClaimed(guildID, nsfw);
       if (claimedCustomQuery && claimedCustomQuery[0]) {
         return { customWaifu: true, waifu: claimedCustomQuery[0] };
@@ -114,7 +114,7 @@ const rollCharacter = async (
   }
 
   // normal
-  if (!userRollClaimed && randomRarity <= (characterClaimed / total)) {
+  if (!userRollClaimed && (randomRarity <= ((characterClaimed / total / 100) * rarityPercentage))) {
     if ((randomDecision > characterCount || randomWeight <= 0.005) && customCount > 0) {
       const claimedCustomQuery = await getRandomCustomWaifuOwnerClaimed(guildID, nsfw);
       if (claimedCustomQuery && claimedCustomQuery[0]) {

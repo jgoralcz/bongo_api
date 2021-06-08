@@ -36,6 +36,7 @@ const {
   updateUserBotNSFWImage,
   updateUserBotSFWImage,
   setWaifuListTitle,
+  usedDailyFreeClaim,
 } = require('../db/tables/clients/clients_table');
 
 const { banSubmissionUser, unbanSubmissionUser } = require('../db/tables/bans_submissions/bans_submissions.js');
@@ -793,5 +794,12 @@ route.patch('/:userID/upgrades/characters/limits', upgrade(upgradeUserRollRankGr
 route.patch('/:userID/upgrades/discount', upgrade(upgradeUserDiscount));
 
 route.patch('/:userID/upgrades/bot-image', upgrade(upgradeUserBotImages));
+
+route.patch('/:userID/guilds/:guildID/free-claim', async (req, res) => {
+  const { userID, guildID } = req.params;
+  await usedDailyFreeClaim(userID, guildID);
+
+  res.status(204).send();
+});
 
 module.exports = route;

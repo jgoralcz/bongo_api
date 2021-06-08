@@ -4,7 +4,6 @@ metadata:
   name: ${ENV}reset-dailies
   namespace: josh-apps
 spec:
-  # TODO: apply this config
   schedule: "0 3 * * * *"
   failedJobsHistoryLimit: 1
   successfulJobsHistoryLimit: 1

@@ -364,24 +364,6 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
         FROM clients_disable_series
         WHERE user_id = $1 AND series_id IS NOT NULL
       )
-      -- AND ws.id NOT IN (
-        -- SELECT wswt.id
-        -- FROM (
-          -- SELECT series_id
-          -- FROM clients_disable_series
-          -- WHERE user_id = $1 AND series_id IS NOT NULL AND series_id NOT IN (
-            -- SELECT series_id
-            -- FROM cg_wishlist_series_table
-            -- WHERE user_id = $1 AND guild_id = $2
-          -- )
-        -- ) cs
-        -- JOIN waifu_schema.waifu_table wswt ON ws.series_id = cs.series_id
-        -- WHERE wswt.id NOT IN (
-          -- SELECT waifu_id AS id
-          -- FROM cg_wishlist_waifu_table
-          -- WHERE user_id = $1 AND guild_id = $2
-        -- )
-      -- )
       AND (((ws.nsfw = $3 AND ws.nsfw = FALSE))
         OR ((ws.nsfw = $3 AND ws.nsfw = TRUE) OR ws.nsfw = FALSE)
         OR ws.nsfw IS NULL

@@ -555,6 +555,7 @@ const resetAllClientDaily = async () => poolQuery(`
 const updateClientDaily = async (userId, used, date, additionalPoints) => poolQuery(`
   UPDATE "clientsTable"
   SET daily = $2, streak = streak + 1, streak_date = $3,
+  vote_enabled = TRUE,
   "bankPoints" = 
     CASE WHEN (streak + 1) >= 30
       THEN "bankPoints" + 3000 + 125 * 30 + $4
@@ -563,6 +564,21 @@ const updateClientDaily = async (userId, used, date, additionalPoints) => poolQu
   WHERE "userId" = $1
   RETURNING "bankPoints", streak;
 `, [userId, used, date, additionalPoints]);
+
+const usedDailyFreeClaim = async (userID, guildID) => poolQuery(`
+  WITH cte AS (
+    UPDATE "clientsGuildsTable"
+    SET claim_waifu = NULL
+    WHERE "userId" = $1 AND "guildId" = $2
+    RETURNING *
+  )
+  UPDATE "clientsTable"
+  SET vote_enabled = NULL
+  FROM cte
+
+  WHERE "clientsTable"."userId" = $1
+    AND vote_enabled IS NOT NULL;
+`, [userID, guildID]);
 
 const clearVoteStreaks = async () => poolQuery(`
   UPDATE "clientsTable"
@@ -677,4 +693,5 @@ module.exports = {
   upgradeUserBotImages,
   updateUserBotSFWImage,
   updateUserBotNSFWImage,
+  usedDailyFreeClaim,
 };
