@@ -357,9 +357,19 @@ route.delete('/:userID/stones/random', async (req, res) => {
 });
 
 route.post('/:userID/guilds/:guildID/characters/:customID/custom', async (req, res) => {
-  const { userID, guildID, customID } = req.params;
+  const {
+    userID,
+    guildID,
+    customID,
+  } = req.params;
 
-  await addClaimWaifuTrue(userID, guildID);
+  const { claimHour } = req.body;
+
+  // unlimited claims for patrons so never add claim waifu
+  if (claimHour !== 0) {
+    await addClaimWaifuTrue(userID, guildID);
+  }
+
   const query = await claimClientCustomWaifuID(userID, guildID, customID, new Date());
   if (!query || query.length <= 0 || !query[0]) {
     await addClaimWaifuFail(userID, guildID);
@@ -370,9 +380,19 @@ route.post('/:userID/guilds/:guildID/characters/:customID/custom', async (req, r
 });
 
 route.post('/:userID/guilds/:guildID/characters/:characterID/claim', async (req, res) => {
-  const { userID, guildID, characterID } = req.params;
+  const {
+    userID,
+    guildID,
+    characterID,
+  } = req.params;
 
-  await addClaimWaifuTrue(userID, guildID);
+  const { claimHour } = req.body;
+
+  // unlimited claims for patrons so never add claim waifu
+  if (claimHour !== 0) {
+    await addClaimWaifuTrue(userID, guildID);
+  }
+
   const query = await claimClientWaifuID(userID, guildID, characterID, new Date()).catch((error) => logger.error(error));
   if (!query || query.length <= 0 || !query[0]) {
     await addClaimWaifuFail(userID, guildID);
