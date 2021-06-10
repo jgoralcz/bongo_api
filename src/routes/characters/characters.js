@@ -119,7 +119,7 @@ route.post('/', async (req, res) => {
   const seriesID = seriesExistsQuery[0].id;
 
   const characterExistsQuery = await searchCharacterExactly(name, series, seriesID);
-  if (characterExistsQuery && characterExistsQuery.length > 0 && !uri) return res.status(409).send({ error: 'Character already exists.', message: 'Required body: imageURL, name, series, husbando, nsfw, description.', body });
+  if (characterExistsQuery && characterExistsQuery.length > 0 && !uri) return res.status(409).send(characterExistsQuery[0]);
 
   const buffer = await getBuffer(imageURL);
   if (!buffer) return res.status(400).send({ error: `No buffer found for url ${imageURL}.` });

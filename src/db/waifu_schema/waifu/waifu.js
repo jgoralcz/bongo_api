@@ -210,7 +210,7 @@ const getWaifuByImageURL = async (imageURL) => poolQuery(`
 `, [imageURL]);
 
 const searchCharacterExactly = async (name, series, seriesID) => poolQuery(`
-  SELECT id
+  SELECT id, image_url_clean AS "imageCropped", image_url AS url
   FROM waifu_schema.waifu_table
   WHERE name ILIKE $1
     AND (series ILIKE $2
