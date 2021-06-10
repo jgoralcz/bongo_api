@@ -26,6 +26,8 @@ server.use(httpLogger({
     /users\/.*\/guilds\/.*/,
     /guilds\/.*\/emojis\/claim\/random/,
     /bots\/patrons\/guilds\/.*/,
+    /messages\/*\/characters/,
+    /users/,
   ],
 }));
 
