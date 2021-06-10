@@ -212,6 +212,13 @@ route.patch('/:id/settings/images/bot/sfw', async (req, res) => {
   const { id } = req.params;
   const { url } = req.body;
 
+  if (url === '') {
+    const success = await updateUserBotSFWImage(id, url);
+    if (!success) return res.status(500).send();
+
+    return res.status(204).send();
+  }
+
   if (!url.startsWith('https://cdn.bongo.best') && !url.startsWith('https://cdn.bongobot.io')) return res.status(400).send({ error: 'Image must be hosted by me.' });
 
   const image = await selectImageByURL(url);
@@ -226,6 +233,13 @@ route.patch('/:id/settings/images/bot/sfw', async (req, res) => {
 route.patch('/:id/settings/images/bot/nsfw', async (req, res) => {
   const { id } = req.params;
   const { url } = req.body;
+
+  if (url === '') {
+    const success = await updateUserBotNSFWImage(id, url);
+    if (!success) return res.status(500).send();
+
+    return res.status(204).send();
+  }
 
   if (!url.startsWith('https://cdn.bongo.best') && !url.startsWith('https://cdn.bongobot.io')) return res.status(400).send({ error: 'Image must be hosted by me.' });
 

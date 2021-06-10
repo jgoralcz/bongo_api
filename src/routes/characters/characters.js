@@ -148,10 +148,10 @@ route.post('/', async (req, res) => {
   if (seriesList && seriesList.length > 0) {
     for (let i = 0; i < seriesList.length; i += 1) {
       const tempSeries = seriesList[i];
-      await insertSeries(id, tempSeries, uploader);
+      await insertSeries(id, tempSeries);
     }
   } else {
-    await insertSeries(id, series, uploader);
+    await insertSeries(id, series);
   }
 
   // store image into the image table AND the main character.
@@ -185,7 +185,10 @@ route.post('/', async (req, res) => {
       }
     }
     return res.status(201).send({
-      url: info.cdnURL, image_id: info.id, id, urlCropped,
+      url: info.cdnURL,
+      image_id: info.id,
+      id,
+      urlCropped,
     });
   }
 
