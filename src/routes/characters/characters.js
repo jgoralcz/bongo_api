@@ -60,6 +60,7 @@ const {
   storeCleanWaifuImage,
   getWaifuByNoCleanImageRandom,
   getRandomWaifu,
+  updateMudaeNameSeries,
 } = require('../../db/waifu_schema/waifu/waifu');
 
 route.get('/top-claim', async (req, res) => {
@@ -364,6 +365,10 @@ route.patch('/merge', async (req, res) => {
   await removeDuplicateWaifuClaims(waifuDupe.id, waifuMerge.id);
   await mergeWaifus(waifuMerge.id, waifuDupe.id);
   await mergeWaifuImages(waifuMerge.id, waifuDupe.id);
+  if (!waifuMerge.mudae_name && waifuDupe.mudae_name) {
+    await updateMudaeNameSeries(waifuMerge.id, waifuDupe.mudae_name, waifuDupe.mudae_series);
+  }
+
   await deleteWaifuByID(waifuDupe.id);
 
   return res.status(204).send({ character: { dupe: waifuDupe, merge: waifuMerge } });

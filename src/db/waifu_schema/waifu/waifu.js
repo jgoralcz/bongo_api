@@ -15,6 +15,12 @@ const insertWaifu = async (waifu) => poolQuery(`
   waifu.series_id, waifu.image_url_clean, waifu.image_url_clean_discord,
 ]);
 
+const updateMudaeNameSeries = async (id, mudaeName, mudaeSeries) => poolQuery(`
+  UPDATE waifu_schema.waifu_table
+  SET mudae_name = $2, mudae_series = $3
+  WHERE id = $1;
+`, [id, mudaeName, mudaeSeries]);
+
 const updateWaifu = async (waifu) => poolQuery(`
   UPDATE waifu_schema.waifu_table
   SET name = $1, series = $2, description = $3, image_url = $4, image_file_path = $5, url = $6, origin = $7, original_name = $8,
@@ -202,7 +208,7 @@ const getWaifuByURL = async (url) => poolQuery(`
 `, [url]);
 
 const getWaifuByImageURL = async (imageURL) => poolQuery(`
-  SELECT id, name, series, series_id
+  SELECT id, name, series, series_id, mudae_name, mudae_series
   FROM waifu_schema.waifu_table
   WHERE image_url = $1
     OR image_url_clean = $1
@@ -283,4 +289,5 @@ module.exports = {
   getWaifuByImageURL,
   updateCharacterMainImage,
   selectMainImage,
+  updateMudaeNameSeries,
 };
