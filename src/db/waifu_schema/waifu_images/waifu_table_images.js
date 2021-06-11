@@ -150,6 +150,7 @@ const mergeWaifuImages = async (mergeID, dupeID) => poolQuery(`
     SELECT buffer_hash
     FROM waifu_schema.waifu_table_images
     WHERE waifu_id = $1
+    AND buffer_hash IS NOT NULL
   );
 `, [mergeID, dupeID]);
 

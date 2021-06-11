@@ -156,7 +156,11 @@ route.post('/', async (req, res) => {
 
   // store image into the image table AND the main character.
   const row = await storeImageBufferToURL(id, buffer, storeNewImage, {
-    width, height, nsfw, type: 'characters', uploader,
+    width,
+    height,
+    nsfw,
+    type: 'characters',
+    uploader,
   });
   if (!row || row.length <= 0 || !row[0]) return res.status(500).send({ error: `Failed uploading character ${name}.` });
 
