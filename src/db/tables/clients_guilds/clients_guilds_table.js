@@ -119,9 +119,10 @@ const resetClaims = async (hours, minute) => poolQuery(`
       WHERE "guildId" IS NOT NULL
         AND roll_claim_minute IS NOT NULL
         AND roll_claim_minute = $2
+        
         AND roll_claim_hour IS NOT NULL
         AND roll_claim_hour != 0
-        AND $1 != 0
+        
         AND MOD($1, roll_claim_hour) = 0
     );
 `, [hours, minute]);
