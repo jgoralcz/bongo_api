@@ -1109,7 +1109,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
         ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
         ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id
       FROM (
-        SELECT id, name, nsfw
+        SELECT wsst.id, name, nsfw
         FROM waifu_schema.series_table wsst
         LEFT JOIN waifu_schema.series_nicknames wssn ON wssn.series_id = wsst.id
         WHERE (
