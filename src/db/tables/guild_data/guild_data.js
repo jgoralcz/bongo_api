@@ -792,7 +792,7 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
 
 const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false, claimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false, wishlistOnly = false, anyClaimsOnly = false, disableCharactersOnly = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, last_edit_by, last_edit_date,
-    nicknames, spoiler_nicknames, series_nicknames, wt.id, count, position, (
+    nicknames, spoiler_nicknames, wt.id, count, position, (
       SELECT
       CASE
       WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
@@ -1126,7 +1126,7 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
             WHEN f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
             WHEN f_unaccent(wssn.nickname) ILIKE '%' || f_unaccent($1) || '%' THEN 5
           ELSE 6 END, wsst.name
-        LIMIT 20
+        LIMIT 100
       ) wsst
       JOIN waifu_schema.waifu_table ws ON wsst.id = ws.series_id
       LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
