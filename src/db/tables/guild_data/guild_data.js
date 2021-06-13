@@ -791,9 +791,8 @@ const updateGuildShowRankRollingWaifus = async (guildID, waifuRankBool) => poolQ
 `, [guildID, waifuRankBool]);
 
 const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDiscordImage = false, claimsOnly = false, favoritesOnly = false, boughtOnly = false, boughtFavoriteOnly = false, wishlistOnly = false, anyClaimsOnly = false, disableCharactersOnly = false) => poolQuery(`
-  SELECT name, nsfw, series, husbando, unknown_gender, user_id,
-    url, description, last_edit_by, last_edit_date, nicknames, spoiler_nicknames,
-    wt.id, count, position, (
+  SELECT name, nsfw, series, husbando, unknown_gender, user_id, url, description, last_edit_by, last_edit_date,
+    nicknames, spoiler_nicknames, series_nicknames, wt.id, count, position, (
       SELECT
       CASE
       WHEN ct.cropped_images = TRUE AND ct.image_url_clean_path_extra IS NOT NULL THEN
@@ -999,7 +998,7 @@ const getAllWaifusByName = async (waifuName, guildID, limit = 100, userID, useDi
 
 const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImage = false) => poolQuery(`
   SELECT name, nsfw, series, husbando, unknown_gender, user_id,
-    url, description, last_edit_by, last_edit_date, nicknames, spoiler_nicknames,
+    url, description, last_edit_by, last_edit_date, nicknames, spoiler_nicknames, series_nicknames,
     wt.id, count, position, (
       SELECT
       CASE
@@ -1095,10 +1094,12 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
     ) ct
   ) AS image_url, image_url AS "imageURLOriginal", image_url_clean AS "imageURLCropped"
   FROM (
-    SELECT name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date,
+    SELECT name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord,
+      image_url_clean, url, description, t1.id, last_edit_by, last_edit_date, count, position,
       COALESCE(array_remove(array_agg(DISTINCT(wscn.nickname)), NULL), '{}') AS nicknames,
       COALESCE(array_remove(array_agg(DISTINCT(CASE WHEN wscn.is_spoiler = TRUE THEN wscn.nickname ELSE NULL END)), NULL), '{}') AS spoiler_nicknames,
-      COALESCE(json_object_agg(t1.date, t1.user_id ORDER BY t1.date) FILTER (WHERE user_id IS NOT NULL), '[]') AS user_id
+      COALESCE(json_object_agg(t1.date, t1.user_id ORDER BY t1.date) FILTER (WHERE user_id IS NOT NULL), '[]') AS user_id,
+      COALESCE(array_remove(array_agg(DISTINCT(t1.nickname)), NULL), '{}') AS series_nicknames
     FROM (
       SELECT ws.name, (
         SELECT
@@ -1107,9 +1108,9 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
           END
       ) AS nsfw, wsst.name AS series, ws.husbando, ws.unknown_gender,
         ws.image_url, ws.image_url_clean_discord, ws.image_url_clean, ws.url, ws.description,
-        ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id
+        ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id, wsst.nickname, count, position
       FROM (
-        SELECT wsst.id, name, nsfw
+        SELECT wsst.id, name, nsfw, wssn.nickname
         FROM waifu_schema.series_table wsst
         LEFT JOIN waifu_schema.series_nicknames wssn ON wssn.series_id = wsst.id
         WHERE (
@@ -1125,16 +1126,25 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
             WHEN f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
             WHEN f_unaccent(wssn.nickname) ILIKE '%' || f_unaccent($1) || '%' THEN 5
           ELSE 6 END, wsst.name
-        LIMIT 10
+        LIMIT 20
       ) wsst
       JOIN waifu_schema.waifu_table ws ON wsst.id = ws.series_id
+      LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = ws.id
       LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-      LIMIT 1500
     ) t1
     LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = t1.id
-    GROUP BY name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date
+    GROUP BY name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord,
+      image_url_clean, url, description, t1.id, last_edit_by, last_edit_date, count, position
   ) wt
-  LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id;
+  ORDER BY
+    CASE
+      WHEN f_unaccent(series) ILIKE f_unaccent($1) THEN 0
+      WHEN f_unaccent($1) ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(series_nicknames) ), ' ')) ) THEN 1
+      WHEN f_unaccent(series) ILIKE f_unaccent($1) || '%' THEN 2
+      WHEN f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(series_nicknames) ), ' ')) ) THEN 3
+      WHEN f_unaccent(series) ILIKE '%' || f_unaccent($1) || '%' THEN 4
+      WHEN '%' || f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(series_nicknames) ), ' ')) ) THEN 5
+    ELSE 6 END, series, name;
 `, [waifuSeries, guildID, userID, useDiscordImage]);
 
 const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`

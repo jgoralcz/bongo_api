@@ -93,9 +93,9 @@ SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_we
       WHEN f_unaccent(name) ILIKE f_unaccent($1) THEN 0
       WHEN f_unaccent($1) ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
       WHEN f_unaccent(name) ILIKE f_unaccent($1) || '%' THEN 2
-      WHEN f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
+      WHEN f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 3
       WHEN f_unaccent(name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
-      WHEN '%' || f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 1
+      WHEN '%' || f_unaccent($1) || '%' ILIKE ANY ( SELECT UNNEST( string_to_array(f_unaccent( UNNEST(nicknames) ), ' ')) ) THEN 5
     ELSE 6 END, name
   LIMIT 20;
 `, [name, userID, guildID, claimsOnly, anyClaimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly, disableSeriesOnly]);
