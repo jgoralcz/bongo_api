@@ -1110,9 +1110,18 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
         ws.id, ws.last_edit_by, ws.last_edit_date, cg.date, cg.user_id
       FROM (
         SELECT id, name, nsfw
-        FROM waifu_schema.series_table
-        WHERE f_unaccent(name) ILIKE '%' || $1 || '%'
-          OR f_unaccent(alternate_name) ILIKE '%' || $1 || '%'
+        FROM waifu_schema.series_table wsst
+        LEFT JOIN waifu_schema.series_nicknames wssn ON wssn.series_id = wsst.id
+        ORDER BY
+          CASE
+            WHEN f_unaccent(wsst.name) ILIKE f_unaccent($1) THEN 0
+            WHEN f_unaccent(wssn.nickname) ILIKE f_unaccent($1) THEN 1
+            WHEN f_unaccent(wsst.name) ILIKE f_unaccent($1) || '%' THEN 2
+            WHEN f_unaccent(wssn.nickname) ILIKE f_unaccent($1) || '%' THEN 3
+            WHEN f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
+            WHEN f_unaccent(wssn.nickname) ILIKE '%' || f_unaccent($1) || '%' THEN 5
+          ELSE 6 END, wsst.name
+        LIMIT 20
       ) wsst
       JOIN waifu_schema.waifu_table ws ON wsst.id = ws.series_id
       LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2

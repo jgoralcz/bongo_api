@@ -529,8 +529,7 @@ const checkSnipe = async (userID) => poolQuery(`
 const updateUserBankPointsAndRollsVote = async (userID, points) => poolQuery(`
   UPDATE "clientsTable" 
   SET "bankPoints" = "bankPoints" + $2, vote_date = NOW(), bank_rolls = bank_rolls + 1,
-  streak_vote_date = NOW() + INTERVAL '2 days', vote_enabled = TRUE,
-  streak_vote = streak_vote + 1
+  streak_vote_date = NOW() + INTERVAL '2 days', streak_vote = streak_vote + 1
   WHERE "userId" = $1
   RETURNING *;
 `, [userID, points]);

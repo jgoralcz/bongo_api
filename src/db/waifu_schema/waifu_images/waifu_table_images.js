@@ -94,9 +94,9 @@ const getCharacterImagesByID = async (userID, waifuID, nsfw = false, useDiscordI
         image_url_path_extra
       END
     ) AS image_url_path_extra,
-    image_id, nsfw, image_url_path_extra AS "imageURLOriginal", image_url_clean_path_extra AS "imageURLCropped"
+    image_id, nsfw, image_url_path_extra AS "imageURLOriginal", image_url_clean_path_extra AS "imageURLCropped", file_type
     FROM (
-      SELECT image_id, nsfw, image_url_path_extra, image_url_clean_path_extra, image_url_clean_discord_path_extra, (
+      SELECT image_id, nsfw, image_url_path_extra, image_url_clean_path_extra, image_url_clean_discord_path_extra, file_type, (
         SELECT cropped_images
         FROM "clientsTable"
         WHERE "userId" = $1
@@ -108,7 +108,14 @@ const getCharacterImagesByID = async (userID, waifuID, nsfw = false, useDiscordI
           OR nsfw IS NULL)
     ) ct
   ) t1
-  WHERE t1.image_url_path_extra IS NOT NULL;
+  WHERE image_url_path_extra IS NOT NULL
+  ORDER BY
+    CASE
+      WHEN (file_type != 'gif' OR file_type IS NULL) AND (nsfw != TRUE OR nsfw IS NULL) THEN 0
+      WHEN (file_type = 'gif' OR file_type IS NULL) AND (nsfw != TRUE OR nsfw IS NULL) THEN 1
+      WHEN (file_type != 'gif' OR file_type IS NULL) AND nsfw = TRUE THEN 2
+      WHEN file_type = 'gif' AND nsfw = TRUE THEN 3
+    ELSE 4 END;
 `, [userID, waifuID, nsfw, useDiscordImage]);
 
 const storeNewImage = async (id, imageURL, buffer, width, height, nsfw, bufferLength, fileType) => poolQuery(`
