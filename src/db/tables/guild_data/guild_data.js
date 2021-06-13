@@ -1112,6 +1112,10 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
         SELECT id, name, nsfw
         FROM waifu_schema.series_table wsst
         LEFT JOIN waifu_schema.series_nicknames wssn ON wssn.series_id = wsst.id
+        WHERE (
+          f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%'
+          OR f_unaccent(nickname) ILIKE '%' || f_unaccent($1) || '%'
+        )
         ORDER BY
           CASE
             WHEN f_unaccent(wsst.name) ILIKE f_unaccent($1) THEN 0
@@ -1121,18 +1125,16 @@ const getAllWaifusBySeries = async (waifuSeries, guildID, userID, useDiscordImag
             WHEN f_unaccent(wsst.name) ILIKE '%' || f_unaccent($1) || '%' THEN 4
             WHEN f_unaccent(wssn.nickname) ILIKE '%' || f_unaccent($1) || '%' THEN 5
           ELSE 6 END, wsst.name
-        LIMIT 20
+        LIMIT 10
       ) wsst
       JOIN waifu_schema.waifu_table ws ON wsst.id = ws.series_id
       LEFT JOIN cg_claim_waifu_table cg ON cg.waifu_id = ws.id AND guild_id = $2
-      ORDER BY series ASC, name ASC
       LIMIT 1500
     ) t1
     LEFT JOIN waifu_schema.character_nicknames wscn ON wscn.character_id = t1.id
     GROUP BY name, nsfw, series, husbando, unknown_gender, image_url, image_url_clean_discord, image_url_clean, url, description, t1.id, last_edit_by, last_edit_date
   ) wt
-  LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id
-  ORDER BY series ASC, name ASC;
+  LEFT JOIN mv_rank_claim_waifu mv ON mv.waifu_id = wt.id;
 `, [waifuSeries, guildID, userID, useDiscordImage]);
 
 const getWaifusByTagGuildOwners = async (guildID, tag) => poolQuery(`
