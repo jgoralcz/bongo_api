@@ -87,7 +87,7 @@ const rollCharacter = async (
   // 10000 = 4
   // 15000 = 3
   // 10000 = 25000 * x
-  const rollRankGreaterThan = rollRankGreaterThanTemp > 0 ? 25000 * (1 - (rollRankGreaterThanTemp / 5) + 0.2) : 0;
+  const rollRankGreaterThan = rollRankGreaterThanTemp > 0 ? parseInt(25000 * (1 - (rollRankGreaterThanTemp / 5) + 0.2), 10) : 0;
 
   // custom only
   if (rollCustomWaifuOnly && customCount > 0) {
