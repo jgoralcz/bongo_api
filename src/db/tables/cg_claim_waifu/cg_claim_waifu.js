@@ -122,6 +122,18 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
         AND (((is_western = $8 AND is_western = FALSE))
           OR ((is_western = $8 AND is_western = TRUE) OR is_western = TRUE)
         )
+        AND ws.id NOT IN (
+          SELECT wsai.waifu_id
+          FROM clients_disable_series cds
+          JOIN waifu_schema.appears_in wsai ON wsai.series_id = cds.series_id
+          WHERE cds.user_id = $1 AND cds.series_id IS NOT NULL
+        )
+        AND ws.series_id NOT IN (
+          SELECT wsais.series_id
+          FROM clients_disable_series cds
+          JOIN waifu_schema.series_appears_in_series wsais ON wsais.series_appears_in_id = cds.series_id
+          WHERE cds.user_id = $1 AND cds.series_id IS NOT NULL
+        )
         AND (
           ($9 = 'FALSE' AND husbando = FALSE)
           OR ($9 = 'TRUE' AND husbando = TRUE)
@@ -259,6 +271,18 @@ const getRandomWaifuOwnerPersonalWishlist = async (userID, guildID, nsfw, rollWe
         AND (((is_western = $8 AND is_western = FALSE))
           OR ((is_western = $8 AND is_western = TRUE) OR is_western = TRUE)
         )
+        AND ws.id NOT IN (
+          SELECT wsai.waifu_id
+          FROM clients_disable_series cds
+          JOIN waifu_schema.appears_in wsai ON wsai.series_id = cds.series_id
+          WHERE cds.user_id = $1 AND cds.series_id IS NOT NULL
+        )
+        AND ws.series_id NOT IN (
+          SELECT wsais.series_id
+          FROM clients_disable_series cds
+          JOIN waifu_schema.series_appears_in_series wsais ON wsais.series_appears_in_id = cds.series_id
+          WHERE cds.user_id = $1 AND cds.series_id IS NOT NULL
+        )
         AND (
           ($9 = 'FALSE' AND husbando = FALSE)
           OR ($9 = 'TRUE' AND husbando = TRUE)
@@ -383,6 +407,18 @@ const getRandomWaifuOwnerNotClaimed = async (userID, guildID, nsfw, rollWestern,
         OR unknown_gender = TRUE
         OR ($8 != 'TRUE' AND $8 != 'FALSE')
       )
+      AND ws.id NOT IN (
+        SELECT wsai.waifu_id
+        FROM clients_disable_series cds
+        JOIN waifu_schema.appears_in wsai ON wsai.series_id = cds.series_id
+        WHERE cds.user_id = $1 AND cds.series_id IS NOT NULL
+      )
+      AND ws.series_id NOT IN (
+        SELECT wsais.series_id
+        FROM clients_disable_series cds
+        JOIN waifu_schema.series_appears_in_series wsais ON wsais.series_appears_in_id = cds.series_id
+        WHERE cds.user_id = $1 AND cds.series_id IS NOT NULL
+      )
       AND (
         $9 = 0 OR
         ws.id IN (
@@ -488,6 +524,18 @@ const getRandomWaifuOwnerClaimed = async (userID, guildID, nsfw, rollWestern, ro
         OR ($8 = 'TRUE' AND husbando = TRUE)
         OR unknown_gender = TRUE
         OR ($8 != 'TRUE' AND $8 != 'FALSE')
+      )
+      AND ws.id NOT IN (
+        SELECT wsai.waifu_id
+        FROM clients_disable_series cds
+        JOIN waifu_schema.appears_in wsai ON wsai.series_id = cds.series_id
+        WHERE cds.user_id = $1 AND cds.series_id IS NOT NULL
+      )
+      AND ws.series_id NOT IN (
+        SELECT wsais.series_id
+        FROM clients_disable_series cds
+        JOIN waifu_schema.series_appears_in_series wsais ON wsais.series_appears_in_id = cds.series_id
+        WHERE cds.user_id = $1 AND cds.series_id IS NOT NULL
       )
       AND (
         $9 = 0 OR

@@ -1,7 +1,4 @@
-const logger = require('log4js').getLogger();
-
 const { poolQuery } = require('../../index');
-const { getSeries } = require('../series/series_table');
 
 const insertAppearsIn = async (waifuID, seriesID) => poolQuery(`
   INSERT INTO waifu_schema.appears_in (waifu_id, series_id)
@@ -11,14 +8,22 @@ const insertAppearsIn = async (waifuID, seriesID) => poolQuery(`
   DO NOTHING;
 `, [waifuID, seriesID]);
 
-const insertSeries = async (waifuID, series) => {
-  const sQuery = await getSeries(series).catch((error) => logger.error(error));
-  if (sQuery && sQuery[0] && sQuery[0].id) {
-    await insertAppearsIn(waifuID, sQuery[0].id).catch((error) => logger.error(error));
-  }
-};
+const deleteAppearsIn = async (waifuID, seriesID) => poolQuery(`
+  DELETE
+  FROM waifu_schema.appears_in
+  WHERE waifu_id = $1 AND series_id = $2
+  RETURNING *;
+`, [waifuID, seriesID]);
+
+const getCharacterAppearsIn = async (characterID) => poolQuery(`
+  SELECT series_id, name
+  FROM waifu_schema.appears_in wsai
+  JOIN waifu_schema.series_table wsst ON wsst.id = wsai.series_id
+  WHERE wsai.waifu_id = $1;
+`, [characterID]);
 
 module.exports = {
   insertAppearsIn,
-  insertSeries,
+  deleteAppearsIn,
+  getCharacterAppearsIn,
 };
