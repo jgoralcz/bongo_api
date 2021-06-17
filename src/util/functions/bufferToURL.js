@@ -20,7 +20,11 @@ const storeImageBufferToURL = async (id, buffer, updateDBFunc, config) => {
   if (!fileExtension || !uploader) return undefined;
 
   const characterUUID = nanoid(7);
-  const { status } = await axios.put(`${cdnURL}/images/${characterUUID}.${fileExtension}`, buffer, { headers: { AccessKey: apiKey } });
+  const { status } = await axios.put(`${cdnURL}/images/${characterUUID}.${fileExtension}`, buffer, {
+    headers: { AccessKey: apiKey },
+    maxContentLength: 100000000,
+    maxBodyLength: 1000000000,
+  });
 
   const cdnUpdatedURL = `${imageURL}/images/${characterUUID}.${fileExtension}`;
   if (status !== 201) {
