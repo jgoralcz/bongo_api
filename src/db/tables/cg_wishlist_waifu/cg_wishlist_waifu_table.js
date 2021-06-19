@@ -27,7 +27,8 @@ const getWishlistWaifuUserGuild = async (userID, guildID) => poolQuery(`
   
   LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.guild_id = cgt.guild_id AND cgt.waifu_id = cgcwt.waifu_id
   JOIN "clientsGuildsTable" ct ON ct.id = cgt.user_guild_id
-  WHERE cgt.user_id = $1 AND cgt.guild_id = $2;
+  WHERE cgt.user_id = $1 AND cgt.guild_id = $2
+  ORDER BY wt.name ASC;
 `, [userID, guildID]);
 
 const getUsersWishWaifu = async (guildID, waifuID) => poolQuery(`

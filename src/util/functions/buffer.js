@@ -5,7 +5,12 @@ const imageSize = require('image-size');
 const { MBLIMIT } = require('../constants/bytes');
 
 const getBuffer = async (uri) => {
-  const { status, data } = await axios.get(uri, { responseType: 'arraybuffer', validateStatus: () => true });
+  const { status, data } = await axios.get(uri, {
+    responseType: 'arraybuffer',
+    validateStatus: () => true,
+    maxContentLength: 100000000,
+    maxBodyLength: 1000000000,
+  });
   if (status !== 200 || !data) {
     logger.error(`url ${uri} did not return status code 200 when seeking buffer.`);
     return undefined;
