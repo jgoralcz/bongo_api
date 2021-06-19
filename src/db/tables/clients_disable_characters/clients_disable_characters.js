@@ -25,6 +25,7 @@ const getBlacklistCharactersUserPage = async (userID, offset, limit) => poolQuer
   JOIN waifu_schema.waifu_table wswt ON wswt.id = cdc.character_id
   JOIN waifu_schema.series_table wsst on wsst.id = wswt.series_id
   WHERE user_id = $1
+  ORDER BY wswt.name ASC
   LIMIT $3 OFFSET $2;
 `, [userID, offset, limit]);
 

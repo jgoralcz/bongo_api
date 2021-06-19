@@ -62,7 +62,7 @@ const rollCharacter = async (
   rollAnime = true,
   rollGame,
   rarityPercentage = 100,
-  limitMultiplierTemp = 1, // wishlist multiplier
+  limitMultiplier = 1, // wishlist multiplier
   rollCustomWaifuOnly,
   unlimitedClaims,
   croppedImage,
@@ -77,7 +77,6 @@ const rollCharacter = async (
     customCharacterClaimed,
   } = await getServerCharacterAll(guildID);
 
-  const limitMultiplier = Math.ceil(limitMultiplierTemp / 1.25);
   const total = customCount + characterCount;
   const randomDecision = Math.floor(Math.random() * total);
   const randomWeight = Math.random();
