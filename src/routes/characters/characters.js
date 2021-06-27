@@ -16,7 +16,6 @@ const {
 const { getRankClaimedWaifuByID } = require('../../db/tables/cg_claim_waifu_rank/cg_claim_waifu_rank');
 
 const { getSeries: searchSeriesExactly } = require('../../db/waifu_schema/series/series_table');
-const { insertSeries } = require('../../db/waifu_schema/appears_in/appears_in');
 const { storeImageBufferToURL } = require('../../util/functions/bufferToURL');
 
 const { config } = require('../../util/constants/config');
@@ -110,7 +109,6 @@ route.post('/', async (req, res) => {
     series,
     nsfw,
     url: uri,
-    seriesList,
     uploader,
     crop,
   } = body;
@@ -145,15 +143,6 @@ route.post('/', async (req, res) => {
 
   const waifu = waifuQuery[0];
   const { id } = waifu;
-
-  if (seriesList && seriesList.length > 0) {
-    for (let i = 0; i < seriesList.length; i += 1) {
-      const tempSeries = seriesList[i];
-      await insertSeries(id, tempSeries);
-    }
-  } else {
-    await insertSeries(id, series);
-  }
 
   // store image into the image table AND the main character.
   const row = await storeImageBufferToURL(id, buffer, storeNewImage, {
