@@ -106,16 +106,17 @@ route.post('/', async (req, res) => {
   const {
     imageURL,
     name,
-    series,
+    series: seriesTemp,
     nsfw,
     url: uri,
     uploader,
     crop,
   } = body;
 
-  const seriesExistsQuery = await searchSeriesExactly(series);
+  const seriesExistsQuery = await searchSeriesExactly(seriesTemp);
   if (!seriesExistsQuery || seriesExistsQuery.length <= 0) return res.status(400).send({ error: 'Series does not exist.', message: `The series ${series} does not exist. You must create the series first.`, body });
   const seriesID = seriesExistsQuery[0].id;
+  const series = seriesExistsQuery[0].name;
 
   const characterExistsQuery = await searchCharacterExactly(name, series, seriesID);
   if (characterExistsQuery && characterExistsQuery.length > 0 && !uri) return res.status(409).send(characterExistsQuery[0]);

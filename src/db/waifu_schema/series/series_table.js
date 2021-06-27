@@ -101,7 +101,7 @@ SELECT id, name, description, image_url, url, release_date, nsfw, is_game, is_we
 `, [name, userID, guildID, claimsOnly, anyClaimsOnly, favoritesOnly, boughtOnly, boughtFavoriteOnly, wishlistOnly, disableSeriesOnly]);
 
 const getSeries = async (name) => poolQuery(`
-  SELECT id
+  SELECT name, id
   FROM waifu_schema.series_table wt
   WHERE name ILIKE $1
     OR wt.id IN (
