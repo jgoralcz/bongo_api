@@ -44,7 +44,7 @@ const removeAllSeriesWishlist = async (userID, guildID) => poolQuery(`
 `, [userID, guildID]);
 
 const getUsersWishSeries = async (guildID, seriesID) => poolQuery(`
-  SELECT DISTINCT(user_id, public_wish_list AS public)
+  SELECT DISTINCT user_id, public_wish_list AS public
     FROM (
       SELECT user_id, guild_id
       FROM cg_wishlist_series_table
