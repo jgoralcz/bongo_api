@@ -114,7 +114,7 @@ route.post('/', async (req, res) => {
   } = body;
 
   const seriesExistsQuery = await searchSeriesExactly(seriesTemp);
-  if (!seriesExistsQuery || seriesExistsQuery.length <= 0) return res.status(400).send({ error: 'Series does not exist.', message: `The series ${series} does not exist. You must create the series first.`, body });
+  if (!seriesExistsQuery || seriesExistsQuery.length <= 0) return res.status(400).send({ error: 'Series does not exist.', message: `The series ${seriesTemp} does not exist. You must create the series first.`, body });
   const seriesID = seriesExistsQuery[0].id;
   const series = seriesExistsQuery[0].name;
 
@@ -128,15 +128,14 @@ route.post('/', async (req, res) => {
   if (!height || !width) return res.status(400).send(error);
 
   let waifuQuery;
+  body.series_id = seriesID;
+  body.series = series;
   if (characterExistsQuery && characterExistsQuery.length > 0 && uri) {
-    body.series_id = seriesID;
     waifuQuery = await upsertWaifu(body);
   } else if (uri) {
-    body.series_id = seriesID;
     waifuQuery = await insertWaifu(body);
   } else {
     body.url = '';
-    body.series_id = seriesID;
     waifuQuery = await upsertWaifu(body);
   }
 
