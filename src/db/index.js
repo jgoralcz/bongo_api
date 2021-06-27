@@ -20,10 +20,10 @@ const poolQuery = async (query, paramsArray) => {
     return result.rows;
   } catch (error) {
     logger.error(error);
+    throw new Error(error);
   } finally {
     client.release();
   }
-  return undefined;
 };
 
 module.exports = {
