@@ -30,6 +30,8 @@ const {
   updateAllowOtherUsersToClaimAfterSeconds,
   updateGuildWebhookURL,
   updateGuildWebhookName,
+  getAllWaifusBySeriesCharacterAppearsIn,
+  getAllWaifusBySeriesAppearsIn,
 } = require('../db/tables/guild_data/guild_data');
 
 const { clearLastPlayed } = require('../db/tables/guild_lastplayed_queue/guild_lastplayed_queue');
@@ -371,8 +373,35 @@ route.get('/:id/requester/:requesterID/characters/series', async (req, res) => {
   const { name, useDiscordImage } = req.query;
   if (!name || (useDiscordImage != null && useDiscordImage !== 'true' && useDiscordImage !== 'false')) return res.status(400).send({ error: 'Incorrect query string.', query: req.query });
 
-  const query = await getAllWaifusBySeries(name, id, requesterID, useDiscordImage);
-  return res.status(200).send(query || []);
+  const [characterSeriesDirect, characterSubSeries, characterSeries] = await Promise.all([
+    getAllWaifusBySeries(name, id, requesterID, useDiscordImage),
+    getAllWaifusBySeriesCharacterAppearsIn(name, id, requesterID, useDiscordImage),
+    getAllWaifusBySeriesAppearsIn(name, id, requesterID, useDiscordImage),
+  ]);
+
+  // get unique character and series
+  const all = [...(characterSeriesDirect || []), ...(characterSubSeries || []), ...(characterSeries || [])];
+  const allCharacterSeries = {};
+  all.forEach((e) => {
+    if (!allCharacterSeries[e.series]) {
+      allCharacterSeries[e.series] = {};
+    }
+    if (!allCharacterSeries[e.series][e.name]) {
+      allCharacterSeries[e.series][e.name] = e;
+    }
+  });
+
+  // sort results
+  const sortedSeries = Object.keys(allCharacterSeries).sort();
+  const allCharacters = [];
+  sortedSeries.forEach((series) => {
+    const sortedSeriesCharacters = Object.keys(allCharacterSeries[series]).sort();
+    sortedSeriesCharacters.forEach((character) => {
+      allCharacters.push(allCharacterSeries[series][character]);
+    });
+  });
+
+  return res.status(200).send(allCharacters);
 });
 
 route.get('/:id/characters/tags/:tag', async (req, res) => {

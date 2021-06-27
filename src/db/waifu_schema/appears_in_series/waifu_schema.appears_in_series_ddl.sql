@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS waifu_schema.series_appears_in_series (
-  id INTEGER PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   series_id INTEGER NOT NULL,
   series_appears_in_id INTEGER NOT NULL,
 

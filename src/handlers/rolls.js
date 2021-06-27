@@ -25,7 +25,7 @@ const getServerCharacterAll = async (guildID) => {
 
   if (!query || query.length <= 0 || !query[0]) {
     return {
-      characterCount: 40000,
+      characterCount: 60000,
       characterClaimed: 0,
       customCount: 0,
       customCharacterClaimed: 0,

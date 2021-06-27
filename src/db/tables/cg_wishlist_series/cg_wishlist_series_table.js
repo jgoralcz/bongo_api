@@ -44,11 +44,18 @@ const removeAllSeriesWishlist = async (userID, guildID) => poolQuery(`
 `, [userID, guildID]);
 
 const getUsersWishSeries = async (guildID, seriesID) => poolQuery(`
-  SELECT user_id, public_wish_list AS public
+  SELECT DISTINCT(user_id, public_wish_list AS public)
     FROM (
       SELECT user_id, guild_id
       FROM cg_wishlist_series_table
-      WHERE guild_id = $1 AND series_id = $2
+      WHERE guild_id = $1 AND (
+        series_id = $2
+        OR $2 IN (
+          SELECT series_id
+          FROM waifu_schema.series_appears_in_series
+          WHERE series_appears_in_id = $2
+        )
+      )
     ) cg
   JOIN "clientsGuildsTable" cgt ON cgt."userId" = cg.user_id AND cgt."guildId" = $1;
 `, [guildID, seriesID]);
@@ -56,11 +63,11 @@ const getUsersWishSeries = async (guildID, seriesID) => poolQuery(`
 const removeSeriesWishlistInArray = async (guildID, usersArray) => poolQuery(`
   WITH deleted AS (
     DELETE
-      FROM cg_wishlist_series_table
-      WHERE guild_id = $1 AND user_id IN (
-        SELECT UNNEST($2::varchar[]) AS user_id
-      )
-      RETURNING *
+    FROM cg_wishlist_series_table
+    WHERE guild_id = $1 AND user_id IN (
+      SELECT UNNEST($2::varchar[]) AS user_id
+    )
+    RETURNING *
   ) SELECT count(*) FROM deleted;
 `, [guildID, usersArray]);
 

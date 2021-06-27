@@ -18,8 +18,8 @@ const deleteSeriesAppearsIn = async (seriesID, seriesAppearsInID) => poolQuery(`
 const getSeriesAppearsIn = async (seriesID) => poolQuery(`
   SELECT series_appears_in_id, name
   FROM waifu_schema.series_appears_in_series wssais
-  JOIN waifu_schema.serieS_table wsst ON wsst.id = wssais.series_appears_in_id
-  WHERE wssais.series_id = $1
+  JOIN waifu_schema.series_table wsst ON wsst.id = wssais.series_appears_in_id
+  WHERE wssais.series_id = $1;
 `, [seriesID]);
 
 module.exports = {

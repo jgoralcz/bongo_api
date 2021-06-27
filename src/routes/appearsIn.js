@@ -5,6 +5,7 @@ const {
   deleteAppearsIn,
   getCharacterAppearsIn,
 } = require('../db/waifu_schema/appears_in/appears_in');
+
 const {
   insertSeriesAppearsIn,
   deleteSeriesAppearsIn,
@@ -32,6 +33,7 @@ route.delete('/characters/:characterID/appears-in/series/:seriesID', async (req,
   const { characterID, seriesID } = req.params;
 
   if (!characterID || isNaN(characterID) || !seriesID || isNaN(seriesID)) return res.status(400).send({ error: 'expected characterID and seriesID in params' });
+
   const rows = await deleteAppearsIn(characterID, seriesID);
   if (!rows || rows.length <= 0) {
     return res.status(404).send();
