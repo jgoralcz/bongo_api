@@ -106,7 +106,7 @@ const getSeries = async (name) => poolQuery(`
   WHERE name ILIKE $1
     OR wt.id IN (
       SELECT series_id as id
-      FROM waifu_schema.series_nickname
+      FROM waifu_schema.series_nicknames
       WHERE nickname ILIKE $1
     );
 `, [name]);
