@@ -52,11 +52,10 @@ const getUsersWishSeries = async (guildID, seriesID) => poolQuery(`
         cgwst.guild_id = $1 AND cgwst.series_id = $2
       )
       OR (
-        cgwst.guild_id = $1 AND cgwst.series_id = $2 AND
-        $2 IN (
+        cgwst.guild_id = $1 AND cgwst.series_id IN (
           SELECT wssais.series_appears_in_id
           FROM waifu_schema.series_appears_in_series wssais
-          WHERE wssais.series_appears_in_id = $2
+          WHERE wssais.series_id = $2
         )
       )
     ) cg
