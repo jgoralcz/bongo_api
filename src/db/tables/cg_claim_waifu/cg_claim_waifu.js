@@ -762,7 +762,7 @@ const removeAllGuildClaimCharactersByID = async (guildID, characterID) => poolQu
 
 const moveAllClaimedWaifu = async (myID, guildID, theirID) => poolQuery(`
   UPDATE cg_claim_waifu_table
-  SET user_id = $3
+  SET user_id = $3, favorite = FALSE
   WHERE user_id = $1 AND guild_id = $2
     AND waifu_id NOT IN (
       SELECT waifu_id

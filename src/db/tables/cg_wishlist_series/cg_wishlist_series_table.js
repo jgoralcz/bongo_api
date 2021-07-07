@@ -47,13 +47,16 @@ const getUsersWishSeries = async (guildID, seriesID) => poolQuery(`
   SELECT DISTINCT user_id, public_wish_list AS public
     FROM (
       SELECT user_id, guild_id
-      FROM cg_wishlist_series_table
-      WHERE guild_id = $1 AND (
-        series_id = $2
-        OR $2 IN (
-          SELECT series_id
-          FROM waifu_schema.series_appears_in_series
-          WHERE series_appears_in_id = $2
+      FROM cg_wishlist_series_table cgwst
+      WHERE (
+        cgwst.guild_id = $1 AND cgwst.series_id = $2
+      )
+      OR (
+        cgwst.guild_id = $1 AND cgwst.series_id = $2 AND
+        $2 IN (
+          SELECT wssais.series_appears_in_id
+          FROM waifu_schema.series_appears_in_series wssais
+          WHERE wssais.series_appears_in_id = $2
         )
       )
     ) cg
