@@ -18,6 +18,8 @@ setInterval(() => {
   serverCharacterAll = {};
 }, 1000 * 60 * 10); // 10 minutes
 
+const characterCountDefault = 70000;
+
 const getServerCharacterAll = async (guildID) => {
   if (serverCharacterAll[guildID]) return serverCharacterAll[guildID];
 
@@ -25,7 +27,7 @@ const getServerCharacterAll = async (guildID) => {
 
   if (!query || query.length <= 0 || !query[0]) {
     return {
-      characterCount: 60000,
+      characterCount: characterCountDefault,
       characterClaimed: 0,
       customCount: 0,
       customCharacterClaimed: 0,
@@ -42,7 +44,7 @@ const getServerCharacterAll = async (guildID) => {
   } = data;
 
   const serverCount = {
-    characterCount: parseInt(characterCount || 40000, 10),
+    characterCount: parseInt(characterCount || characterCountDefault, 10),
     characterClaimed: parseInt(characterClaimed || 0, 10),
     customCount: parseInt(customCount || 0, 10),
     customCharacterClaimed: parseInt(customCharacterClaimed || 0, 10),
