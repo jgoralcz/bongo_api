@@ -148,7 +148,7 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
             WHERE position < $10
           )
         )
-        LIMIT $7 * 10 + 10
+        LIMIT $7 * 5 + 10
       ) s1
       WHERE s1.id IN (
         SELECT DISTINCT(waifu_id) AS id
@@ -297,7 +297,7 @@ const getRandomWaifuOwnerPersonalWishlist = async (userID, guildID, nsfw, rollWe
             WHERE position < $10
           )
         )
-        LIMIT $7 * 10 + 10
+        LIMIT $7 * 5 + 10
       ) s1
       WHERE s1.id IN (
         SELECT DISTINCT(waifu_id) AS id
