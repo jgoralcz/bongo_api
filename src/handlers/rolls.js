@@ -64,7 +64,7 @@ const rollCharacter = async (
   rollAnime = true,
   rollGame,
   rarityPercentage = 100,
-  limitMultiplier = 30, // wishlist multiplier
+  limitMultiplier = 20, // wishlist multiplier
   rollCustomWaifuOnly,
   unlimitedClaims,
   croppedImage,
@@ -134,8 +134,7 @@ const rollCharacter = async (
     }
   }
 
-  const limitMultiplierRandom = (Math.random() * 200) - 1;
-  console.log(limitMultiplierRandom, limitMultiplier, limitMultiplierRandom <= limitMultiplier);
+  const limitMultiplierRandom = (Math.random() * 125) - 1;
   if (limitMultiplierRandom <= limitMultiplier) {
     const randomOwnerWishlistNotClaimed = await getRandomWaifuOwnerWishlistNotClaimed(userID, guildID, nsfw, rollWestern, rollGame, croppedImage, limitMultiplier, rollAnime, isHusbando, rollRankGreaterThan);
     if (randomOwnerWishlistNotClaimed && randomOwnerWishlistNotClaimed[0]) return randomOwnerWishlistNotClaimed;

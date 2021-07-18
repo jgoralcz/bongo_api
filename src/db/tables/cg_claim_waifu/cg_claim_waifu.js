@@ -177,7 +177,7 @@ const getRandomWaifuOwnerWishlistNotClaimed = async (userID, guildID, nsfw, roll
           ORDER BY random()
         )
       )
-      LIMIT 3000
+      LIMIT 1000
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
     ORDER BY random()
@@ -309,7 +309,7 @@ const getRandomWaifuOwnerPersonalWishlist = async (userID, guildID, nsfw, rollWe
         FROM cg_wishlist_series_table cgt
         WHERE cgt.user_id = $1 AND cgt.guild_id = $2
       )
-      LIMIT 3000
+      LIMIT 1000
     ) cgw
     LEFT JOIN cg_claim_waifu_table cgcwt ON cgcwt.waifu_id = cgw.id AND cgcwt.guild_id = $2
     ORDER BY random()
